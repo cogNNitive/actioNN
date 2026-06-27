@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>iNNv0 — AI Agent Skills para OpenCode</title>
+  <meta name="description" content="Ecosistema de skills para agentes de IA en OpenCode. Model Router, Skills Manager, traNNsform, y Design System.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;1,400;1,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --canvas: #FFFFFF;
+      --canvas-inert: #FAFAFC;
+      --brand: #4D0E4E;
+      --brand-light: #6A1B6B;
+      --border: #F2F2F7;
+      --ink: #111112;
+      --ink-muted: #636366;
+      --sans: 'Plus Jakarta Sans', 'Geist Sans', system-ui, sans-serif;
+      --serif: 'Playfair Display', Georgia, serif;
+      --mono: 'JetBrains Mono', 'Geist Mono', monospace;
+      --max-w: 1280px;
+      --space-xs: 4px;
+      --space-sm: 8px;
+      --space-md: 16px;
+      --space-lg: 24px;
+      --space-xl: 48px;
+      --space-xxl: 80px;
+      --radius: 10px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--sans);
+      font-size: 16px;
+      line-height: 1.6;
+      color: var(--ink);
+      background: var(--canvas);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 0 var(--space-lg);
+    }
+
+    /* --- Navigation --- */
+    nav {
+      padding: var(--space-md) 0;
+      border-bottom: 1px solid var(--border);
+      background: var(--canvas);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    nav .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-weight: 800;
+      font-size: 22px;
+      color: var(--brand);
+      text-decoration: none;
+      letter-spacing: -0.02em;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: var(--space-lg);
+      align-items: center;
+      list-style: none;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--ink-muted);
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--brand); }
+
+    .nav-cta {
+      background: var(--brand);
+      color: #fff !important;
+      padding: 8px 20px;
+      border-radius: var(--radius);
+      font-size: 13px !important;
+      font-weight: 600 !important;
+      transition: background 0.2s;
+    }
+
+    .nav-cta:hover { background: var(--brand-light) !important; }
+
+    /* --- Hero --- */
+    .hero {
+      padding: 120px 0 var(--space-xxl);
+      text-align: center;
+    }
+
+    .hero h1 {
+      font-size: 48px;
+      line-height: 1.15;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      max-width: 900px;
+      margin: 0 auto var(--space-md);
+    }
+
+    .hero h1 .accent {
+      font-family: var(--serif);
+      font-weight: 600;
+      font-style: italic;
+      color: var(--brand);
+    }
+
+    .hero p {
+      font-size: 18px;
+      color: var(--ink-muted);
+      max-width: 600px;
+      margin: 0 auto var(--space-xl);
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: var(--space-md);
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-sm);
+      background: var(--brand);
+      color: #fff;
+      text-decoration: none;
+      padding: 14px 32px;
+      border-radius: var(--radius);
+      font-weight: 600;
+      font-size: 15px;
+      transition: background 0.2s;
+    }
+
+    .btn-primary:hover { background: var(--brand-light); }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-sm);
+      background: transparent;
+      color: var(--brand);
+      text-decoration: none;
+      padding: 14px 32px;
+      border-radius: var(--radius);
+      font-weight: 600;
+      font-size: 15px;
+      border: 1px solid var(--brand);
+      transition: background 0.2s;
+    }
+
+    .btn-secondary:hover { background: #F8F0F8; }
+
+    /* --- Section base --- */
+    section { padding: var(--space-xxl) 0; }
+
+    section + section { border-top: 1px solid var(--border); }
+
+    .section-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--brand);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: var(--space-sm);
+    }
+
+    .section-title {
+      font-size: 32px;
+      line-height: 1.25;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: var(--space-md);
+    }
+
+    .section-title .accent {
+      font-family: var(--serif);
+      font-weight: 400;
+      font-style: italic;
+      color: var(--brand);
+    }
+
+    .section-desc {
+      color: var(--ink-muted);
+      max-width: 640px;
+      font-size: 16px;
+    }
+
+    /* --- Skills Grid --- */
+    .skills-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-lg);
+      margin-top: var(--space-xl);
+    }
+
+    .skill-card {
+      background: var(--canvas);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: var(--space-lg);
+      transition: border-color 0.2s;
+    }
+
+    .skill-card:hover { border-color: var(--brand); }
+
+    .skill-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius);
+      background: #F6EEF6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      margin-bottom: var(--space-md);
+      color: var(--brand);
+      font-weight: 700;
+    }
+
+    .skill-card h3 {
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      margin-bottom: var(--space-sm);
+    }
+
+    .skill-card p {
+      font-size: 14px;
+      color: var(--ink-muted);
+      line-height: 1.6;
+      margin-bottom: var(--space-md);
+    }
+
+    .skill-card a {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--brand);
+      text-decoration: none;
+    }
+
+    .skill-card a:hover { text-decoration: underline; }
+
+    /* --- How it works --- */
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-xl);
+      margin-top: var(--space-xl);
+    }
+
+    .step {
+      counter-increment: step;
+      position: relative;
+      padding-top: 40px;
+    }
+
+    .steps { counter-reset: step; }
+
+    .step::before {
+      content: counter(step);
+      position: absolute;
+      top: 0;
+      left: 0;
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--brand);
+      background: #F6EEF6;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .step h4 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: var(--space-sm);
+    }
+
+    .step p {
+      font-size: 14px;
+      color: var(--ink-muted);
+      line-height: 1.6;
+    }
+
+    /* --- Installation --- */
+    .code-block {
+      background: var(--canvas-inert);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: var(--space-lg);
+      margin-top: var(--space-xl);
+      font-family: var(--mono);
+      font-size: 14px;
+      line-height: 1.5;
+      overflow-x: auto;
+      white-space: pre;
+      color: var(--ink);
+    }
+
+    .code-block .comment { color: #8E8E93; }
+    .code-block .cmd { color: var(--brand); }
+
+    /* --- Footer --- */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: var(--space-xl) 0 var(--space-lg);
+    }
+
+    footer .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: var(--space-md);
+    }
+
+    footer p {
+      font-size: 13px;
+      color: var(--ink-muted);
+    }
+
+    footer a {
+      color: var(--ink-muted);
+      text-decoration: none;
+      font-size: 13px;
+    }
+
+    footer a:hover { color: var(--brand); }
+
+    /* --- Responsive --- */
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 34px; }
+      .section-title { font-size: 26px; }
+      .skills-grid { grid-template-columns: 1fr; }
+      .steps { grid-template-columns: 1fr; gap: var(--space-lg); }
+      .hero { padding: 80px 0 var(--space-xl); }
+      section { padding: var(--space-xl) 0; }
+      .nav-links li:not(.nav-cta-li) { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="/" class="logo">iNNv0</a>
+    <ul class="nav-links">
+      <li><a href="#skills">Skills</a></li>
+      <li><a href="#how-it-works">Cómo funciona</a></li>
+      <li><a href="#install">Instalación</a></li>
+      <li class="nav-cta-li"><a href="docs/" class="nav-cta">Documentación</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="container">
+    <h1>AI Agent Skills, <span class="accent">Engineered</span> for OpenCode</h1>
+    <p>iNNv0 es un ecosistema de skills modulares que potencian a tu agente de IA con capacidades especializadas: evaluación de modelos, gestión de skills, transformación de documentos y diseño web.</p>
+    <div class="hero-actions">
+      <a href="#skills" class="btn-primary">Explorar Skills &rarr;</a>
+      <a href="https://github.com/lucasventurini/iNNv0_skills" class="btn-secondary" target="_blank">Ver en GitHub</a>
+    </div>
+  </div>
+</section>
+
+<!-- Skills -->
+<section id="skills">
+  <div class="container">
+    <span class="section-label">Ecosistema</span>
+    <h2 class="section-title">Skills que <span class="accent">transforman</span> tu agente</h2>
+    <p class="section-desc">Cada skill es un módulo independiente con instrucciones precisas para que el agente actúe con propósito y conocimiento de dominio.</p>
+
+    <div class="skills-grid">
+      <div class="skill-card">
+        <div class="skill-icon">M</div>
+        <h3>Model Router</h3>
+        <p>Evalúa si el modelo de IA que estás usando es el adecuado para cada tarea. Clasifica solicitudes en 4 escalas y recomienda el modelo óptimo según costo y capacidad.</p>
+        <a href="docs/#/skills/opencode-model-router">Ver documentación &rarr;</a>
+      </div>
+
+      <div class="skill-card">
+        <div class="skill-icon">S</div>
+        <h3>Skills Manager</h3>
+        <p>Meta-skill que administra todos los skills del repositorio. Escanea, detecta tipos de instalación (Junction, Symlink, Copy), y gestiona el ciclo de vida de cada skill.</p>
+        <a href="docs/#/skills/skills-manager">Ver documentación &rarr;</a>
+      </div>
+
+      <div class="skill-card">
+        <div class="skill-icon">T</div>
+        <h3>traNNsform</h3>
+        <p>Pipeline completo de ingestión y transformación de documentos. Convierte PDFs, DOCX, y más a Markdown unificado usando el propio LLM del agente como motor de transformación.</p>
+        <a href="docs/#/skills/trannsform">Ver documentación &rarr;</a>
+      </div>
+
+      <div class="skill-card">
+        <div class="skill-icon">W</div>
+        <h3>Web Design Guide</h3>
+        <p>Sistema de diseño completo con paleta Morado Nazareno, tipografía sistemática y grid de 8px. Incluye guías para layouts comerciales y documentación técnica con Docsify.</p>
+        <a href="docs/#/skills/web-design-guide">Ver documentación &rarr;</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How it works -->
+<section id="how-it-works">
+  <div class="container">
+    <span class="section-label">Arquitectura</span>
+    <h2 class="section-title">Cómo <span class="accent">funciona</span></h2>
+    <p class="section-desc">Los skills se cargan bajo demanda en el agente de OpenCode. Cada skill define su propio dominio, lenguaje y reglas de comportamiento.</p>
+
+    <div class="steps">
+      <div class="step">
+        <h4>Escaneo automático</h4>
+        <p>Al iniciar sesión, el Skills Manager detecta todos los skills disponibles en el repositorio y verifica su estado de instalación.</p>
+      </div>
+      <div class="step">
+        <h4>Carga bajo demanda</h4>
+        <p>Cuando una tarea coincide con un skill, el agente carga sus instrucciones y ejecuta el flujo de trabajo especializado.</p>
+      </div>
+      <div class="step">
+        <h4>Persistencia con Engram</h4>
+        <p>Las decisiones, descubrimientos y configuraciones se guardan en memoria persistente, disponibles entre sesiones.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Installation -->
+<section id="install">
+  <div class="container">
+    <span class="section-label">Primeros pasos</span>
+    <h2 class="section-title">Instalación en <span class="accent">segundos</span></h2>
+    <p class="section-desc">Clona el repositorio y deja que el Skills Manager configure todo automáticamente con junctions de Windows NTFS.</p>
+
+    <div class="code-block"><span class="comment"># Clonar el repositorio</span>
+git clone https://github.com/lucasventurini/iNNv0_skills.git
+
+<span class="comment"># Iniciar OpenCode en el directorio</span>
+opencode .
+
+<span class="comment"># El Skills Manager escaneará y ofrecerá instalar todo automáticamente</span>
+<span class="comment"># Usa junctions (New-Item -ItemType Junction) para reflejar cambios en vivo</span></div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="container">
+    <p>&copy; 2026 iNNv0. Open source bajo licencia MIT.</p>
+    <a href="docs/">Documentación</a>
+  </div>
+</footer>
+
+</body>
+</html>

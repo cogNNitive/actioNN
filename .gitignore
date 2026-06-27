@@ -1,0 +1,2 @@
+# Skill dependencies — installed by the agent on first use
+skills/*/node_modules/
