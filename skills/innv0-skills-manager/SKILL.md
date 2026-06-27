@@ -51,7 +51,7 @@ Rules:
 
 After showing the table, ask:
 
-> "¿Querés instalar algún skill que falte, o cambiar el tipo de enlace de alguno?"
+> "Would you like to install any missing skill, or change the link type of any?"
 
 If the user says yes (or points to a specific skill):
 
@@ -82,7 +82,7 @@ Also run `git log --oneline -5` from the repo root to summarize recent activity 
 
 ### 6. Idempotency
 
-If all skills are already installed and the user says no to changes, just report "Todo en orden" and let the session proceed normally.
+If all skills are already installed and the user says no to changes, just report "All in order" and let the session proceed normally.
 
 ### 7. Junction detection
 

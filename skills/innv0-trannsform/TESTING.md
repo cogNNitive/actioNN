@@ -1,139 +1,139 @@
 # innv0-trannsform — Manual Test Guide
 
-Seguí estos pasos en orden en un proyecto nuevo con OpenCode. Cada paso verifica una parte del skill. Marcá ✅ cuando pase.
+Follow these steps in order on a new project with OpenCode. Each step verifies a part of the skill. Mark ✅ when it passes.
 
 ---
 
 ## Setup
 
 ```bash
-# Creá una carpeta limpia para la prueba
+# Create a clean folder for testing
 mkdir ~/Documents/trannsform-test
 cd ~/Documents/trannsform-test
 ```
 
-Creá algunos archivos de prueba adentro:
+Create some test files inside:
 
-**`informe.txt`**
+**`report.txt`**
 ```
-La organización tenía 45 miembros activos en 2023.
-La cobertura alcanzó el 78% de la población objetivo.
-```
-
-**`datos.csv`**
-```
-nombre,edad,rol
-Ana,34,Coordinadora
-Luis,28,Técnico
+The organization had 45 active members in 2023.
+Coverage reached 78% of the target population.
 ```
 
-**`presentacion.docx`** (optional — solo si querés probar docx)
+**`data.csv`**
+```
+name,age,role
+Ana,34,Coordinator
+Luis,28,Technician
+```
+
+**`presentation.docx`** (optional — only if you want to test docx)
 
 ---
 
-## Test 1: Instalación del skill
+## Test 1: Skill installation
 
-**Instrucción para OpenCode:**
+**Instruction for OpenCode:**
 
-> Instalá el skill `innv0-trannsform` en mi sesión. Buscalo en `~/.agents/skills/innv0-trannsform/SKILL.md` o en el repositorio `iNNv0_skills/skills/innv0-trannsform/`.
+> Install the `innv0-trannsform` skill in my session. Look for it in `~/.agents/skills/innv0-trannsform/SKILL.md` or in the `iNNv0_skills/skills/innv0-trannsform/` repository.
 
-**Resultado esperado:** OpenCode carga el skill exitosamente.
-
----
-
-## Test 2: Bootstrap de proyecto
-
-**Instrucción para OpenCode:**
-
-> Usando el skill innv0-trannsform, bootstrap un proyecto con los archivos de la carpeta actual como fuente. Nombre del proyecto: "test-docs".
-
-**Resultado esperado:**
-- ✅ OpenCode crea la estructura `test-docs/raw/`, `test-docs/md/`, `test-docs/traNNsformations/`, `test-docs/output/`
-- ✅ Los archivos se copian a `test-docs/raw/`
-- ✅ OpenCode no reporta errores
+**Expected result:** OpenCode loads the skill successfully.
 
 ---
 
-## Test 3: Scan y detección de formatos
+## Test 2: Project bootstrap
 
-**Instrucción para OpenCode:**
+**Instruction for OpenCode:**
 
-> Ejecutá el scan en el proyecto `test-docs` usando el CLI del skill.
+> Using the innv0-trannsform skill, bootstrap a project with the files in the current folder as source. Project name: "test-docs".
 
-**Resultado esperado:**
-- ✅ OpenCode ejecuta `node scripts/index.js --scan --src test-docs`
-- ✅ Aparece el resumen: "Discovered: X, Processed: Y, Skipped: Z"
-- ✅ Se crea `test-docs/_index.md`
-- ✅ Se crea `test-docs/md/informe.md` con el contenido del txt
-- ✅ Se crea `test-docs/md/datos.md` con el contenido del csv
-- ✅ Se crea `test-docs/md/_all.md` con ambos documentos consolidados
+**Expected result:**
+- ✅ OpenCode creates the structure `test-docs/raw/`, `test-docs/md/`, `test-docs/traNNsformations/`, `test-docs/output/`
+- ✅ Files are copied to `test-docs/raw/`
+- ✅ OpenCode reports no errors
 
 ---
 
-## Test 4: Transformación por el agente (LLM) — Draft
+## Test 3: Scan and format detection
 
-**Instrucción para OpenCode:**
+**Instruction for OpenCode:**
 
-> Ahora quiero generar un resumen en borrador de los documentos del proyecto. Usá el skill para hacer una transformación tipo "resumen" en formato draft.
+> Run the scan on the `test-docs` project using the skill's CLI.
 
-**Resultado esperado:**
-- ✅ OpenCode te pregunta qué tipo de transformación querés
-- ✅ Elegís "Crear nueva" (o "Resumen" si lo oferta)
-- ✅ OpenCode te pregunta si querés draft o versión definitiva
-- ✅ Elegís "Borrador draft"
-- ✅ OpenCode genera un archivo `output/[nombre]_draft.md`
-- ✅ El draft incluye el encabezado `# BORRADOR PARA REVISIÓN — NO ES VERSIÓN FINAL`
-- ✅ El draft incluye citas de fuente (ej: `— Fuente: informe.txt`)
-- ✅ Si no está seguro de algún dato, incluye marcas como `[dato no confirmado — revisar]`
+**Expected result:**
+- ✅ OpenCode executes `node scripts/index.js --scan --src test-docs`
+- ✅ Summary appears: "Discovered: X, Processed: Y, Skipped: Z"
+- ✅ `test-docs/_index.md` is created
+- ✅ `test-docs/md/report.md` is created with the txt content
+- ✅ `test-docs/md/data.md` is created with the csv content
+- ✅ `test-docs/md/_all.md` is created with both documents consolidated
 
 ---
 
-## Test 5: Transformación — Versión definitiva
+## Test 4: Agent (LLM) transformation — Draft
 
-**Instrucción para OpenCode:**
+**Instruction for OpenCode:**
 
-> Ahora generá una versión definitiva limpia del mismo resumen.
+> I want to generate a draft summary of the project documents. Use the skill to do a "summary" type transformation in draft format.
 
-**Resultado esperado:**
-- ✅ OpenCode te pregunta si querés incluir referencias a las fuentes
-- ✅ Respondés que sí (o no)
-- ✅ OpenCode genera `output/[nombre]_v_0-1-0.md`
-- ✅ El archivo NO tiene marcas de draft ni anotaciones
-- ✅ (Opcional) Incluye referencias a fuentes si dijiste que sí
-
----
-
-## Test 6: Verificación de trazabilidad (solo si hay docx/pdf)
-
-Si tenés un archivo docx o pdf en la carpeta fuente, al hacer el scan:
-
-- ❓ ¿Aparece el panel de diagnóstico de formatos?
-- ❓ ¿OpenCode te pregunta si querés procesarlo con Node.js o saltearlo?
-- ❓ Si elegís Node.js, ¿instala la dependencia automáticamente?
+**Expected result:**
+- ✅ OpenCode asks you what type of transformation you want
+- ✅ You choose "Create new" (or "Summary" if offered)
+- ✅ OpenCode asks if you want draft or final version
+- ✅ You choose "Draft"
+- ✅ OpenCode generates a file `output/[name]_draft.md`
+- ✅ The draft includes the header `# DRAFT FOR REVIEW — NOT FINAL VERSION`
+- ✅ The draft includes source citations (e.g., `— Source: informe.txt`)
+- ✅ If unsure about any data, it includes markers like `[unconfirmed data — review]`
 
 ---
 
-## Test 7: Fallback del CLI transformer
+## Test 5: Transformation — Final version
 
-**Instrucción para OpenCode:**
+**Instruction for OpenCode:**
 
-> Ejecutá el transformer de fallback del CLI con `node scripts/index.js --apply Generic_Normalizer --src test-docs`. Usá el template que está en examples/ o copialo a traNNsformations/ primero.
+> Now generate a clean final version of the same summary.
 
-**Resultado esperado:**
-- ✅ OpenCode copia `examples/traNNsformations/Generic_Normalizer.md` a `test-docs/traNNsformations/`
-- ✅ OpenCode ejecuta el comando
-- ✅ Se genera `output/Generic_Normalizer_[timestamp].md`
+**Expected result:**
+- ✅ OpenCode asks if you want to include source references
+- ✅ You answer yes (or no)
+- ✅ OpenCode generates `output/[name]_v_0-1-0.md`
+- ✅ The file has NO draft markers or annotations
+- ✅ (Optional) Includes source references if you said yes
 
 ---
 
-## Resumen de resultados
+## Test 6: Traceability verification (only if docx/pdf present)
 
-| Test | Descripción | Resultado |
-|------|-------------|-----------|
-| 1 | Instalación del skill | — |
-| 2 | Bootstrap de proyecto | — |
-| 3 | Scan y detección | — |
-| 4 | Transformación Draft | — |
-| 5 | Transformación Definitiva | — |
-| 6 | Trazabilidad (si aplica) | — |
-| 7 | Fallback CLI | — |
+If you have a docx or pdf file in the source folder, when running the scan:
+
+- ❓ Does the format diagnostic panel appear?
+- ❓ Does OpenCode ask if you want to process it with Node.js or skip it?
+- ❓ If you choose Node.js, does it install the dependency automatically?
+
+---
+
+## Test 7: CLI transformer fallback
+
+**Instruction for OpenCode:**
+
+> Run the CLI fallback transformer with `node scripts/index.js --apply Generic_Normalizer --src test-docs`. Use the template that's in examples/ or copy it to traNNsformations/ first.
+
+**Expected result:**
+- ✅ OpenCode copies `examples/traNNsformations/Generic_Normalizer.md` to `test-docs/traNNsformations/`
+- ✅ OpenCode runs the command
+- ✅ `output/Generic_Normalizer_[timestamp].md` is generated
+
+---
+
+## Results Summary
+
+| Test | Description | Result |
+|------|-------------|--------|
+| 1 | Skill installation | — |
+| 2 | Project bootstrap | — |
+| 3 | Scan and detection | — |
+| 4 | Draft transformation | — |
+| 5 | Final transformation | — |
+| 6 | Traceability (if applicable) | — |
+| 7 | CLI fallback | — |
