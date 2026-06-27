@@ -111,7 +111,7 @@ To integrate natively with **Docsify**, the design adaptation is executed with a
 
 ---
 
-## 🖼️ IMÁGENES (AI Asset Style Prompting Guide)
+## 🖼️ IMAGES (AI Asset Style Prompting Guide)
 
 When drafting visual guidelines or engineering prompts for image diffusion models, enforce these four abstract visual paradigms to match the clean, bright layout style:
 

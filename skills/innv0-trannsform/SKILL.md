@@ -30,73 +30,73 @@ node scripts/index.js --src "<source-folder>" --dest "<destination-parent-folder
 
 ### 2. Capability Scan & Ingestion
 
-> **Filosofía**: Cada agente/modelo tiene capacidades nativas distintas. Algunos leen PDFs directamente, otros no. En lugar de asumir, el skill presenta un **panel de diagnóstico** con las rutas disponibles y sus tradeoffs, y el usuario decide.
+> **Philosophy**: Each agent/model has different native capabilities. Some read PDFs directly, others don't. Instead of assuming, the skill presents a **diagnostic panel** with the available routes and their tradeoffs, and the user decides.
 
 #### 2a. Detect formats in source folder
 
-Formatos soportados: `txt`, `md`, `csv`, `json`, `docx`, `pdf`, `xlsx`
+Supported formats: `txt`, `md`, `csv`, `json`, `docx`, `pdf`, `xlsx`
 
 Read the `raw/` folder, group files by extension, and show the user:
 ```
-Formatos detectados en la carpeta fuente:
-  - txt:  3 archivos
-  - docx: 2 archivos
-  - pdf:  1 archivo
+Formats detected in source folder:
+  - txt:  3 files
+  - docx: 2 files
+  - pdf:  1 file
 ```
 
 #### 2b. Capability Assessment — Present the decision matrix
 
-**IMPORTANTE**: Antes de preguntar qué hacer, presentá este cuadro de diagnóstico para cada formato detectado. El objetivo es que el usuario VEa el panorama completo.
+**IMPORTANT**: Before asking what to do, present this diagnostic table for each detected format. The goal is for the user to SEE the complete picture.
 
 ```
 ╔════════════╦══════════════════════╦══════════════════════════╗
-║  Formato   ║ Nativo del agente    ║ Librería Node.js         ║
+║  Format    ║ Agent-native         ║ Node.js Library          ║
 ╠════════════╬══════════════════════╬══════════════════════════╣
-║ txt        ║ ✅ Lectura directa   ║ —                        ║
-║ md         ║ ✅ Lectura directa   ║ —                        ║
-║ csv/json   ║ ✅ Lectura directa   ║ —                        ║
-║ pdf        ║ ⚠️  Depende del modelo║ pdf-parse (npm)         ║
-║ docx       ║ ❌ No disponible      ║ mammoth (npm)           ║
-║ xlsx       ║ ❌ No disponible      ║ xlsx (npm)              ║
+║ txt        ║ ✅ Direct read       ║ —                        ║
+║ md         ║ ✅ Direct read       ║ —                        ║
+║ csv/json   ║ ✅ Direct read       ║ —                        ║
+║ pdf        ║ ⚠️  Model-dependent  ║ pdf-parse (npm)          ║
+║ docx       ║ ❌ Not available     ║ mammoth (npm)            ║
+║ xlsx       ║ ❌ Not available     ║ xlsx (npm)               ║
 ╚════════════╩══════════════════════╩══════════════════════════╝
 ```
 
-Luego, para cada formato detectado **que NO sea texto plano**, presentar al usuario UNA pregunta unificada por formato:
+Then, for each detected format **that is NOT plain text**, present the user ONE unified question per format:
 
 ```
-Formato: PDF (1 archivo)
-  [a] Nativo del agente — puede o no funcionar según el modelo, costo variable en tokens
-  [b] Node.js (pdf-parse) — instalación única (~2MB), procesamiento local, sin consumo extra de tokens
-  [c] Saltear este formato
+Format: PDF (1 file)
+  [a] Agent-native — may or may not work depending on the model, variable token cost
+  [b] Node.js (pdf-parse) — one-time install (~2MB), local processing, no extra token consumption
+  [c] Skip this format
 
-¿Qué ruta preferís para PDF? (a/b/c)
+Which route do you prefer for PDF? (a/b/c)
 ```
 
-**Reglas para el agente al presentar esto:**
+**Rules for the agent when presenting this:**
 
-1. **Marca visual clara**: Si el agente sabe (por su propia configuración o porque preguntó antes) que PUEDE leer PDF nativamente, mostrar `[a]` como `✅ RECOMENDADO` si no implica costo extra, o `⚠️ Nativo (costo en tokens)` si el costo es significativo.
-2. **Si el agente NO SABE** si puede leer el formato nativamente, decirlo explícitamente: _"No puedo garantizar que mi modelo lea PDFs nativamente. La opción más confiable es [b]."_
-3. **La opción `[a]` SIEMPRE debe aclarar el tradeoff de tokens** (o tiempo de procesamiento) cuando corresponda.
+1. **Clear visual indicator**: If the agent knows (from its own configuration or because it asked earlier) that it CAN read PDF natively, show `[a]` as `✅ RECOMMENDED` if it incurs no extra cost, or `⚠️ Native (token cost)` if the cost is significant.
+2. **If the agent DOES NOT KNOW** if it can read the format natively, say so explicitly: _"I cannot guarantee that my model reads PDFs natively. The most reliable option is [b]."_
+3. **Option `[a]` MUST ALWAYS clarify the token tradeoff** (or processing time) when applicable.
 
 #### 2c. Verify Node.js availability
 
-Para la opción `[b]`, verificar disponibilidad antes de preguntar. Si Node.js no está disponible, mostrar la opción como `❌ No disponible`:
+For option `[b]`, check availability before asking. If Node.js is not available, show the option as `❌ Not available`:
 
 ```bash
 node --version
 ```
 
-Si el comando falla o no hay shell disponible, informar: _"No puedo verificar si Node.js está instalado en este entorno. Si sabés que lo tenés, decime y lo intentamos."_
+If the command fails or no shell is available, report: _"I cannot verify if Node.js is installed in this environment. If you know you have it, let me know and I'll try."_
 
 #### 2d. Execute the chosen strategy
 
-Según la decisión del usuario para cada formato:
+Depending on the user's decision for each format:
 
-- **Opción `[a]`**: Leer el archivo directamente usando las capacidades de lectura del agente (Read tool, PDF nativo, etc.). El agente transforma el contenido a Markdown manualmente.
-- **Opción `[b]`**: Si la librería no está instalada, preguntar confirmación y correr `npm install <package>` en la carpeta del skill (directorio base). Luego ejecutar el script de conversión.
-- **Opción `[c]`**: Saltear el formato.
+- **Option `[a]`**: Read the file directly using the agent's read capabilities (Read tool, native PDF, etc.). The agent transforms the content to Markdown manually.
+- **Option `[b]`**: If the library is not installed, ask for confirmation and run `npm install <package>` in the skill folder (base directory). Then run the conversion script.
+- **Option `[c]`**: Skip the format.
 
-**Nota sobre instalación**: Si el usuario elige instalar una librería y falla (permisos, red, entorno), informar el error exacto y ofrecer volver al menú de opciones para elegir otra ruta.
+**Installation note**: If the user chooses to install a library and it fails (permissions, network, environment), report the exact error and offer to return to the options menu to choose another route.
 
 #### 2e. Run the scan
 
@@ -104,75 +104,75 @@ Según la decisión del usuario para cada formato:
 node scripts/index.js --scan --src "<target-project-directory>"
 ```
 
-Leer el `_index.md` generado. Si hay archivos marcados como `?` (docx, pdf) o `NO` (audio, imágenes), informar al usuario.
+Read the generated `_index.md`. If there are files marked as `?` (docx, pdf) or `NO` (audio, images), inform the user.
 
 ### 3. Transformation — Using the Agent's LLM
 
-El skill **no depende de APIs externas** (Gemini, OpenAI). La transformación la realiza el propio agente usando su modelo de lenguaje incorporado. El CLI script `scripts/transformer.js` queda como fallback opcional.
+The skill **does not depend on external APIs** (Gemini, OpenAI). The transformation is performed by the agent itself using its built-in language model. The CLI script `scripts/transformer.js` remains as an optional fallback.
 
-**IMPORTANTE**: Antes de transformar, leé el contenido de `md/_all.md` y preguntá:
+**IMPORTANT**: Before transforming, read the content of `md/_all.md` and ask:
 
 #### 3a. Check for local templates
 
-Checkeá si hay archivos `*traNNsform.md` en la raíz del proyecto. Si hay, preguntá si quiere usar uno local o explorar otras opciones.
+Check if there are `*traNNsform.md` files in the project root. If there are, ask if they want to use a local one or explore other options.
 
 #### 3b. Select or create a template
 
-Si no hay template local o el usuario prefiere otra opción, preguntar: **"¿Querés aplicar una transformación existente o crear una nueva?"**
+If there is no local template or the user prefers another option, ask: **"Do you want to apply an existing transformation or create a new one?"**
 
-- **Aplicar existente**: Leer templates en `traNNsformations/`, listarlos, dejar elegir.
-- **Crear nueva**: Guiar paso a paso (nombre, propósito, instrucciones, estructura, ubicación).
+- **Apply existing**: Read templates in `traNNsformations/`, list them, let them choose.
+- **Create new**: Guide step by step (name, purpose, instructions, structure, location).
 
 #### 3c. Ask version type — BEFORE transforming
 
-Antes de generar el documento, preguntar:
+Before generating the document, ask:
 
-**"¿Querés generar un borrador con comentarios y citas de fuentes para revisión, o una versión definitiva limpia?"**
+**"Do you want to generate a draft with comments and source citations for review, or a clean final version?"**
 
-- Si elige **borrador draft**: Se genera con todas las anotaciones, citas y marcas de revisión (ver punto 4). Nombre del archivo: `[template-name]_draft.md`.
-- Si elige **versión definitiva**: Se genera limpio, sin anotaciones. Preguntar además: **"¿Querés incluir referencias a las fuentes en la versión definitiva?"** Nombre del archivo: `[template-name]_v_0-1-0.md` (semver, empezando en 0.1.0).
+- If they choose **draft**: Generated with all annotations, citations, and review markers (see point 4). File name: `[template-name]_draft.md`.
+- If they choose **final version**: Generated clean, without annotations. Also ask: **"Do you want to include source references in the final version?"** File name: `[template-name]_v_0-1-0.md` (semver, starting at 0.1.0).
 
 #### 3d. Perform the transformation (agent does it, not external API)
 
-1. Leer el template y `md/_all.md`.
-2. Usando tu propio LLM como agente, generar el documento transformado siguiendo las instrucciones del template y las reglas de versión (draft o definitiva).
-3. Escribir el archivo en `output/` con el nombre correspondiente.
-4. Presentar el resultado al usuario.
+1. Read the template and `md/_all.md`.
+2. Using your own LLM as agent, generate the transformed document following the template instructions and version rules (draft or final).
+3. Write the file in `output/` with the corresponding name.
+4. Present the result to the user.
 
-Si por alguna razón no podés generar el contenido (contexto demasiado grande, etc.), informá al usuario y ofrecé como fallback ejecutar el transformer.js del CLI:
+If for any reason you cannot generate the content (context too large, etc.), inform the user and offer the CLI transformer.js as fallback:
 ```bash
 node scripts/index.js --apply "<template-name>" --src "<target-project-directory>"
 ```
 
-### 4. Contenido del borrador _draft con trazabilidad de fuentes
+### 4. Draft content with source traceability
 
-Cuando el usuario elige **borrador draft**, el archivo `_draft.md` debe incluir:
+When the user chooses **draft**, the `_draft.md` file must include:
 
-#### Encabezado obligatorio
+#### Mandatory header
 
-El documento debe comenzar con:
+The document must begin with:
 
 ```markdown
-# BORRADOR PARA REVISIÓN — NO ES VERSIÓN FINAL
+# DRAFT FOR REVIEW — NOT FINAL VERSION
 ```
 
-#### Citas de fuente por afirmación
+#### Source citations per claim
 
-Cada dato, cifra o conclusión debe llevar la referencia al documento fuente del que se extrajo. Usar el nombre del archivo fuente (sin ruta) como identificador:
+Each fact, figure, or conclusion must include a reference to the source document from which it was extracted. Use the source file name (without path) as identifier:
 
 ```markdown
 La organización tenía 45 miembros activos en 2023.
-— Fuente: IF Narrativo GV22BO-1, sección IOE.1
+— Source: IF Narrative GV22BO-1, section IOE.1
 ```
 
 ```markdown
 La cobertura alcanzó el 78% de la población objetivo.
-— Fuente: Transcripciones T11, entrevista Etelvina
+— Source: Transcripts T11, interview Etelvina
 ```
 
-#### Anotaciones de revisión en formato Markdown
+#### Review annotations in Markdown format
 
-Usar bloques de nota de GitHub Flavored Markdown:
+Use GitHub Flavored Markdown note blocks:
 
 ```markdown
 > [!NOTE] Revisar: este dato proviene de una fuente parcial. Contrastar con otras fuentes.
@@ -186,26 +186,26 @@ Usar bloques de nota de GitHub Flavored Markdown:
 > [!TIP] Esta conclusión surge del cruce de tres fuentes independientes.
 ```
 
-#### Marcas de incertidumbre
+#### Uncertainty markers
 
-Cuando un dato no esté claro o la fuente sea ambigua:
+When a fact is unclear or the source is ambiguous:
 
 ```markdown
-[dato no confirmado — revisar]
+[unconfirmed data — review]
 ```
 
 ```markdown
-[estimación propia — contrastar con fuentes oficiales]
+[own estimate — cross-check with official sources]
 ```
 
 ```markdown
-[fecha aproximada — verificar]
+[approximate date — verify]
 ```
 
 ### 5. Naming Convention Summary
 
-| Tipo | Sufijo | Ejemplo |
+| Type | Suffix | Example |
 |------|--------|---------|
-| Draft | `_draft.md` | `Resumen_Bandas_draft.md` |
-| Definitiva | `_v_0-1-0.md` | `Resumen_Bandas_v_0-1-0.md` |
-| Definitiva (siguiente versión) | `_v_0-2-0.md` | `Resumen_Bandas_v_0-2-0.md` |
+| Draft | `_draft.md` | `Summary_Bands_draft.md` |
+| Final | `_v_0-1-0.md` | `Summary_Bands_v_0-1-0.md` |
+| Final (next version) | `_v_0-2-0.md` | `Summary_Bands_v_0-2-0.md` |
