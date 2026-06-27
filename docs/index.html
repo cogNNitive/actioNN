@@ -377,6 +377,27 @@
 
     footer a:hover { color: var(--brand); }
 
+    /* --- Contact --- */
+    #contact { text-align: center; }
+
+    .contact-links {
+      text-align: center;
+      padding: 48px 24px;
+    }
+
+    .contact-btn {
+      display: inline-flex;
+    }
+
+    .contact-url-display {
+      display: block;
+      margin-top: 16px;
+      font-size: 14px;
+      font-family: var(--mono);
+      color: var(--ink-muted);
+      word-break: break-all;
+    }
+
     /* --- Responsive --- */
     @media (max-width: 768px) {
       .hero h1 { font-size: 34px; }
@@ -398,11 +419,13 @@
       <li><a href="#skills">Skills</a></li>
       <li><a href="#how-it-works">How it works</a></li>
       <li><a href="#install">Install</a></li>
+      <li><a href="https://innv0.com/contact?ref=innv0-skills" target="_blank" rel="noopener noreferrer">Contact</a></li>
       <li class="nav-cta-li"><a href="documentation/" class="nav-cta">Documentation</a></li>
     </ul>
   </div>
 </nav>
 
+<main>
 <!-- Hero -->
 <section class="hero">
   <div class="container">
@@ -495,6 +518,22 @@ opencode .
 <span class="comment"># Uses junctions (New-Item -ItemType Junction) for live-change reflection</span></div>
   </div>
 </section>
+
+<!-- Contact -->
+<section id="contact">
+  <div class="container">
+    <span class="section-label">Contact</span>
+    <h2 class="section-title">Get in <span class="accent">Touch</span></h2>
+    <p class="section-desc">We'd love to hear from you. Questions, ideas, or feedback — reach out anytime.</p>
+    <div class="contact-links">
+      <a href="https://innv0.com/contact?ref=innv0-skills" target="_blank" rel="noopener noreferrer" class="btn-primary contact-btn">
+        Contact Us
+      </a>
+      <span class="contact-url-display">https://innv0.com/contact?ref=innv0-skills</span>
+    </div>
+  </div>
+</section>
+</main>
 
 <!-- Footer -->
 <footer>

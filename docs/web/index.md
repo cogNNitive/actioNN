@@ -47,3 +47,9 @@ opencode .
 ```
 
 The Skills Manager will scan and offer to install everything automatically using Windows NTFS junctions for live-change reflection.
+
+## Contact
+
+We'd love to hear from you. Questions, ideas, or feedback — reach out anytime.
+
+- [Contact Us](https://innv0.com/contact?ref=innv0-skills) — `https://innv0.com/contact?ref=innv0-skills`

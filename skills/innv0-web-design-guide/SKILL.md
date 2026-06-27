@@ -2,7 +2,7 @@
 name: innv0-web-design-guide
 version: "V_2-5-0"
 last_updated: 2026-06-27
-description: Comprehensive light-mode design system with strict spacing grid, typography stack (Plus Jakarta Sans, Playfair Display, Geist Mono), and Morado Nazareno (#4D0E4E) brand palette. Covers Docsify theming, marketing CTAs, AI image style prompting, AI-training optimization, attribution metadata, favicon generation, analytics integration (Umami), mandatory Google Form contact section, and generated site readme.md with operational documentation.
+description: Comprehensive light-mode design system with strict spacing grid, typography stack (Plus Jakarta Sans, Playfair Display, Geist Mono), and Morado Nazareno (#4D0E4E) brand palette. Covers Docsify theming, marketing CTAs, AI image style prompting, AI-training optimization, attribution metadata, favicon generation, analytics integration (Umami), and contact section with Google Form embed or Contact URL options and source tracking.
 license: MIT
 metadata:
   source_type: original
@@ -461,11 +461,22 @@ When generating any site with this skill:
 
 ---
 
-## 📋 CONTACT SECTION & GOOGLE FORM EMBEDDING (MANDATORY)
+## 📋 CONTACT SECTION
 
-**Every generated site MUST include a contact section with an embedded Google Form.** The contact section is the primary lead generation channel — it is not optional. The form is referenced by its `FORM_ID`, which is the unique identifier in a Google Form's URL.
+Every generated site MUST include a contact section. **Before generating it, ask the user which approach they prefer:**
 
-### How to Obtain the `FORM_ID`
+1. **Google Form embed** — embed an interactive form via iframe
+2. **Contact URL** — a link (email, contact page, scheduling link, etc.) that buttons and header nav open in a new tab
+
+If the user is unsure, recommend the **Contact URL** approach — it is simpler, lighter, and works immediately without setting up a Google Form.
+
+---
+
+### Option A: Google Form Embed
+
+Select this when the user provides a Google Form link or a `FORM_ID`.
+
+#### How to Obtain the `FORM_ID`
 
 A Google Form URL follows this structure:
 
@@ -475,7 +486,7 @@ https://docs.google.com/forms/d/e/{FORM_ID}/viewform
 
 The `FORM_ID` is the alphanumeric string between `/d/e/` and `/viewform`. To get it:
 
-1. Open your Google Form in the browser
+1. Open the Google Form in the browser
 2. Copy the full URL from the address bar
 3. Extract the segment between `/d/e/` and `/viewform`
 
@@ -487,15 +498,7 @@ ID:   1FAIpQLSdX5yABCdef123GHIjklMNOpqr456UVwxyz7890
 
 Once extracted, replace the `{{FORM_ID}}` placeholder in the embed code below.
 
-### Embed Implementation
-
-Use the standard Google Forms iframe embed pattern. The `src` URL is constructed as:
-
-```
-https://docs.google.com/forms/d/e/{{FORM_ID}}/viewform?embedded=true
-```
-
-**Recommended HTML structure for the contact section:**
+#### Embed Implementation
 
 ```html
 <section id="contact">
@@ -519,65 +522,167 @@ https://docs.google.com/forms/d/e/{{FORM_ID}}/viewform?embedded=true
 </section>
 ```
 
-### Styling Rules (Design System Alignment)
+#### Styling
 
-The form embed wrapper MUST follow the system's design tokens:
-
-```
+```css
 .form-wrapper {
-  max-width: 720px;        /* constrained width for readability */
-  margin: 0 auto;          /* centered */
-  padding: space-lg;       /* 24px internal cushion */
-  background: #FFFFFF;     /* Canvas Base */
-  border: 1px solid #F2F2F7;  /* Border Soft */
-  border-radius: 12px;     /* subtle corner radius matching component cards */
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px;           /* space-lg */
+  background: #FFFFFF;
+  border: 1px solid #F2F2F7;
+  border-radius: 12px;
 }
 ```
 
-- The `iframe` itself takes `width: 100%` so it fills the wrapper responsively
-- No background or border on the iframe — the wrapper container provides the visual boundary
-- Height of `900px` is a safe default for most Google Forms (longer forms may need `1100px`)
-- The `title` attribute on the iframe is required for accessibility (already included above)
-- Place the contact section at `space-xxl` (64-96px) vertical distance from the preceding section
+- The iframe uses `width: 100%` inside the wrapper
+- No background or border on the iframe itself
+- `900px` height is safe for most forms; use `1100px` for longer ones
+- The `title` attribute on the iframe is required for accessibility
+- Place the section at `space-xxl` (64-96px) from the preceding section
 
-### Responsive Behavior
+#### Responsive Behavior
 
-Google Forms iframes are not natively responsive — they have a fixed internal width. To ensure mobile-friendly behavior:
+Google Forms iframes have a fixed internal width. The wrapper's `max-width: 720px` keeps it readable on desktop; on mobile it scales down naturally. Google Forms handle their own internal responsiveness down to ~320px. If scrollbars appear on very small screens, add:
 
-1. The wrapper's `max-width: 720px` keeps the form from stretching beyond its optimal reading width on desktop
-2. On viewports narrower than 720px, the wrapper scales down naturally via `margin: 0 auto`
-3. Google Forms handle their own internal responsiveness down to ~320px — no additional CSS breakpoints are needed
-4. If horizontal scrollbars appear on very small screens, set:
-   ```css
-   .form-wrapper iframe {
-     min-width: 280px;
-   }
-   ```
+```css
+.form-wrapper iframe {
+  min-width: 280px;
+}
+```
 
-### Google Form Setup Best Practices
+#### Google Form Setup Best Practices
 
-For the best user experience when designing the source form in Google Forms:
-
-- **Disable "Show progress bar"** — it adds unnecessary visual weight and rarely works well in embedded mode
+- **Disable "Show progress bar"** — adds visual weight, rarely works well embedded
 - **Disable "Shuffle question order"** — predictable flow is better for lead gen
-- **Use the "Confirmation message" field** to redirect users or show a custom thank-you after submission
-- **Keep the form short** — 3-5 fields max for contact forms (name, email, message is ideal)
-- **Collect emails** via a required field to enable follow-up; enable "Collect email addresses" in Google Forms settings
-- **Response destination:** Leave as "Responses" in the form (stored in Google Forms) unless you need Sheets integration
+- **Use the "Confirmation message"** to show a custom thank-you after submission
+- **Keep the form short** — 3-5 fields max (name, email, message is ideal)
+- **Collect emails** via a required field; enable "Collect email addresses" in Google Forms settings
+- **Response destination:** Leave as "Responses" in the form unless you need Sheets integration
 
-### Checklist
+#### Checklist
 
-When generating any site with this skill:
+- [ ] Google Form created at https://forms.google.com
+- [ ] `FORM_ID` extracted from the form's share URL
+- [ ] `{{FORM_ID}}` replaced in the iframe `src`
+- [ ] `title` attribute set on the iframe
+- [ ] Wrapper uses `border: 1px solid #F2F2F7` and `background: #FFFFFF`
+- [ ] Contact section is at `space-xxl` distance from the preceding section
+- [ ] Tested on mobile — no horizontal overflow
 
-- [ ] A Google Form has been created at https://forms.google.com
-- [ ] The `FORM_ID` has been extracted from the form's share URL
-- [ ] The contact section with the iframe embed is present in the page
-- [ ] `{{FORM_ID}}` replaced with the actual form ID in the iframe `src`
-- [ ] The `title` attribute on the iframe is set to a descriptive value
-- [ ] The wrapper uses the system's `border: 1px solid #F2F2F7` and `background: #FFFFFF`
-- [ ] The contact section sits at `space-xxl` distance from the preceding section
-- [ ] The form wrapper is `max-width: 720px` and centered
-- [ ] Tested on mobile viewport — no horizontal overflow
+---
+
+### Option B: Contact URL (Simple)
+
+Select this when the user provides a URL instead of a Google Form. The URL can be anything — an email link (`mailto:hello@example.com`), a Calendly/HCB/booking page, a separate contact form page, or any external link.
+
+The header navigation and all contact buttons/CTAs throughout the site must point to this URL and open it in a new tab.
+
+#### Source Tracking Parameter
+
+**Every contact URL that is NOT a `mailto:` link MUST include the repository name as a `ref` query parameter.** This tells the destination page which repo the visitor came from.
+
+If the user provides `https://example.com/contact`, generate the tracked URL as:
+
+```
+https://example.com/contact?ref={{REPO_NAME}}
+```
+
+The `{{REPO_NAME}}` is the name of the **source repository** — the repo that contains the website with the contact link (e.g., `my-product-site`, `iNNv0-skills`). The agent detects it automatically from the repository remote URL. It is NOT the destination's repo; it is the repo where this site is being generated.
+
+- **Do NOT append `?ref=` to `mailto:` links** — email URLs do not support query parameters
+- If the user's URL already has query parameters, append with `&ref={{REPO_NAME}}` instead of `?`
+- The `ref` parameter is preferred (GitHub-style convention), but `source` or `utm_source` can be substituted if the destination requires a specific parameter name — ask the user if unsure
+
+#### Behavior Rules
+
+- **Header nav link**: Include a "Contact" link in the main navigation that points to the tracked contact URL with `target="_blank"` and `rel="noopener noreferrer"`
+- **CTAs**: Any "Contact", "Get in touch", "Send us a message", or equivalent call-to-action button across the site MUST use the same tracked URL with `target="_blank"`
+- **Contact section**: The contact section on the page should present the tracked URL clearly (displayed as text) alongside a prominent button or link that opens it
+- **Trust signal**: If the URL is an email, always display the email address in full — hiding it behind "Email us" text reduces trust
+- **Display the tracked URL**, not the bare URL, so users can see where they will be redirected
+
+#### HTML Structure
+
+For non-email URLs (with `ref` parameter):
+
+```html
+<section id="contact">
+  <div class="container">
+    <h2>Get in Touch</h2>
+    <p class="subtitle">We'd love to hear from you</p>
+    <div class="contact-links">
+      <a href="{{CONTACT_URL}}?ref={{REPO_NAME}}"
+         target="_blank"
+         rel="noopener noreferrer"
+         class="btn btn-primary">
+        Contact Us
+      </a>
+      <span class="contact-url-display">{{CONTACT_URL}}?ref={{REPO_NAME}}</span>
+    </div>
+  </div>
+</section>
+```
+
+If the URL is a `mailto:` link (no `ref` parameter), display the email address extracted from it:
+
+```html
+<section id="contact">
+  <div class="container">
+    <h2>Get in Touch</h2>
+    <p class="subtitle">We'd love to hear from you</p>
+    <div class="contact-links">
+      <a href="{{CONTACT_URL}}"
+         target="_blank"
+         rel="noopener noreferrer"
+         class="btn btn-primary">
+        Send us an email
+      </a>
+      <span class="contact-url-display">{{DISPLAY_EMAIL}}</span>
+    </div>
+  </div>
+</section>
+```
+
+#### Header Navigation Integration
+
+In the `<nav>` element, the "Contact" link must also include the `ref` parameter (for non-email URLs):
+
+```html
+<a href="{{CONTACT_URL}}?ref={{REPO_NAME}}" target="_blank" rel="noopener noreferrer">Contact</a>
+```
+
+#### Styling
+
+The contact links wrapper follows the system's centered card pattern:
+
+```css
+.contact-links {
+  text-align: center;
+  padding: 48px 24px;      /* space-xl horizontal, space-xl vertical */
+}
+
+.contact-url-display {
+  display: block;
+  margin-top: 16px;        /* space-md */
+  font-size: 14px;
+  color: #636366;           /* Ink Muted */
+  word-break: break-all;
+}
+```
+
+The `.btn-primary` class follows the existing CTA rules from the Marketing Layouts section: solid Morado Nazareno (`#4D0E4E`) background with white text.
+
+#### Checklist
+
+- [ ] User explicitly chose the Contact URL approach over Google Form
+- [ ] `REPO_NAME` detected from the repository remote URL
+- [ ] Non-email URLs include `?ref={{REPO_NAME}}` (or `&ref=` if params already exist)
+- [ ] Header "Contact" link uses `target="_blank"`, `rel="noopener noreferrer"`, and the tracked URL
+- [ ] All contact CTAs across the site point to the same tracked URL
+- [ ] URL is displayed as readable text in the contact section (with the `ref` parameter visible)
+- [ ] For `mailto:` links, the email address is clearly visible, no `ref` appended
+- [ ] Contact section styled with the system's spacing and centered layout
 
 ---
 
