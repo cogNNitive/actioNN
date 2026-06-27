@@ -48,18 +48,18 @@
       color: var(--theme-color);
     }
 
-    .sidebar-brand {
-      padding: 16px 24px;
-      font-weight: 800;
-      font-size: 20px;
-      color: var(--theme-color);
-      text-decoration: none;
-      letter-spacing: -0.02em;
-      display: block;
-      border-bottom: 1px solid var(--sidebar-border-color);
+    .sidebar > h1 {
+      font-size: 20px !important;
+      font-weight: 800 !important;
+      letter-spacing: -0.02em !important;
+      padding: 20px 24px !important;
+      margin: 0 !important;
+      border-bottom: 1px solid var(--sidebar-border-color) !important;
     }
 
-    .sidebar-brand:hover { color: var(--theme-color); }
+    .sidebar > h1 a {
+      color: var(--theme-color) !important;
+    }
 
     .markdown-section h1 {
       font-size: 40px;
@@ -152,7 +152,7 @@
 
   <script>
     window.$docsify = {
-      name: '',
+      name: 'iNNv0',
       repo: 'https://github.com/innV0/innv0-skills',
       loadSidebar: true,
       subMaxLevel: 3,
@@ -161,22 +161,6 @@
       search: 'auto',
       formatUpdated: '{YYYY}-{MM}-{DD}',
     }
-  </script>
-  <script>
-    /* Inject sidebar brand */
-    document.addEventListener('DOMContentLoaded', function() {
-      var checkExist = setInterval(function() {
-        var sidebar = document.querySelector('.sidebar');
-        if (sidebar) {
-          clearInterval(checkExist);
-          var brand = document.createElement('a');
-          brand.href = '/iNNv0_skills/docs/#/';
-          brand.className = 'sidebar-brand';
-          brand.textContent = 'iNNv0';
-          sidebar.insertBefore(brand, sidebar.firstChild);
-        }
-      }, 100);
-    });
   </script>
   <script src="//cdn.jsdelivr.net/npm/docsify@4"></script>
   <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/search.min.js"></script>
