@@ -1,3 +1,10 @@
+---
+title: "Web Design Guide — iNNv0 Skill"
+description: "Light-mode design system with Morado Nazareno palette, systematic typography, and 8px grid"
+html_url: https://skills.innv0.com/docs/#/skills/web-design-guide
+generator: https://skills.innv0.com/innv0-web-design-guide
+---
+
 # Web Design Guide
 
 ## Purpose

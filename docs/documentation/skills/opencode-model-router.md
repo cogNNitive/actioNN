@@ -1,3 +1,10 @@
+---
+title: "Model Router — iNNv0 Skill"
+description: "Evaluates AI model suitability for each task across 4 task scales"
+html_url: https://skills.innv0.com/docs/#/skills/opencode-model-router
+generator: https://skills.innv0.com/innv0-web-design-guide
+---
+
 # Model Router
 
 **Version**: 1.0.0 · **Updated**: 2026-06-27

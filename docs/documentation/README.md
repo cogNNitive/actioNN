@@ -1,3 +1,10 @@
+---
+title: "iNNv0 — Documentation"
+description: "Technical documentation for the iNNv0 skills ecosystem for OpenCode"
+html_url: https://skills.innv0.com/documentation/
+generator: https://skills.innv0.com/innv0-web-design-guide
+---
+
 # iNNv0 — Documentation
 
 **iNNv0** is a **skills** ecosystem for AI agents in [OpenCode](https://opencode.ai). Each skill is an autonomous module that teaches the agent to solve a specific type of task with domain knowledge.

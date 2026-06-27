@@ -1,0 +1,49 @@
+---
+title: "iNNv0 — AI Agent Skills for OpenCode"
+description: "Skills ecosystem for AI agents in OpenCode. Model Router, Skills Manager, traNNsform, and Web Design Guide."
+html_url: https://skills.innv0.com/
+generator: https://skills.innv0.com/innv0-web-design-guide
+---
+
+# AI Agent Skills, Engineered for OpenCode
+
+iNNv0 is a modular skills ecosystem that powers your AI agent with specialized capabilities: model evaluation, skills management, document transformation, and web design.
+
+- [Explore Skills](#skills)
+- [View on GitHub](https://github.com/innV0/innv0-skills)
+
+## Skills
+
+### Model Router
+Evaluates whether the AI model you're using is the right fit for each task. Classifies requests across 4 scales and recommends the optimal model based on cost and capability.
+[View documentation →](https://skills.innv0.com/documentation/#/skills/opencode-model-router)
+
+### Skills Manager
+Meta-skill that manages all skills in the repository. Scans, detects installation types (Junction, Symlink, Copy), and manages each skill's lifecycle.
+[View documentation →](https://skills.innv0.com/documentation/#/skills/skills-manager)
+
+### traNNsform
+Complete document ingestion and transformation pipeline. Converts PDFs, DOCX, and more to unified Markdown using the agent's own LLM as the transformation engine.
+[View documentation →](https://skills.innv0.com/documentation/#/skills/trannsform)
+
+### Web Design Guide
+Complete design system with Morado Nazareno palette, systematic typography, and 8px grid. Includes guides for commercial layouts and technical documentation with Docsify.
+[View documentation →](https://skills.innv0.com/documentation/#/skills/web-design-guide)
+
+## How it works
+
+Skills are loaded on demand by the OpenCode agent. Each skill defines its own domain, language, and behavior rules.
+
+1. **Automatic scan** — At session start, the Skills Manager detects all available skills in the repository and checks their installation status.
+2. **On-demand loading** — When a task matches a skill, the agent loads its instructions and executes the specialized workflow.
+3. **Modular by design** — Each skill is self-contained with its own domain rules. Skills can be installed, updated, and removed independently.
+
+## Installation
+
+```bash
+git clone https://github.com/innV0/innv0-skills.git
+cd iNNv0_skills
+opencode .
+```
+
+The Skills Manager will scan and offer to install everything automatically using Windows NTFS junctions for live-change reflection.

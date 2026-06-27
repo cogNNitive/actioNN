@@ -21,3 +21,33 @@ Exceptions:
 
 This rule applies to all files in all directories, including `skills/`, `docs/`, and any future additions.
 <!-- /gentle-ai:lang-enforce -->
+
+<!-- gentle-ai:skill-versioning -->
+## Skill Versioning Convention — MANDATORY
+
+All skills in `skills/` MUST include these fields in their YAML frontmatter:
+
+```yaml
+---
+name: <skill-name>
+version: "V_x-y-z"           # Semantic versioning
+last_updated: YYYY-MM-DD     # ISO date of last change
+metadata:
+  source_type: "original" | "mirrored" | "integrated"
+  source: "https://github.com/innV0/<repo>"  # For mirrored skills
+license: MIT
+---
+```
+
+`source_type` values:
+- **original**: authored here, this repo is source of truth
+- **mirrored**: copied from another repo via sync script (`source` field required)
+- **integrated**: bundled tool lives in the skill directory
+
+Version format `V_x-y-z`:
+- **x** = major (breaking changes)
+- **y** = minor (feature additions)
+- **z** = patch (fixes, documentation)
+
+When mirroring from another repo, the sync script copies the original and adapts `source_type` + `source` fields for this repo's context.
+<!-- /gentle-ai:skill-versioning -->

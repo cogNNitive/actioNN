@@ -1,4 +1,4 @@
-* [Home](/)
+* [Home](/documentation/)
 * Skills
   * [Model Router](skills/opencode-model-router.md)
   * [Skills Manager](skills/skills-manager.md)
