@@ -2,14 +2,14 @@
 site:
   name: "iNNv0"
   url: "https://skills.innv0.com"
-  description: "AI Agent Skills ecosystem for OpenCode — modular skills that power AI agents with specialized capabilities"
+  description: "AI Agent Skills ecosystem — modular skills that power AI agents with specialized capabilities"
   generator: "https://skills.innv0.com/innv0-web-design-guide"
   language: "en"
   updated: "2026-06-27"
 pages:
   - path: "/"
-    title: "iNNv0 — AI Agent Skills for OpenCode"
-    description: "Skills ecosystem for AI agents in OpenCode. Model Router, Skills Manager, traNNsform, and Design System."
+    title: "iNNv0 — AI Agent Skills"
+    description: "Skills ecosystem for AI agents. Model Router, Skills Manager, traNNsform, and Design System."
     last_modified: "2026-06-27"
     format: markdown
     url: "https://skills.innv0.com/web/index.md"

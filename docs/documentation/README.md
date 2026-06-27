@@ -1,13 +1,13 @@
 ---
 title: "iNNv0 — Documentation"
-description: "Technical documentation for the iNNv0 skills ecosystem for OpenCode"
+description: "Technical documentation for the iNNv0 skills ecosystem"
 html_url: https://skills.innv0.com/documentation/
 generator: https://skills.innv0.com/innv0-web-design-guide
 ---
 
 # iNNv0 — Documentation
 
-**iNNv0** is a **skills** ecosystem for AI agents in [OpenCode](https://opencode.ai). Each skill is an autonomous module that teaches the agent to solve a specific type of task with domain knowledge.
+**iNNv0** is a **skills** ecosystem for AI agents. Each skill is an autonomous module that teaches the agent to solve a specific type of task with domain knowledge.
 
 ## Included Skills
 
@@ -23,8 +23,9 @@ generator: https://skills.innv0.com/innv0-web-design-guide
 ```bash
 git clone https://github.com/innV0/innv0-skills.git
 cd iNNv0_skills
-opencode .
 ```
+
+Then launch your AI agent from the directory (`opencode .`, `claude .`, or equivalent).
 
 The **Skills Manager** activates automatically at session start. It scans the `skills/` directory, detects available skills, and guides you through installation using **Windows NTFS junctions**, which reflect repo changes live.
 
@@ -37,7 +38,7 @@ The **Skills Manager** activates automatically at session start. It scans the `s
 
 ## Tech Stack
 
-- **Runtime**: OpenCode (conversational AI agent)
+- **Runtime**: AI agent (OpenCode, Claude Code, Gemini, Cursor, or any compatible agent)
 - **Persistent memory**: Engram
 - **Primary OS**: Windows (NTFS junctions for installation)
 - **Documentation**: Docsify + this site

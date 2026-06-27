@@ -1,11 +1,11 @@
 ---
-title: "iNNv0 — AI Agent Skills for OpenCode"
-description: "Skills ecosystem for AI agents in OpenCode. Model Router, Skills Manager, traNNsform, and Web Design Guide."
+title: "iNNv0 — AI Agent Skills"
+description: "Skills ecosystem for AI agents. Model Router, Skills Manager, traNNsform, and Web Design Guide."
 html_url: https://skills.innv0.com/
 generator: https://skills.innv0.com/innv0-web-design-guide
 ---
 
-# AI Agent Skills, Engineered for OpenCode
+# AI Agent Skills, Engineered for Any Agent
 
 iNNv0 is a modular skills ecosystem that powers your AI agent with specialized capabilities: model evaluation, skills management, document transformation, and web design.
 
@@ -32,7 +32,7 @@ Complete design system with Morado Nazareno palette, systematic typography, and 
 
 ## How it works
 
-Skills are loaded on demand by the OpenCode agent. Each skill defines its own domain, language, and behavior rules.
+Skills are loaded on demand by your AI agent. Each skill defines its own domain, language, and behavior rules.
 
 1. **Automatic scan** — At session start, the Skills Manager detects all available skills in the repository and checks their installation status.
 2. **On-demand loading** — When a task matches a skill, the agent loads its instructions and executes the specialized workflow.
@@ -43,10 +43,9 @@ Skills are loaded on demand by the OpenCode agent. Each skill defines its own do
 ```bash
 git clone https://github.com/innV0/innv0-skills.git
 cd iNNv0_skills
-opencode .
 ```
 
-The Skills Manager will scan and offer to install everything automatically using Windows NTFS junctions for live-change reflection.
+Launch your AI agent from this directory (e.g. `opencode .`, `claude .`, or your agent's equivalent). The Skills Manager will scan and offer to install everything automatically using Windows NTFS junctions for live-change reflection.
 
 ## Contact
 

@@ -2,7 +2,7 @@
 name: innv0-web-design-guide
 version: "V_2-5-0"
 last_updated: 2026-06-27
-description: Comprehensive light-mode design system with strict spacing grid, typography stack (Plus Jakarta Sans, Playfair Display, Geist Mono), and Morado Nazareno (#4D0E4E) brand palette. Covers Docsify theming, marketing CTAs, AI image style prompting, AI-training optimization, attribution metadata, favicon generation, analytics integration (Umami), and contact section with Google Form embed or Contact URL options and source tracking.
+description: Comprehensive light-mode design system with strict spacing grid, typography stack (Plus Jakarta Sans, Playfair Display, Geist Mono), and Morado Nazareno (#4D0E4E) brand palette. Interactive activation with 4 paths: create new website, edit existing website, add Umami analytics, add contact mechanism. Covers Docsify theming, marketing CTAs, AI image style prompting, AI-training optimization, attribution metadata, favicon generation, analytics integration (Umami), and contact section with Google Form embed or Contact URL options and source tracking.
 license: MIT
 metadata:
   source_type: original
@@ -10,6 +10,73 @@ metadata:
 ---
 
 # Agent Skill: iNNv0 Comprehensive Design System
+
+## 🚀 ACTIVATION — Choose Your Path
+
+When this skill loads, you MUST ask the user what they want to do. Present these options using the `question` tool:
+
+| # | Action | Description |
+|---|--------|-------------|
+| 1 | **Create a new website** | Generate a full site from scratch — commercial layout, documentation (Docsify), or both. Follow the full skill from start to finish. |
+| 2 | **Edit the existing website** | Modify the current site at `docs/` — update pages, navigation, styling, or content. Requires an existing site to already be present in the repo. |
+| 3 | **Add analytics (Umami)** | Integrate Umami Cloud analytics into an existing site. Create `docs/js/analytics.js`, add the injector to each page, and replace the `{{UMAMI_WEBSITE_ID}}` placeholder with a real ID. |
+| 4 | **Add a contact mechanism** | Add or update the contact section — either a Google Form embed or an external URL. Replace `{{FORM_ID}}` or the contact URL with real values. |
+
+### Workflow: Option 1 — Create a New Website
+
+Follow the entire skill from the top. Generate all required files inside `docs/`:
+
+- Landing page (`docs/index.html`) with Markdown twin (`docs/index.md`)
+- Documentation section at `docs/documentation/` with Docsify
+- About page (`docs/about.html` + `docs/about.md`)
+- AI-readiness files: `robots.txt`, `llms.txt`, `llms-full.txt`, `ai-index.yaml`, `.well-known/ai-catalog.json`
+- Favicon set: `favicon.ico`, `favicon-16x16.png`, `favicon-32x32.png`, `apple-touch-icon.png`, `favicon.svg`
+- Analytics injector at `docs/js/analytics.js` (placeholder `{{UMAMI_WEBSITE_ID}}`)
+- Contact section (placeholder `{{FORM_ID}}` or default URL)
+- Attribution metadata in every page's `<head>`
+
+When done, run through the Deployment Checklist section.
+
+### Workflow: Option 2 — Edit the Existing Website
+
+Examine the current state of `docs/` first. Then tell the user they have **two ways** to make changes:
+
+**A) Direct conversation.** Describe what you want changed, and I will edit the Markdown twin (`.md`), regenerate the corresponding HTML, and update any supporting files (nav, sitemap, etc.).
+
+**B) Manual edit of Markdown twins.** Edit the `.md` file(s) directly (content, structure, metadata), then tell me "sync the web from the markdown twins" and I will regenerate the HTML pages and update supporting files.
+
+The Markdown twin is always the source of truth — HTML is derived from it. Pick whichever path is more comfortable.
+
+### Workflow: Option 3 — Add Analytics (Umami)
+
+1. Ask the user: **"Do you have an Umami Cloud account already?"**
+2. If NO: Guide them to create one:
+   - Go to https://cloud.umami.is/signup and create an account
+   - Once logged in, add your site domain (e.g. `skills.innv0.com`) as a new website
+3. Umami Cloud gives you a **script tag**, not just an ID. It looks like this:
+   ```html
+   <script defer src="https://cloud.umami.is/script.js" data-website-id="63f444a0-59f9-4d8d-a09d-641a402839ae"></script>
+   ```
+   Ask the user to paste that entire script tag.
+4. Extract the `data-website-id` value from the script tag (the UUID).
+5. Create `docs/js/analytics.js` with the injector snippet (see ANALYTICS INTEGRATION section), replacing `{{UMAMI_WEBSITE_ID}}` with the extracted UUID.
+6. Add `<script src="/js/analytics.js" defer></script>` to every page's `<head>`.
+7. For Docsify: add the `doneEach` hook for SPA route tracking.
+8. Verify: ask the user to visit the site and check the Umami dashboard for live data.
+
+### Workflow: Option 4 — Add a Contact Mechanism
+
+1. Ask the user: **"Do you want a Google Form embed or an external URL?"**
+2. If **Google Form**:
+   - Guide them to create a form at https://forms.google.com
+   - Ask for the form's share URL
+   - Extract the `FORM_ID` from the URL
+   - Add the contact section with the iframe embed (see CONTACT SECTION)
+3. If **External URL**:
+   - Ask for the URL (e.g. https://innv0.com/contact?ref=innv0-skills)
+   - Add a styled button linking to that URL in the contact section
+4. Place the contact section at `space-xxl` (64-96px) vertical distance from the preceding section
+5. Verify: ask the user to check the page renders correctly on desktop and mobile
 
 ## ⚙️ SYSTEM CONFIGURATION & TOKENS
 ```yaml

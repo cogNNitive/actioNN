@@ -24,7 +24,7 @@ Loaded **mandatorily at the start of each session** by order of the root `AGENTS
 3. **Detects** the installation type: Junction (recommended), Symlink, or Copy
 4. **Presents** a status table:
 
-| Repo Skill | OpenCode | ~/.agents/skills | Type | Status |
+| Repo Skill | ~/.config/opencode/skills | ~/.agents/skills | Type | Status |
 |---|---|---|---|---|
 | innv0-opencode-model-router | ❌ | ✅ | Junction | Installed |
 | innv0-trannsform | ❌ | ✅ | Junction | Installed |
