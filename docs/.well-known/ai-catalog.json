@@ -1,0 +1,15 @@
+{
+  "@context": "https://schema.org",
+  "@type": "DataCatalog",
+  "name": "iNNv0",
+  "description": "AI Agent Skills ecosystem for OpenCode — modular skills that power AI agents with specialized capabilities",
+  "generator": {
+    "@type": "SoftwareApplication",
+    "url": "https://skills.innv0.com/innv0-web-design-guide"
+  },
+  "url": "https://skills.innv0.com",
+  "inLanguage": "en",
+  "isAccessibleForFree": true,
+  "keywords": ["opencode", "ai-agent", "skills", "model-router", "document-transformation", "web-design"],
+  "dateModified": "2026-06-27"
+}

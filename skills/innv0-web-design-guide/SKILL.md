@@ -1,8 +1,12 @@
 ---
 name: innv0-web-design-guide
-description: Comprehensive light-mode design system with strict spacing grid, typography stack (Plus Jakarta Sans, Playfair Display, Geist Mono), and Morado Nazareno (#4D0E4E) brand palette. Covers Docsify theming, marketing CTAs, and AI image style prompting.
+version: "V_2-5-0"
+last_updated: 2026-06-27
+description: Comprehensive light-mode design system with strict spacing grid, typography stack (Plus Jakarta Sans, Playfair Display, Geist Mono), and Morado Nazareno (#4D0E4E) brand palette. Covers Docsify theming, marketing CTAs, AI image style prompting, AI-training optimization, attribution metadata, favicon generation, analytics integration (Umami), mandatory Google Form contact section, and generated site readme.md with operational documentation.
 license: MIT
-compatibility: ">=1.0.0"
+metadata:
+  source_type: original
+  compatibility: ">=1.0.0"
 ---
 
 # Agent Skill: iNNv0 Comprehensive Design System
@@ -29,6 +33,35 @@ typography:
 ## 🚨 ABSOLUTE CONSTRAINTS
 1. **Strict Light Mode Only:** Absolutely zero configurations, switches, or media query recommendations for Dark Mode are allowed. The system commits 100% to a high-contrast white workspace environment.
 2. **Abstract Structural Direction:** When assessing layout design or prompting AI models for graphic assets, enforce macro structural styling guidelines (linework weight, spatial balance, structural layouts) instead of mentioning temporary UI component behaviors.
+
+---
+
+## 🏗️ REPOSITORY STRUCTURE & GITHUB PAGES DEPLOYMENT
+
+All website files MUST live inside a **`docs/`** folder at the repository root. GitHub Pages must be configured to publish from the `/docs` folder (Settings > Pages > Source > Deploy from a branch > /docs). This separates deployable site assets from non-deployable project code (skills, scripts, agent config).
+
+When GitHub Pages publishes from `/docs`, the `docs/` folder becomes the **web root**. A file at `docs/robots.txt` is served at `https://site.com/robots.txt`. All URL paths referenced in this skill are relative to the published site root, not the repository root.
+
+```
+repo/
+├── docs/                    ← GitHub Pages publishing source (becomes web root)
+│   ├── index.html           ← /
+│   ├── index.md             ← /index.md
+│   ├── robots.txt           ← /robots.txt
+│   ├── llms.txt             ← /llms.txt
+│   ├── llms-full.txt        ← /llms-full.txt
+│   ├── ai-index.yaml        ← /ai-index.yaml
+│   ├── CNAME                ← custom domain for GitHub Pages
+│   ├── favicon.ico          ← /favicon.ico
+│   ├── .well-known/
+│   │   └── ai-catalog.json  ← /.well-known/ai-catalog.json
+│   ├── about.md             ← /about.md
+│   ├── about.html           ← /about.html
+│   └── ...
+├── skills/                  ← skill definitions (NOT deployed)
+├── scripts/                 ← build scripts (NOT deployed)
+└── AGENTS.md                ← agent config (NOT deployed)
+```
 
 ---
 
@@ -134,3 +167,713 @@ When drafting visual guidelines or engineering prompts for image diffusion model
 * **Aesthetic:** Graphic novel/comic illustration style with a modern, crisp feel.
 * **Linework:** Uniform, highly legible black pen lines mapping out boundaries.
 * **Color & Tone:** Flat color mapping paired with explicit, sharp-edged cell-shading instead of smooth blur transitions, set against a white canvas base.
+
+---
+
+## 🔖 FAVICON GENERATION
+
+Every generated site MUST include a favicon. The favicon is the small icon displayed in browser tabs, bookmarks, and browser history. A `.ico` file is a container format that can hold multiple image sizes in a single file.
+
+### How .ICO Files Work
+
+The `.ico` format acts as a **multi-resolution container**. Inside a single `.ico` file, you store the same icon at different pixel sizes. The browser picks the best match for the context:
+
+| Size | Usage |
+|------|-------|
+| 16×16 | Browser tab, address bar |
+| 32×32 | Taskbar, Windows shortcuts, browser tabs (HiDPI) |
+| 48×48 | Desktop icons, Windows folder view |
+| 64×64 | High-resolution displays, some browsers |
+| 128×128 | Chrome Web Store, some pinned tabs |
+
+### ICO File Structure (Technical)
+
+An `.ico` file has three parts:
+
+1. **Header** (6 bytes): Reserved (2) + Type (2 = 1 for icons) + Image Count (2)
+2. **Directory Entries** (16 bytes each): One per image, specifying size, color depth, and offset
+3. **Image Data**: Raw BMP or PNG data for each entry
+
+A well-formed `.ico` file looks like this hex-wise:
+```
+00 00 01 00 05 00     ← Header: reserved=0, type=1 (icon), count=5
+10 10 00 00 00 00 ... ← Entry 1: 16×16, 32bpp, offset
+20 20 00 00 00 00 ... ← Entry 2: 32×32, 32bpp, offset
+30 30 00 00 00 00 ... ← Entry 3: 48×48, 32bpp, offset
+...
+```
+
+### Generation Rules
+
+When generating a site with this skill:
+
+1. **Always include `favicon.ico`** in the site root (`/favicon.ico` on the published site, `docs/favicon.ico` in the repository)
+2. **Always include a `<link>` tag** in the `<head>` of every HTML page:
+   ```html
+   <link rel="icon" type="image/x-icon" href="/favicon.ico">
+   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+   ```
+3. **Minimum sizes to include** in the `.ico`: 16×16, 32×32, 48×48
+4. **Morado Nazareno branding**: The favicon should feature the brand primary color `#4D0E4E` as background or as the dominant accent
+5. **Simplicity is critical**: Favicons are tiny (16×16 is the most common display size). Use a simple geometric shape, monogram, or symbol — no fine detail, no text smaller than the icon
+6. **For SVG favicons** (modern browsers): Optionally add:
+   ```html
+   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+   ```
+
+### Favicon Design Guidance for AI Image Generation
+
+When prompting an AI model to generate favicon source art:
+
+- **Canvas**: Square, at least 256×256px (downscales cleanly)
+- **Subject**: Single geometric shape, letterform, or minimalist symbol
+- **Background**: Solid `#4D0E4E` or transparent with `#4D0E4E` as the foreground
+- **Style**: Flat, high-contrast, no gradients smaller than 4px
+- **Test at 16px**: If the shape is unrecognizable at 16×16, simplify
+
+### Complete Favicon Setup Checklist
+
+For every generated site:
+
+- [ ] `/favicon.ico` — multi-size .ico with at least 16, 32, 48px variants
+- [ ] `/favicon-16x16.png` — standalone 16px PNG
+- [ ] `/favicon-32x32.png` — standalone 32px PNG
+- [ ] `/apple-touch-icon.png` — 180×180px PNG for iOS/Android
+- [ ] `<link>` tags referencing all favicon variants in `<head>`
+- [ ] Color profile: Morado Nazareno (`#4D0E4E`) as the primary brand color
+
+---
+
+## 🏷️ ATTRIBUTION & GENERATOR METADATA
+
+Every web page generated using this skill MUST include metadata marking it as produced by the iNNv0 design system. This serves as a signal for both humans and AI systems to understand the page's origin and tooling.
+
+Per community best practices across the AEO/GEO ecosystem (aeo.js, specification.website, Dualmark), attribution uses the skill's **public URL**, not a human-readable name string. This gives AI training pipelines and crawlers a dereferenceable resource to verify the tool's identity.
+
+### Required: Generator Meta Tag
+
+Include this `<meta>` tag in the `<head>` of every generated page:
+
+```html
+<meta name="generator" content="https://skills.innv0.com/innv0-web-design-guide">
+```
+
+### Recommended: Schema.org SoftwareApplication Structured Data
+
+For richer machine-readable attribution, add JSON-LD to the page identifying the tool that generated it. Place this in a `<script type="application/ld+json">` block in the `<head>`:
+
+```json
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "iNNv0 Web Design Guide",
+  "applicationCategory": "WebApplication",
+  "description": "Comprehensive light-mode design system with strict spacing grid, typography stack, and Morado Nazareno (#4D0E4E) brand palette.",
+  "url": "https://skills.innv0.com/innv0-web-design-guide",
+  "operatingSystem": "Any",
+  "browserRequirements": "Requires JavaScript"
+}
+```
+
+### Machine-Readable YAML Metadata for AI Crawlers (Recommended)
+
+Following the emerging convention from the AEO/GEO ecosystem, every generated site should expose a YAML index file at a well-known path that AI crawlers can fetch directly. This file serves as a structured manifest — the YAML equivalent of what `llms.txt` does in Markdown.
+
+Place this at `/ai-index.yaml` on the published site (`docs/ai-index.yaml` in the repo):
+
+```yaml
+# AI Content Index — https://skills.innv0.com/innv0-web-design-guide
+site:
+  name: "{{SITE_NAME}}"
+  url: "{{SITE_URL}}"
+  description: "{{SITE_DESCRIPTION}}"
+  generator: "https://skills.innv0.com/innv0-web-design-guide"
+  language: "{{LANG_CODE}}"
+  updated: "{{DATE_ISO}}"
+pages:
+  - path: "/"
+    title: "{{HOME_TITLE}}"
+    description: "{{HOME_DESCRIPTION}}"
+    last_modified: "{{DATE_ISO}}"
+    format: markdown
+    url: "{{SITE_URL}}/index.md"
+  - path: "/about"
+    title: "{{ABOUT_TITLE}}"
+    description: "{{ABOUT_DESCRIPTION}}"
+    last_modified: "{{DATE_ISO}}"
+    format: markdown
+    url: "{{SITE_URL}}/about.md"
+```
+
+### robots.txt AI Crawler Directives (Required)
+
+Every generated site MUST include explicit AI crawler directives in `robots.txt`. Based on the specification.website agent-readiness spec and the known AI crawler user-agents:
+
+```txt
+# AI Training & Grounding — https://skills.innv0.com/innv0-web-design-guide
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+# General crawlers (search engines)
+User-agent: *
+Allow: /
+Sitemap: https://{{SITE_URL}}/sitemap.xml
+```
+
+### Optional: llms.txt Reference
+
+If the site provides an `/llms.txt` file (per the llmstxt.org proposal by AnswerDotAI, 2.5k GitHub stars), include a reference line pointing back to the design system URL:
+
+```markdown
+# Generator: https://skills.innv0.com/innv0-web-design-guide
+```
+
+### Optional: .well-known/ai-catalog.json (Agentic Resource Discovery)
+
+For sites that want to participate in the emerging Agentic Resource Discovery (ARD) convention from specification.website, expose a catalog at `/.well-known/ai-catalog.json` (`docs/.well-known/ai-catalog.json` in the repo):
+
+```json
+{
+  "@context": "https://schema.org",
+  "@type": "DataCatalog",
+  "name": "{{SITE_NAME}}",
+  "description": "{{SITE_DESCRIPTION}}",
+  "generator": {
+    "@type": "SoftwareApplication",
+    "url": "https://skills.innv0.com/innv0-web-design-guide"
+  }
+}
+```
+
+---
+
+## 📊 ANALYTICS INTEGRATION (Umami)
+
+Every generated site MUST include Umami analytics tracking. Umami is a privacy-focused, open-source analytics platform that runs as a cloud service (free tier: ~100k events/month) with full data export (CSV, JSON, API). No cookies, no GDPR consent needed.
+
+### Universal Approach: Single JavaScript Injector (Recommended)
+
+Instead of hardcoding the tracking snippet into every HTML page, create a single lightweight JS file that dynamically loads the Umami script. This keeps the tracking configuration in **one place** regardless of how many pages the site has.
+
+Create `docs/js/analytics.js`:
+
+```js
+// Umami Analytics — https://umami.is
+(function() {
+  var d = document, s = d.createElement('script');
+  s.src = 'https://cloud.umami.is/script.js';
+  s.setAttribute('data-website-id', '{{UMAMI_WEBSITE_ID}}');
+  s.setAttribute('data-auto-track', 'true');
+  s.async = true;
+  d.head.appendChild(s);
+})();
+```
+
+Then include it in every page's `<head>`:
+
+```html
+<script src="/js/analytics.js" defer></script>
+```
+
+This approach:
+- Changes to the tracking code are made **once** in `analytics.js`
+- The `UMAMI_WEBSITE_ID` placeholder is replaced with the actual site ID from Umami Cloud
+- Works for both multi-page static sites and SPAs
+- The script is deferred so it never blocks page rendering
+
+### Docsify (SPA) Specific Configuration
+
+For Docsify-powered documentation sites, the Umami script goes **once** in `docs/index.html` because Docsify is a single-page app — every "page" loads from the same `index.html`. However, Umami's default `data-auto-track` only fires on initial page load, not on SPA route changes.
+
+Docsify fires a `doneEach` event after every route change. Hook into it to tell Umami the URL changed:
+
+Add this **after** the Umami script injector in `docs/index.html`:
+
+```html
+<script>
+// Docsify SPA route tracking for Umami
+window.addEventListener('load', function () {
+  if (typeof Docsify !== 'undefined') {
+    Docsify.doneEach(function () {
+      if (window.umami) {
+        umami.track({ url: window.location.pathname + window.location.search });
+      }
+    });
+  }
+});
+</script>
+```
+
+With this hook, every Docsify route change sends a new pageview to Umami automatically.
+
+### Static Multi-Page Sites (Commercial / Marketing)
+
+For sites with multiple standalone HTML pages (no SPA), the injector approach works as-is. Every page includes:
+
+```html
+<script src="/js/analytics.js" defer></script>
+```
+
+No route-change hooks are needed because each page load is a full navigation that Umami captures natively.
+
+### Alternative: Direct Script Tag (No JS Injector)
+
+If you prefer to avoid the extra HTTP request for `analytics.js`, paste the Umami snippet directly into the `<head>` of each page or into the shared template:
+
+```html
+<script defer src="https://cloud.umami.is/script.js"
+  data-website-id="{{UMAMI_WEBSITE_ID}}"></script>
+```
+
+This is simpler but requires editing every page if the tracking configuration changes.
+
+### Checklist
+
+When generating any site with this skill:
+
+- [ ] Umami Cloud account created at https://cloud.umami.is
+- [ ] Website added to Umami Cloud, website ID obtained
+- [ ] `docs/js/analytics.js` created with the injector snippet (or direct tag placed in template)
+- [ ] For Docsify: `doneEach` hook added for SPA route tracking
+- [ ] `UMAMI_WEBSITE_ID` placeholder replaced with the actual ID
+- [ ] Verify tracking by visiting the site and checking Umami dashboard for live data
+- [ ] Data export tested (Umami dashboard > Settings > Export data → CSV/JSON)
+
+---
+
+## 📋 CONTACT SECTION & GOOGLE FORM EMBEDDING (MANDATORY)
+
+**Every generated site MUST include a contact section with an embedded Google Form.** The contact section is the primary lead generation channel — it is not optional. The form is referenced by its `FORM_ID`, which is the unique identifier in a Google Form's URL.
+
+### How to Obtain the `FORM_ID`
+
+A Google Form URL follows this structure:
+
+```
+https://docs.google.com/forms/d/e/{FORM_ID}/viewform
+```
+
+The `FORM_ID` is the alphanumeric string between `/d/e/` and `/viewform`. To get it:
+
+1. Open your Google Form in the browser
+2. Copy the full URL from the address bar
+3. Extract the segment between `/d/e/` and `/viewform`
+
+**Example:**
+```
+URL:  https://docs.google.com/forms/d/e/1FAIpQLSdX5yABCdef123GHIjklMNOpqr456UVwxyz7890/viewform
+ID:   1FAIpQLSdX5yABCdef123GHIjklMNOpqr456UVwxyz7890
+```
+
+Once extracted, replace the `{{FORM_ID}}` placeholder in the embed code below.
+
+### Embed Implementation
+
+Use the standard Google Forms iframe embed pattern. The `src` URL is constructed as:
+
+```
+https://docs.google.com/forms/d/e/{{FORM_ID}}/viewform?embedded=true
+```
+
+**Recommended HTML structure for the contact section:**
+
+```html
+<section id="contact">
+  <div class="container">
+    <h2>Contact Us</h2>
+    <p class="subtitle">We'd love to hear from you</p>
+    <div class="form-wrapper">
+      <iframe
+        src="https://docs.google.com/forms/d/e/{{FORM_ID}}/viewform?embedded=true"
+        width="100%"
+        height="900"
+        frameborder="0"
+        marginheight="0"
+        marginwidth="0"
+        loading="lazy"
+        title="Contact form">
+        Loading form...
+      </iframe>
+    </div>
+  </div>
+</section>
+```
+
+### Styling Rules (Design System Alignment)
+
+The form embed wrapper MUST follow the system's design tokens:
+
+```
+.form-wrapper {
+  max-width: 720px;        /* constrained width for readability */
+  margin: 0 auto;          /* centered */
+  padding: space-lg;       /* 24px internal cushion */
+  background: #FFFFFF;     /* Canvas Base */
+  border: 1px solid #F2F2F7;  /* Border Soft */
+  border-radius: 12px;     /* subtle corner radius matching component cards */
+}
+```
+
+- The `iframe` itself takes `width: 100%` so it fills the wrapper responsively
+- No background or border on the iframe — the wrapper container provides the visual boundary
+- Height of `900px` is a safe default for most Google Forms (longer forms may need `1100px`)
+- The `title` attribute on the iframe is required for accessibility (already included above)
+- Place the contact section at `space-xxl` (64-96px) vertical distance from the preceding section
+
+### Responsive Behavior
+
+Google Forms iframes are not natively responsive — they have a fixed internal width. To ensure mobile-friendly behavior:
+
+1. The wrapper's `max-width: 720px` keeps the form from stretching beyond its optimal reading width on desktop
+2. On viewports narrower than 720px, the wrapper scales down naturally via `margin: 0 auto`
+3. Google Forms handle their own internal responsiveness down to ~320px — no additional CSS breakpoints are needed
+4. If horizontal scrollbars appear on very small screens, set:
+   ```css
+   .form-wrapper iframe {
+     min-width: 280px;
+   }
+   ```
+
+### Google Form Setup Best Practices
+
+For the best user experience when designing the source form in Google Forms:
+
+- **Disable "Show progress bar"** — it adds unnecessary visual weight and rarely works well in embedded mode
+- **Disable "Shuffle question order"** — predictable flow is better for lead gen
+- **Use the "Confirmation message" field** to redirect users or show a custom thank-you after submission
+- **Keep the form short** — 3-5 fields max for contact forms (name, email, message is ideal)
+- **Collect emails** via a required field to enable follow-up; enable "Collect email addresses" in Google Forms settings
+- **Response destination:** Leave as "Responses" in the form (stored in Google Forms) unless you need Sheets integration
+
+### Checklist
+
+When generating any site with this skill:
+
+- [ ] A Google Form has been created at https://forms.google.com
+- [ ] The `FORM_ID` has been extracted from the form's share URL
+- [ ] The contact section with the iframe embed is present in the page
+- [ ] `{{FORM_ID}}` replaced with the actual form ID in the iframe `src`
+- [ ] The `title` attribute on the iframe is set to a descriptive value
+- [ ] The wrapper uses the system's `border: 1px solid #F2F2F7` and `background: #FFFFFF`
+- [ ] The contact section sits at `space-xxl` distance from the preceding section
+- [ ] The form wrapper is `max-width: 720px` and centered
+- [ ] Tested on mobile viewport — no horizontal overflow
+
+---
+
+## 🤖 AI-TRAINING & MACHINE-READABILITY OPTIMIZATION
+
+This section codifies best practices so the generated site is not only SEO-optimized but also maximally interpretable by AI models during training and inference. The core insight from Google Search and web.dev research: **what serves humans serves AI** — there is no special markup or secret sauce required.
+
+### Core Principles
+
+1.  **Semantic HTML over visual complexity**: AI models read the DOM and accessibility tree, not the rendered design. Proper landmarks (`<main>`, `<nav>`, `<article>`, `<section>`), heading hierarchy (one `<h1>`, logical `h2>h3>` nesting), and native interactive elements (`<button>`, `<a>`) give AI systems the clearest signal.
+2.  **Text-accessible content**: Never embed critical information exclusively in images, icon fonts, or JavaScript-rendered elements. AI training pipelines extract plain text — if it is not in the HTML source, it may not be learned.
+3.  **Stable predictable layout**: AI agents that take screenshots for visual analysis are confused by shifting layouts, overlays, or dynamic element repositioning. The 8px grid and fixed `1280px` max-width in this system already enforce this stability.
+4.  **Accessibility tree as high-fidelity map**: Agents use the accessibility tree (roles, names, states) to understand page functionality. Every interactive element MUST have an appropriate `role`, label, and state.
+
+### Markdown-First Architecture (Source of Truth)
+
+The emerging best practice across the ecosystem (Dualmark — 91 stars, specification.website — 723 stars, aeo.js — 100 stars) is a **Markdown-first architecture**: a single source of truth in Markdown, with the visual web layer rendered from it. This is the inverse of the traditional HTML-only approach.
+
+**Architecture (inside `docs/`):**
+```
+docs/page.md  ──►  https://site.com/page.md    (Markdown twin served to AI agents)
+      │
+      └──►  https://site.com/page.html  (rendered visual layer for humans)
+```
+
+When GitHub Pages publishes from `/docs`, the `docs/` folder is the site root, so both URLs resolve correctly.
+
+This pattern:
+- Gives AI training pipelines clean, parseable text without nav chrome, cookie banners, or JS
+- Eliminates the need for AI to parse HTML and extract content
+- Uses the same URL space: `site.com/page` and `site.com/page.md` coexist
+- Can use HTTP content negotiation (`Accept: text/markdown`) to serve the right format
+
+**Implementation rules when generating a site:**
+
+1. **Every page gets a Markdown twin at `page.md`**: Generate `about.md` alongside `about.html`, `pricing.md` alongside `pricing.html`, etc. The Markdown twin contains only content (title, description, body, metadata) — no navigation, no chrome, no scripts.
+2. **`/llms.txt` as entry point**: Following the llmstxt.org proposal (AnswerDotAI, 2.5k GitHub stars), generate a root-level `/llms.txt` that indexes all Markdown pages. This gives AI agents a curated site map.
+3. **`/llms-full.txt` for small sites**: Concatenate all page content into a single file for context-window-friendly consumption.
+4. **`robots.txt` with per-page `.md` endpoints**: Ensure `robots.txt` allows crawlers to access the `.md` endpoints.
+5. **`Link rel="alternate"` header**: Each HTML response should advertise its Markdown twin via the HTTP `Link` header:
+   ```
+   Link: <https://site.com/page.md>; rel="alternate"; type="text/markdown"
+   ```
+6. **Cross-reference in both directions**: The `.md` file links back to the HTML page in its frontmatter (`html_url: https://site.com/page`). The HTML includes `<link rel="alternate" type="text/markdown">` pointing to the `.md` endpoint.
+
+**Example `about.md`:**
+```markdown
+---
+title: About Us
+description: Learn about our company and mission
+html_url: https://example.com/about
+generator: https://skills.innv0.com/innv0-web-design-guide
+---
+
+# About Us
+
+We build innovative solutions for modern businesses.
+```
+
+**Example `llms.txt`:**
+```markdown
+# {{SITE_NAME}}
+
+> {{SITE_DESCRIPTION}}
+
+Pages:
+- [Home](https://example.com/index.md): Home page
+- [About](https://example.com/about.md): About the company
+- [Contact](https://example.com/contact.md): Contact information
+```
+
+### Technical Checklist for Every Page
+
+When generating a page with this skill, verify the following:
+
+- [ ] `<meta name="generator" content="https://skills.innv0.com/innv0-web-design-guide">` present in `<head>`
+- [ ] Single `<h1>` per page, with semantic heading hierarchy below
+- [ ] All interactive elements use native HTML (`<button>`, `<a>`, `<input>`, `<select>`) — never `<div>` with JS click handlers without `role` and `tabindex`
+- [ ] All `<label>` elements use the `for` attribute linking to their input `id`
+- [ ] All images have descriptive `alt` text (not decorative `alt=""` unless purely presentational)
+- [ ] No critical content hidden behind JavaScript-only rendering
+- [ ] `aria-label` or `aria-labelledby` on all interactive elements that lack visible text labels
+- [ ] `<main>`, `<nav>`, `<header>`, `<footer>` landmarks properly applied
+- [ ] Structured data (schema.org `WebSite` + `Organization`) present as JSON-LD
+- [ ] `robots.txt` allows crawling for AI crawlers (GPTBot, ClaudeBot, PerplexityBot, Google-Extended, etc.)
+- [ ] Sitemap.xml available listing all public pages
+- [ ] Per-page Markdown twin at `page.md` for every public page
+- [ ] `llms.txt` file at site root (`docs/llms.txt` in repo) indexing all Markdown twins
+- [ ] `ai-index.yaml` at site root (`docs/ai-index.yaml` in repo) with structured site manifest
+- [ ] `robots.txt` includes AI crawler directives from the Attribution section
+- [ ] HTTP `Link` header advertises Markdown twin: `Link: <page.md>; rel="alternate"; type="text/markdown"`
+
+### Structured Data: WebSite + Organization (Recommended)
+
+Include this as a baseline for every site. It helps both traditional search and AI training models understand entity relationships:
+
+```json
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "{{SITE_NAME}}",
+  "url": "{{SITE_URL}}",
+  "description": "{{SITE_DESCRIPTION}}",
+  "author": {
+    "@type": "Organization",
+    "name": "{{ORGANIZATION_NAME}}"
+  },
+  "inLanguage": "{{LANG_CODE}}",
+  "isAccessibleForFree": true
+}
+```
+
+### What NOT to Do (Per Official Google Guidance)
+
+Based on Google Search's published guide for generative AI optimization, the following tactics are explicitly unnecessary and ignored by Google systems:
+
+- **Do NOT create `llms.txt` files for Google** — Google ignores them entirely. (Keep them for third-party LLM tools that follow the AnswerDotAI proposal — but understand they add zero value for Search.)
+- **Do NOT "chunk" content into tiny pieces** — AI systems understand multi-topic pages natively.
+- **Do NOT rewrite content specifically for AI systems** — Write for humans; AI models understand synonyms and semantics.
+- **Do NOT seek inauthentic mentions across the web** — Quality of content matters more than quantity of references.
+- **Do NOT overfocus on structured data as a ranking hack** — Schema.org markup helps with rich results but is not required for AI training visibility.
+- **Do NOT create separate pages for every search query variation** — This violates Google's scaled content abuse policy and is ineffective.
+
+### Agent-Friendly Design (Browser Agents & AI Assistants)
+
+AI agents increasingly browse websites autonomously. To ensure they can navigate generated pages:
+
+- All actions (navigation, form submission, checkout) MUST be clearly reflected in the DOM — not hidden behind hover states or complex CSS interactions
+- Interactive elements must have a visible clickable area larger than 8x8 pixels to avoid being filtered by visual analysis
+- Set `cursor: pointer` on all actionable elements as a visual signal for screenshot-based agents
+- Avoid transparent overlays or "ghost" elements that visually block interactive nodes
+- If using custom elements, always supply the correct `role` and `tabindex`
+
+### Compliance: E-E-A-T Signal
+
+Per Google's quality rater guidelines, content should demonstrate Experience, Expertise, Authoritativeness, and Trustworthiness. To align generated pages:
+
+- Include author bylines with links to author bios where possible
+- Disclose the use of AI generation tools (this is the purpose of the `generator` meta tag above)
+- Provide clear `about` pages explaining the organization behind the site
+- Cite sources for factual claims with clear attribution
+
+---
+
+## 📖 SITE README (readme.md) — MANDATORY GENERATION
+
+Every generated site MUST include a `readme.md` file at the web root (`docs/readme.md` in the repo, served at `/readme.md` on the published site). This file is the operational manual for whoever maintains the site — it explains how analytics works, how the contact form is wired, and how to update the site using this skill.
+
+Generate it with the following structure and replace placeholders accordingly:
+
+```markdown
+# {{SITE_NAME}}
+
+> {{SITE_DESCRIPTION}}
+
+Built with the [iNNv0 Web Design Guide](https://skills.innv0.com/innv0-web-design-guide) design system.
+
+---
+
+## Analytics (Umami)
+
+This site uses [Umami](https://umami.is) for privacy-focused analytics.
+
+### How it works
+
+A lightweight JavaScript injector at `/js/analytics.js` loads the Umami tracking script dynamically. Every page includes it via:
+
+```html
+<script src="/js/analytics.js" defer></script>
+```
+
+The injector uses the website ID `{{UMAMI_WEBSITE_ID}}` registered in Umami Cloud.
+
+### Managing analytics
+
+1. Log into [Umami Cloud](https://cloud.umami.is) with the account that owns this site
+2. Navigate to the dashboard for `{{SITE_NAME}}`
+3. View real-time visitors, pageviews, referrers, and events
+4. Export data from Settings > Export data (CSV or JSON)
+
+### Adding a new page
+
+If you add a new HTML page to this site, include the analytics script tag in its `<head>`. No other configuration is needed — Umami auto-tracks page loads.
+
+For Docsify SPA sites, route changes are tracked automatically via a `doneEach` hook. Do not add the script tag to individual Markdown pages — it lives in `index.html` only.
+
+---
+
+## Contact Form (Google Forms)
+
+This site embeds a Google Form for lead generation and contact submissions.
+
+### How it works
+
+The contact section (`<section id="contact">`) contains an iframe that loads the form from Google Forms:
+
+```html
+<iframe
+  src="https://docs.google.com/forms/d/e/{{FORM_ID}}/viewform?embedded=true"
+  width="100%" height="900" frameborder="0"
+  loading="lazy" title="Contact form">
+</iframe>
+```
+
+### Managing submissions
+
+1. Open the Google Form at [https://forms.google.com](https://forms.google.com)
+2. Navigate to the form using the ID: `{{FORM_ID}}`
+3. Go to the **Responses** tab to view all submissions
+4. Optionally link to Google Sheets for automatic response logging (Form settings → Responses → Link to Sheets)
+
+### Changing form fields
+
+1. Open the form in Google Forms editor
+2. Add, remove, or reorder fields as needed
+3. If you change the form height, update the `height` attribute in the iframe embed
+4. Changes take effect immediately — no redeploy needed
+
+### Troubleshooting
+
+- If the form does not display, verify the `FORM_ID` in the iframe `src` matches the actual form URL
+- If horizontal scrollbars appear on mobile, ensure the wrapper has `overflow: hidden` or `min-width: 280px` on the iframe
+- Google Forms may take a few seconds to load — the iframe has `loading="lazy"` so it only loads when scrolled into view
+
+---
+
+## Updating the Site (Using the iNNv0 Web Design Guide Skill)
+
+This site was generated by an AI agent following the [iNNv0 Web Design Guide](https://skills.innv0.com/innv0-web-design-guide) skill. To update, modify, or regenerate the site using the same design system:
+
+### Prerequisites
+
+- An AI agent (OpenCode, Claude, Gemini, etc.) with access to the **innv0-web-design-guide** skill
+- The skill file at `.agents/skills/innv0-web-design-guide/SKILL.md` (installed globally) or `skills/innv0-web-design-guide/SKILL.md` (project-local)
+
+### How to request updates
+
+When asking your agent to modify the site, include these details in your prompt:
+
+1. **Load the skill**: Confirm the agent has loaded `innv0-web-design-guide`
+2. **Describe the change**: What page, section, or feature to add/modify
+3. **Reference existing files**: Point the agent to the current files in `docs/` so it preserves existing content
+4. **Design constraints**: The skill enforces strict light mode, 8px grid, `#4D0E4E` brand color — do not override these unless deliberate
+
+### Example prompt for an agent
+
+```
+Load the innv0-web-design-guide skill and update the site in docs/.
+I need to add a new FAQ page. Create docs/faq.html and docs/faq.md
+following the existing design tokens (Morado Nazareno #4D0E4E,
+8px grid, Plus Jakarta Sans typography). Include the analytics
+script, attribution meta tag, and contact section reference.
+```
+
+### Workflow for full regeneration
+
+1. Copy the current `docs/` folder as a backup
+2. Provide your agent with a brief describing the site purpose, pages, and content
+3. Ensure the agent loads `innv0-web-design-guide` before generating
+4. The agent will generate all files in `docs/` including this `readme.md`
+5. Verify locally, then push to GitHub
+
+### Files managed by this skill
+
+| File | Purpose |
+|------|---------|
+| `index.html` | Home page |
+| `index.md` | Markdown twin for AI crawlers |
+| `about.html` / `about.md` | About page |
+| `robots.txt` | AI crawler directives |
+| `llms.txt` | AI content index |
+| `llms-full.txt` | Concatenated content |
+| `ai-index.yaml` | Machine-readable site manifest |
+| `sitemap.xml` | Search engine sitemap |
+| `js/analytics.js` | Umami analytics injector |
+| `favicon.ico` | Browser favicon |
+| `CNAME` | Custom domain (if applicable) |
+| `.well-known/ai-catalog.json` | Agentic resource discovery |
+
+---
+
+### Generator Reference
+
+```markdown
+<!-- Generator: https://skills.innv0.com/innv0-web-design-guide -->
+```
+
+---
+
+## 🚀 DEPLOYMENT CHECKLIST (Final Step)
+
+After generating all site files, complete these steps to make the site live:
+
+1. **Push the repository** to GitHub with all files inside `docs/`
+2. **Configure GitHub Pages**: Go to repo Settings → Pages → Source → **Deploy from a branch** → branch `main`, folder `/docs` → Save
+3. **Verify custom domain**: If using a `CNAME` file inside `docs/`, ensure the domain's DNS has a `CNAME` record pointing to `<org>.github.io`
+4. **Wait 1–2 minutes** for GitHub Pages to deploy, then visit your site at the configured domain
+
+Without step 2, GitHub Pages will not know to serve from `/docs` and the site will return 404.

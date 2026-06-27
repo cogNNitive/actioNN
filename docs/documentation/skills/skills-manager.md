@@ -1,3 +1,10 @@
+---
+title: "Skills Manager — iNNv0 Skill"
+description: "Meta-skill that manages the lifecycle of all repository skills"
+html_url: https://skills.innv0.com/docs/#/skills/skills-manager
+generator: https://skills.innv0.com/innv0-web-design-guide
+---
+
 # Skills Manager
 
 **Version**: 1.0 · **Installed**: 2026-06-27

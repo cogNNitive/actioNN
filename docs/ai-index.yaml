@@ -1,0 +1,45 @@
+# AI Content Index — https://skills.innv0.com/innv0-web-design-guide
+site:
+  name: "iNNv0"
+  url: "https://skills.innv0.com"
+  description: "AI Agent Skills ecosystem for OpenCode — modular skills that power AI agents with specialized capabilities"
+  generator: "https://skills.innv0.com/innv0-web-design-guide"
+  language: "en"
+  updated: "2026-06-27"
+pages:
+  - path: "/"
+    title: "iNNv0 — AI Agent Skills for OpenCode"
+    description: "Skills ecosystem for AI agents in OpenCode. Model Router, Skills Manager, traNNsform, and Design System."
+    last_modified: "2026-06-27"
+    format: markdown
+    url: "https://skills.innv0.com/web/index.md"
+  - path: "/documentation/"
+    title: "iNNv0 — Documentation"
+    description: "Technical documentation for the iNNv0 skills ecosystem"
+    last_modified: "2026-06-27"
+    format: markdown
+    url: "https://skills.innv0.com/documentation/README.md"
+  - path: "/documentation/skills/opencode-model-router"
+    title: "Model Router Skill"
+    description: "Evaluates AI model suitability for each task"
+    last_modified: "2026-06-27"
+    format: markdown
+    url: "https://skills.innv0.com/documentation/skills/opencode-model-router.md"
+  - path: "/documentation/skills/skills-manager"
+    title: "Skills Manager Skill"
+    description: "Manages the lifecycle of repository skills"
+    last_modified: "2026-06-27"
+    format: markdown
+    url: "https://skills.innv0.com/documentation/skills/skills-manager.md"
+  - path: "/documentation/skills/trannsform"
+    title: "traNNsform Skill"
+    description: "Document ingestion and transformation pipeline"
+    last_modified: "2026-06-27"
+    format: markdown
+    url: "https://skills.innv0.com/documentation/skills/trannsform.md"
+  - path: "/documentation/skills/web-design-guide"
+    title: "Web Design Guide Skill"
+    description: "Light-mode design system with Morado Nazareno palette"
+    last_modified: "2026-06-27"
+    format: markdown
+    url: "https://skills.innv0.com/documentation/skills/web-design-guide.md"
