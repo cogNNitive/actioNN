@@ -1,5 +1,14 @@
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
+
+const TRANNNSFORM_VERSION = (() => {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8')).version || '1.0.0';
+  } catch {
+    return '1.0.0';
+  }
+})();
 
 // Supported extensions by category
 const EXT_OK = ['.txt', '.md', '.csv', '.json'];
@@ -16,6 +25,34 @@ const EXT_DEPS = {
   '.pdf':  { pkg: 'pdf-parse', label: 'pdf-parse' },
   '.xlsx': { pkg: 'xlsx', label: 'xlsx' }
 };
+
+/**
+ * Compute SHA-256 hash of a file
+ */
+function computeFileHash(filePath) {
+  const content = fs.readFileSync(filePath);
+  return crypto.createHash('sha256').update(content).digest('hex');
+}
+
+/**
+ * Generate YAML frontmatter with source traceability
+ */
+function generateSourceFrontmatter(originalFilePath, relativeSourcePath) {
+  const hash = computeFileHash(originalFilePath);
+  const timestamp = new Date().toISOString();
+  const stat = fs.statSync(originalFilePath);
+
+  return `---
+source:
+  file: "${relativeSourcePath}"
+  hash: "sha256:${hash}"
+  size: ${stat.size}
+  normalized_at: "${timestamp}"
+  normalized_by: "traNNsform v${TRANNNSFORM_VERSION}"
+---
+
+`;
+}
 
 /**
  * Detect available formats in a raw directory
@@ -114,9 +151,17 @@ async function scanAndProcess(projectDir, options = {}) {
       } else {
         try {
           let content = fs.readFileSync(filePath, 'utf8');
+          // Strip existing frontmatter if present (to avoid double frontmatter)
+          let strippedContent = content;
+          if (content.startsWith('---\n') || content.startsWith('---\r\n')) {
+            const endIdx = content.indexOf('\n---', 3);
+            if (endIdx !== -1) {
+              strippedContent = content.slice(endIdx + 5);
+            }
+          }
           let mdContent = '';
           if (ext === '.md') {
-            mdContent = content;
+            mdContent = strippedContent;
           } else if (ext === '.txt') {
             mdContent = content;
           } else if (ext === '.json') {
@@ -126,7 +171,8 @@ async function scanAndProcess(projectDir, options = {}) {
           }
 
           const destPath = path.join(mdDir, `${baseName}.md`);
-          fs.writeFileSync(destPath, mdContent, 'utf8');
+          const frontmatter = generateSourceFrontmatter(filePath, `raw/${file}`);
+          fs.writeFileSync(destPath, frontmatter + mdContent, 'utf8');
           status = '✅ Processed';
           action = `Converted to markdown at \`md/${baseName}.md\``;
           processedCount++;
@@ -194,7 +240,8 @@ async function scanAndProcess(projectDir, options = {}) {
               if (ext === '.docx') {
                 const mammoth = require('mammoth');
                 const result = await mammoth.convertToMarkdown({ path: filePath });
-                fs.writeFileSync(destPath, result.value, 'utf8');
+                const docxFm = generateSourceFrontmatter(filePath, `raw/${file}`);
+                fs.writeFileSync(destPath, docxFm + result.value, 'utf8');
                 status = '✅ Processed';
                 action = `Converted DOCX to markdown at \`md/${baseName}.md\``;
                 processedCount++;
@@ -204,13 +251,15 @@ async function scanAndProcess(projectDir, options = {}) {
                   const dataBuffer = fs.readFileSync(filePath);
                   const data = await pdfParse(dataBuffer);
                   const mdContent = `# ${baseName}\n\n${data.text}`;
-                  fs.writeFileSync(destPath, mdContent, 'utf8');
+                  const pdfFm = generateSourceFrontmatter(filePath, `raw/${file}`);
+                  fs.writeFileSync(destPath, pdfFm + mdContent, 'utf8');
                   status = '✅ Processed';
                   action = `Converted PDF to markdown at \`md/${baseName}.md\``;
                   processedCount++;
                 } catch (pdfErr) {
                   const mockContent = `# ${baseName}\n\n*PDF Content Ingested (Placeholder)*\n\n[PDF: ${file} needs manual verification or a PDF parser package to extract text fully.]`;
-                  fs.writeFileSync(destPath, mockContent, 'utf8');
+                  const pdfMockFm = generateSourceFrontmatter(filePath, `raw/${file}`);
+                  fs.writeFileSync(destPath, pdfMockFm + mockContent, 'utf8');
                   status = '✅ Processed (Partial)';
                   action = `Created placeholder markdown at \`md/${baseName}.md\`. PDF parsing failed: ${pdfErr.message}`;
                   processedCount++;
@@ -244,7 +293,8 @@ async function scanAndProcess(projectDir, options = {}) {
                   }
                   mdContent += '\n';
                 });
-                fs.writeFileSync(destPath, mdContent, 'utf8');
+                const xlsxFm = generateSourceFrontmatter(filePath, `raw/${file}`);
+                fs.writeFileSync(destPath, xlsxFm + mdContent, 'utf8');
                 status = '✅ Processed';
                 action = `Converted XLSX to markdown at \`md/${baseName}.md\``;
                 processedCount++;
@@ -286,7 +336,17 @@ async function scanAndProcess(projectDir, options = {}) {
   logs.push(`*   **${timestamp}:** Discovered ${totalDiscovered} files.`);
 
   // Consolidate files in alphabetical order into md/_all.md
-  let consolidatedContent = '# Converted Documents Consolidation\n\n';
+  const consolidationTimestamp = new Date().toISOString();
+  let consolidatedContent = `---
+title: "Converted Documents Consolidation"
+generated_at: "${consolidationTimestamp}"
+generated_by: "traNNsform v${TRANNNSFORM_VERSION}"
+source_count: ${processedCount}
+---
+
+# Converted Documents Consolidation
+
+`;
   const mdFiles = fs.readdirSync(mdDir)
     .filter(f => f.endsWith('.md') && f !== '_all.md')
     .sort();
@@ -335,6 +395,8 @@ module.exports = {
   detectFormats,
   isDepInstalled,
   getSupportedFormats,
+  computeFileHash,
+  generateSourceFrontmatter,
   EXT_LABELS,
   EXT_DEPS
 };
