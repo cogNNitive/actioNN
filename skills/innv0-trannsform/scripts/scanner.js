@@ -55,6 +55,59 @@ source:
 }
 
 /**
+ * Scan md/ directory and generate a source registry mapping src-NNN IDs to file paths.
+ * Reads YAML frontmatter from each .md file, extracts source.file, and assigns
+ * sequential IDs per unique source path.
+ * @param {string} mdDir - Path to the md/ directory
+ * @returns {Array<{id: string, path: string}>} - Registry entries sorted by path
+ */
+function generateSourceRegistry(mdDir) {
+  const registry = [];
+  if (!fs.existsSync(mdDir)) return registry;
+
+  const mdFiles = fs.readdirSync(mdDir)
+    .filter(f => f.endsWith('.md') && f !== '_all.md')
+    .sort();
+
+  let srcCounter = 0;
+  const seen = new Map(); // path -> id
+
+  for (const mdFile of mdFiles) {
+    const mdPath = path.join(mdDir, mdFile);
+    const content = fs.readFileSync(mdPath, 'utf8');
+
+    // Extract YAML frontmatter
+    const fmMatch = content.match(/^---\n([\s\S]*?)\n---/);
+    if (!fmMatch) continue;
+
+    const fmLines = fmMatch[1].split('\n');
+    let sourceFile = null;
+
+    for (const line of fmLines) {
+      const match = line.match(/^\s*file:\s*"([^"]+)"\s*$/);
+      if (match) {
+        sourceFile = match[1];
+        break;
+      }
+    }
+
+    if (!sourceFile) continue;
+
+    if (seen.has(sourceFile)) {
+      // Already assigned an ID — skip duplicate
+      continue;
+    }
+
+    srcCounter++;
+    const id = 'src-' + String(srcCounter).padStart(3, '0');
+    seen.set(sourceFile, id);
+    registry.push({ id, path: sourceFile });
+  }
+
+  return registry;
+}
+
+/**
  * Detect available formats in a raw directory
  */
 function detectFormats(rawDir) {
@@ -397,6 +450,7 @@ module.exports = {
   getSupportedFormats,
   computeFileHash,
   generateSourceFrontmatter,
+  generateSourceRegistry,
   EXT_LABELS,
   EXT_DEPS
 };

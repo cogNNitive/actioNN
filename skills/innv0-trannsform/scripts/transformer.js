@@ -22,8 +22,10 @@ function listTemplates(projectDir) {
  */
 async function applyTransformation(projectDir, templateName, options = {}) {
   const transDir = path.join(projectDir, 'traNNsformations');
-  const outputDir = path.join(projectDir, 'output');
   const allMdFile = path.join(projectDir, 'md', '_all.md');
+
+  const cleanTemplateName = path.basename(templateName, '.md').replace(/\s+/g, '_');
+  const outputDir = path.join(projectDir, 'output', cleanTemplateName);
 
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true });
@@ -44,7 +46,6 @@ async function applyTransformation(projectDir, templateName, options = {}) {
   const transformedOutput = runHeuristicTransformation(templateName, templateContent, sourceContent);
 
   // Save Output
-  const cleanTemplateName = path.basename(templateName, '.md').replace(/\s+/g, '_');
   const timestamp = getFormattedTimestamp();
   const outputFileName = `${cleanTemplateName}_${timestamp}.md`;
   const outputPath = path.join(outputDir, outputFileName);
