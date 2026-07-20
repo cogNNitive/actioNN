@@ -1,4 +1,4 @@
-# Pipeline Orchestration Specification
+﻿# Pipeline Orchestration Specification
 
 ## Purpose
 
@@ -24,7 +24,7 @@ The orchestrator MUST scan user-specified locations for pipeline FORMAT files.
 - THEN it SHOULD report "No pipeline files found in [path]"
 - AND offer the user the option to create a new pipeline
 
-### Requirement: User Interaction — Choose or Create
+### Requirement: User Interaction â€” Choose or Create
 
 The orchestrator MUST ask the user whether to use an existing pipeline or create a new one before any scanning or execution.
 
@@ -67,7 +67,7 @@ The orchestrator MUST execute pipeline stages in the order defined by the docume
 
 #### Scenario: Three-stage pipeline executes in order
 
-- GIVEN a pipeline with stages `[Normalize → Format → Transform]`
+- GIVEN a pipeline with stages `[Normalize â†’ Format â†’ Transform]`
 - WHEN the orchestrator executes
 - THEN stage Normalize runs first, stage Format runs second, stage Transform runs third
 - AND no stage starts before its predecessor completes
@@ -128,11 +128,11 @@ If any stage fails, the orchestrator MUST report the error and stop.
 
 ### Requirement: Registry Registration
 
-The orchestrator SKILL.md MUST include a `triggers` metadata entry and the `.innv0/skill-registry.md` MUST be updated to include the orchestrator entry.
+The orchestrator SKILL.md MUST include a `triggers` metadata entry and the `.cogNNitive/skill-registry.md` MUST be updated to include the orchestrator entry.
 
 #### Scenario: Registry entry present
 
-- GIVEN `.innv0/skill-registry.md` exists
+- GIVEN `.cogNNitive/skill-registry.md` exists
 - WHEN the change is applied
 - THEN the registry MUST contain a table row for `innv0-pipeline-orchestrator`
 - AND the row MUST include path `skills/innv0-pipeline-orchestrator/SKILL.md`

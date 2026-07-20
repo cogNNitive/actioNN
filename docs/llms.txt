@@ -2,13 +2,13 @@
 
 > AI Agent Skills ecosystem for OpenCode. Modular skills that power AI agents with specialized capabilities: model evaluation, skills management, document transformation, and web design.
 
-Generator: https://skills.innv0.com/nn-design-presets
+Generator: https://actionn.cognitive.com/nn-design-presets
 
 ## Pages
 
-- [Home](https://skills.innv0.com/web/index.md): iNNv0 skills ecosystem landing page with skill cards, architecture overview, and installation instructions
-- [Documentation](https://skills.innv0.com/documentation/README.md): Full documentation for all skills including Model Router, Skills Manager, traNNsform, and Web Design Guide
-- [Model Router](https://skills.innv0.com/documentation/skills/opencode-model-router.md): Evaluates AI model suitability for each task across 4 task scales
-- [Skills Manager](https://skills.innv0.com/documentation/skills/skills-manager.md): Meta-skill managing all repository skills lifecycle
-- [traNNsform](https://skills.innv0.com/documentation/skills/trannsform.md): Document ingestion and transformation pipeline from PDF/DOCX to Markdown
-- [Web Design Guide](https://skills.innv0.com/documentation/skills/web-design-guide.md): Light-mode design system with Morado Nazareno palette and 8px grid
+- [Home](https://actionn.cognitive.com/web/index.md): iNNv0 skills ecosystem landing page with skill cards, architecture overview, and installation instructions
+- [Documentation](https://actionn.cognitive.com/documentation/README.md): Full documentation for all skills including Model Router, Skills Manager, traNNsform, and Web Design Guide
+- [Model Router](https://actionn.cognitive.com/documentation/skills/opencode-model-router.md): Evaluates AI model suitability for each task across 4 task scales
+- [Skills Manager](https://actionn.cognitive.com/documentation/skills/skills-manager.md): Meta-skill managing all repository skills lifecycle
+- [traNNsform](https://actionn.cognitive.com/documentation/skills/trannsform.md): Document ingestion and transformation pipeline from PDF/DOCX to Markdown
+- [Web Design Guide](https://actionn.cognitive.com/documentation/skills/web-design-guide.md): Light-mode design system with Morado Nazareno palette and 8px grid

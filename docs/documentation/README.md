@@ -1,8 +1,8 @@
 ---
 title: "iNNv0 — Documentation"
 description: "Technical documentation for the iNNv0 skills ecosystem"
-html_url: https://skills.innv0.com/documentation/
-generator: https://skills.innv0.com/nn-design-presets
+html_url: https://actionn.cognitive.com/documentation/
+generator: https://actionn.cognitive.com/nn-design-presets
 ---
 
 # iNNv0 — Documentation

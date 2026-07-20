@@ -1,17 +1,17 @@
-# Delta for Infrastructure
+﻿# Delta for Infrastructure
 
 ## ADDED Requirements
 
 ### Requirement: Registry Builder Script
 
-The project MUST ship `scripts/build-registry.js` — a zero-dependency Node.js script that scans `skills/<name>/SKILL.md`, parses YAML frontmatter via regex, and writes a registry manifest into `.innv0/`.
+The project MUST ship `scripts/build-registry.js` â€” a zero-dependency Node.js script that scans `skills/<name>/SKILL.md`, parses YAML frontmatter via regex, and writes a registry manifest into `.cogNNitive/`.
 
 #### Scenario: Build produces valid registry files
 
 - GIVEN `skills/` contains 5 skill subdirectories each with a valid `SKILL.md` (name, triggers, description in frontmatter)
 - WHEN `node scripts/build-registry.js` runs from the repo root
-- THEN `.innv0/skill-registry.md` is created with a Markdown table listing all 5 skills
-- AND `.innv0/.skill-registry.cache.json` is created with minimal metadata
+- THEN `.cogNNitive/skill-registry.md` is created with a Markdown table listing all 5 skills
+- AND `.cogNNitive/.skill-registry.cache.json` is created with minimal metadata
 
 #### Scenario: Script handles malformed frontmatter gracefully
 
@@ -28,14 +28,14 @@ The project MUST ship `scripts/build-registry.js` — a zero-dependency Node.js 
 
 ### Requirement: State Directory Migration
 
-The project MUST migrate its canonical state directory from `.atl/` to `.innv0/`.
+The project MUST migrate its canonical state directory from `.atl/` to `.cogNNitive/`.
 
 #### Scenario: Files moved and gitignore updated
 
 - GIVEN `.atl/skill-registry.md` and `.atl/.skill-registry.cache.json` exist
 - WHEN the migration is applied
-- THEN those files appear under `.innv0/` with identical content
-- AND `.gitignore` references `.atl/` are replaced with `.innv0/`
+- THEN those files appear under `.cogNNitive/` with identical content
+- AND `.gitignore` references `.atl/` are replaced with `.cogNNitive/`
 - AND the `.atl/` directory is deleted
 
 #### Scenario: Deleted directory confirmed
@@ -46,7 +46,7 @@ The project MUST migrate its canonical state directory from `.atl/` to `.innv0/`
 
 ### Requirement: nn-format Refactor
 
-The `nn-format` skill MUST remove the "Source Ingestion Pipeline" section (~55 lines, lines 187–241) and update its frontmatter `description` to remove coordination references to `traNNsform`.
+The `nn-format` skill MUST remove the "Source Ingestion Pipeline" section (~55 lines, lines 187â€“241) and update its frontmatter `description` to remove coordination references to `traNNsform`.
 
 #### Scenario: Pipeline section removed
 
@@ -80,21 +80,21 @@ The `nn-skills-manager` skill MUST remove the "Copy" install option from its int
 
 ### Requirement: AGENTS.md Documentation
 
-AGENTS.md MUST add a section documenting `.innv0/` as the canonical state directory and the `scripts/build-registry.js` workflow.
+AGENTS.md MUST add a section documenting `.cogNNitive/` as the canonical state directory and the `scripts/build-registry.js` workflow.
 
 #### Scenario: State directory documented
 
 - GIVEN AGENTS.md exists at the repo root
 - WHEN the change is applied
-- THEN AGENTS.md contains a heading describing `.innv0/` contents and purpose
+- THEN AGENTS.md contains a heading describing `.cogNNitive/` contents and purpose
 - AND includes usage instructions for `node scripts/build-registry.js`
 
 ### Requirement: openspec/config.yaml Path Update
 
-Line 34 of `openspec/config.yaml` MUST reference `.innv0/` instead of `.atl/`.
+Line 34 of `openspec/config.yaml` MUST reference `.cogNNitive/` instead of `.atl/`.
 
 #### Scenario: Path corrected
 
 - GIVEN `openspec/config.yaml` line 34 reads `- Update .atl/skill-registry.md if skills changed`
 - WHEN the change is applied
-- THEN line 34 reads `- Update .innv0/skill-registry.md if skills changed`
+- THEN line 34 reads `- Update .cogNNitive/skill-registry.md if skills changed`

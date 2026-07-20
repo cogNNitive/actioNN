@@ -1,4 +1,4 @@
----
+﻿---
 name: agent-web-bootstrap
 description: >
   Bootstrap the iNNv0 ecosystem from a manifest URL. Trigger when the user
@@ -22,7 +22,7 @@ Bootstrap the iNNv0 ecosystem from a manifest URL. One-shot: installs skills, do
 ## Trigger
 
 When the user says something like:
-- "Quiero usar eNNvironment https://innv0.github.io/eNNvironment"
+- "Quiero usar eNNvironment https://cogNNitive.github.io/eNNvironment"
 - "Usa eNNvironment <URL>"
 - "/bootstrap <URL>"
 
@@ -38,21 +38,21 @@ The URL must point to a page with YAML frontmatter containing `agent-bootstrap:`
    - `skills[]`: array of `{name, repo, path, description?, mcp[]?}`
    - `workflows[]`: array of `{id, label, description, skill}`
 
-If YAML is malformed → error: "Failed to parse manifest: {detail} at line N"
-If URL is unreachable → error: "Could not reach {URL}: HTTP {code}"
-If no `skills[]` or `workflows[]` → error: "Manifest has no skills or workflows declared"
+If YAML is malformed â†’ error: "Failed to parse manifest: {detail} at line N"
+If URL is unreachable â†’ error: "Could not reach {URL}: HTTP {code}"
+If no `skills[]` or `workflows[]` â†’ error: "Manifest has no skills or workflows declared"
 
 ### Step 2: Provision skills
 
 For each skill in `skills[]`:
 
 ```
-1. Check if ~/.agents/skills/{name}/SKILL.md exists → skip, report "Already installed: {name}"
+1. Check if ~/.agents/skills/{name}/SKILL.md exists â†’ skip, report "Already installed: {name}"
 2. Clone {repo} to a temp directory (git clone --depth 1)
 3. Copy {path} to ~/.agents/skills/{name}/
 4. If skill-origin-guard is available, validate frontmatter
-   - If validation fails → warn but continue
-   - If skill-origin-guard not found → warn "frontmatter validation skipped" and continue
+   - If validation fails â†’ warn but continue
+   - If skill-origin-guard not found â†’ warn "frontmatter validation skipped" and continue
 5. Update skill registry (~/.agents/skills is auto-discovered by most agents)
 ```
 
@@ -63,9 +63,9 @@ For each skill that declares `mcp[]`:
 ```
 1. For each mcp entry: {name, url}
 2. Create ~/.agents/mcp/ if it doesn't exist
-3. Check if ~/.agents/mcp/{name}.bundle.js exists → skip, report "MCP already present: {name}"
+3. Check if ~/.agents/mcp/{name}.bundle.js exists â†’ skip, report "MCP already present: {name}"
 4. Download {url} to ~/.agents/mcp/{name}.bundle.js
-5. If download fails (HTTP error, timeout) → warn and mark skill as "MCP unavailable"
+5. If download fails (HTTP error, timeout) â†’ warn and mark skill as "MCP unavailable"
 6. Register the MCP server in the current workspace's .opencode/opencode.json:
    {
      "mcp": {
@@ -85,7 +85,7 @@ The MCP path must be absolute (resolved from `~/.agents/mcp/{name}.bundle.js`) s
 Render a numbered menu from `workflows[]`:
 
 ```markdown
-[a] {workflow.label} — {workflow.description}
+[a] {workflow.label} â€” {workflow.description}
 [b] ...  
 [x] Salir
 ```
@@ -94,24 +94,24 @@ On selection:
 - Route to the corresponding `{workflow.skill}` by invoking the skill
 - For "cognnitive": load `nn-innfo` skill and guide through model creation
 - For "transform": load `nn-trannsform` skill
-- Invalid input → reprompt: "Invalid selection. Enter a valid option or 'x' to exit"
-- If `workflows[]` is empty → "No workflows available. Skills installed — use /{name} to invoke each."
+- Invalid input â†’ reprompt: "Invalid selection. Enter a valid option or 'x' to exit"
+- If `workflows[]` is empty â†’ "No workflows available. Skills installed â€” use /{name} to invoke each."
 
 ## Post-install summary
 
 After all steps, report:
 
 ```
-✅ Skills instalados:
-  • {name} — {status}
-  • {name} — {status}
+âœ… Skills instalados:
+  â€¢ {name} â€” {status}
+  â€¢ {name} â€” {status}
 
-✅ MCP bundles:
-  • {name} — {status}
+âœ… MCP bundles:
+  â€¢ {name} â€” {status}
 
-📋 Workflows disponibles:
-  • {label}
-  • {label}
+ðŸ“‹ Workflows disponibles:
+  â€¢ {label}
+  â€¢ {label}
 ```
 
 ## Edge cases
@@ -125,12 +125,12 @@ After all steps, report:
 ## Example conversation
 
 ```
-User: Quiero usar eNNvironment https://innv0.github.io/eNNvironment
-Agent: 🔧 Agent Web Bootstrap Skill activado.
-       Leí la página de eNNvironment.
+User: Quiero usar eNNvironment https://cogNNitive.github.io/eNNvironment
+Agent: ðŸ”§ Agent Web Bootstrap Skill activado.
+       LeÃ­ la pÃ¡gina de eNNvironment.
        Skills a instalar: nn-innfo, nn-trannsform, nn-workflow-orchestrator
        MCP a descargar: innfo-mcp (~1.2MB)
-       ¿Damos aprobación?
-User: Sí
-Agent: ✅ Todo instalado. Workflows disponibles: CogNNitive, traNNsform
+       Â¿Damos aprobaciÃ³n?
+User: SÃ­
+Agent: âœ… Todo instalado. Workflows disponibles: CogNNitive, traNNsform
 ```

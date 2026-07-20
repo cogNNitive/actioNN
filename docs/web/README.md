@@ -1,10 +1,10 @@
 # iNNv0 Web — Site Documentation
 
-This folder contains the source files for the [iNNv0 skills website](https://skills.innv0.com), a static site generated using the [nn-design-presets](https://skills.innv0.com/nn-design-presets) AI agent skill.
+This folder contains the source files for the [iNNv0 skills website](https://actionn.cognitive.com), a static site generated using the [nn-design-presets](https://actionn.cognitive.com/nn-design-presets) AI agent skill.
 
 ## Links
 
-- **Live site**: [https://skills.innv0.com](https://skills.innv0.com)
+- **Live site**: [https://actionn.cognitive.com](https://actionn.cognitive.com)
 - **GitHub repo**: [https://github.com/cogNNitive/actioNN](https://github.com/cogNNitive/actioNN)
 - **Web Design Guide skill**: `skills/nn-design-presets/SKILL.md`
 - **Umami dashboard**: [https://cloud.umami.is](https://cloud.umami.is)
@@ -44,7 +44,7 @@ docs/
 ├── favicon-32x32.png
 ├── apple-touch-icon.png
 ├── favicon.svg
-├── CNAME                   ← Custom domain: skills.innv0.com
+├── CNAME                   ← Custom domain: actionn.cognitive.com
 ├── robots.txt              ← AI crawler directives
 ├── sitemap.xml
 ├── llms.txt                ← LLM-friendly entry point
@@ -150,8 +150,8 @@ Every page follows the **Markdown twin pattern**: a `.md` source and an `.html` 
 ---
 title: Page Title
 description: Page description for SEO and AI crawlers
-html_url: https://skills.innv0.com/path/to/page
-generator: https://skills.innv0.com/nn-design-presets
+html_url: https://actionn.cognitive.com/path/to/page
+generator: https://actionn.cognitive.com/nn-design-presets
 ---
 
 # Page Title
@@ -213,7 +213,7 @@ The site deploys automatically via GitHub Pages whenever changes are pushed to t
 ### Configuration
 
 - **Settings > Pages > Source**: Deploy from branch `main`, folder `/docs`
-- **Custom domain**: `skills.innv0.com` (set in `docs/CNAME` and DNS)
+- **Custom domain**: `actionn.cognitive.com` (set in `docs/CNAME` and DNS)
 
 ### How to Deploy
 
@@ -232,12 +232,12 @@ git push origin main
 ```
 
 4. GitHub Actions builds and deploys automatically (usually 1-2 minutes)
-5. Visit [https://skills.innv0.com](https://skills.innv0.com) to confirm
+5. Visit [https://actionn.cognitive.com](https://actionn.cognitive.com) to confirm
 
 ### Verifying the Deployment
 
 - Check the **Environment** tab on the GitHub repo for deployment status
-- Or run: `curl -s -o /dev/null -w "%{http_code}" https://skills.innv0.com` — should return `200`
+- Or run: `curl -s -o /dev/null -w "%{http_code}" https://actionn.cognitive.com` — should return `200`
 
 ## Design Tokens
 

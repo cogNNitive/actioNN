@@ -1,17 +1,17 @@
-#!/usr/bin/env node
+﻿#!/usr/bin/env node
 /**
  * scripts/build-registry.js
  *
  * Zero-dependency skill registry builder.
  * Scans skills/<name>/SKILL.md, parses YAML frontmatter via regex,
- * and writes .innv0/skill-registry.md + .innv0/.skill-registry.cache.json
+ * and writes .cogNNitive/skill-registry.md + .cogNNitive/.skill-registry.cache.json
  *
  * Usage:
  *   node scripts/build-registry.js [--root <dir>] [--output <dir>]
  *
  *   --root    Additional root to scan (repeatable). skills/<name>/SKILL.md
  *             is always scanned from repo root.
- *   --output  Output directory (default: .innv0/)
+ *   --output  Output directory (default: .cogNNitive/)
  *   --help    Show this message
  */
 
@@ -57,7 +57,7 @@ Usage: node scripts/build-registry.js [options]
 Options:
   --root <dir>    Additional root to scan (repeatable). skills/<name>/SKILL.md
                   is always scanned from repo root.
-  --output <dir>  Output directory (default: .innv0/)
+  --output <dir>  Output directory (default: .cogNNitive/)
   --help          Show this message
   --version       Show version
 `);
@@ -97,7 +97,7 @@ function parseFrontmatter(content, dirName) {
   }
   const name = nameMatch[1].trim();
 
-  // Extract description — try folded block (|) first, then single-line
+  // Extract description â€” try folded block (|) first, then single-line
   let description = '';
   const foldedMatch = fm.match(/^description:\s*\|\s*\r?\n((?: {2}.*(?:\r?\n|$))*)/m);
   if (foldedMatch) {
