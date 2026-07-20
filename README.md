@@ -1,10 +1,10 @@
-# iNNv0 Skills
+# actioNN Skills
 
 **Modular AI Agent skills ecosystem for [OpenCode](https://opencode.ai).**
 
-iNNv0 is a collection of self-contained, domain-specialized skills that teach your AI agent to solve specific types of tasks — from model evaluation and document transformation to web design and skills lifecycle management. Each skill is an autonomous module with its own triggers, instructions, and behavior rules.
+actioNN is a collection of self-contained, domain-specialized skills that teach your AI agent to solve specific types of tasks — from model evaluation and document transformation to web design and skills lifecycle management. Each skill is an autonomous module with its own triggers, instructions, and behavior rules.
 
-[View site](https://skills.innv0.com) · [Documentation](https://skills.innv0.com/documentation/) · [Report issue](https://github.com/innV0/iNNv0_skills/issues)
+[View site](https://skills.innv0.com) · [Documentation](https://skills.innv0.com/documentation/) · [Report issue](https://github.com/cogNNitive/actioNN/issues)
 
 ---
 
@@ -12,18 +12,18 @@ iNNv0 is a collection of self-contained, domain-specialized skills that teach yo
 
 | Skill | Description |
 |---|---|---|
-| **[Model Router](./skills/innv0-opencode-model-router/)** | Evaluates whether the active AI model is cost-effective for the task at hand. Classifies requests across 4 tiers and recommends optimal model tiers. |
-| **[Workflow Orchestrator](./skills/innv0-workflow-orchestrator/)** | Meta-skill that reads declarative workflow FORMAT files and coordinates multi-skill execution sequences (traNNsform, FORMAT, etc.) in sequential stages. |
-| **[Skills Manager](./skills/innv0-skills-manager/)** | Meta-skill that scans, audits, and installs all skills in the repository. Supports NTFS junctions, symlinks, and copy install modes. |
-| **[traNNsform](./skills/innv0-trannsform/)** | Document ingestion and transformation pipeline. Converts PDF, DOCX, XLSX, and more to unified Markdown using the agent's own LLM as the transformation engine. Ships with a Node.js CLI tool. |
-| **[Web Design Guide](./skills/innv0-web-design-guide/)** | Complete light-mode design system with Morado Nazareno palette (#4D0E4E), systematic typography (Plus Jakarta Sans, Playfair Display, Geist Mono), and 8px spacing grid. |
-| **[iNNfo](./skills/innv0-innfo/)** | Semantic modeling with iNNfo V_0-2-0 (`_NN` markers), template-based authoring, marker-based matrices, and spec-driven dashboard renderers. |
+| **[Model Router](./skills/nn-dev-opencode-model-router/)** | Evaluates whether the active AI model is cost-effective for the task at hand. Classifies requests across 4 tiers and recommends optimal model tiers. |
+| **[Workflow Orchestrator](./skills/nn-workflow-orchestrator/)** | Meta-skill that reads declarative workflow FORMAT files and coordinates multi-skill execution sequences (traNNsform, FORMAT, etc.) in sequential stages. |
+| **[Skills Manager](./skills/nn-skills-manager/)** | Meta-skill that scans, audits, and installs all skills in the repository. Supports NTFS junctions, symlinks, and copy install modes. |
+| **[traNNsform](./skills/nn-trannsform/)** | Document ingestion and transformation pipeline. Converts PDF, DOCX, XLSX, and more to unified Markdown using the agent's own LLM as the transformation engine. Ships with a Node.js CLI tool. |
+| **[Web Design Guide](./skills/nn-design-presets/)** | Complete light-mode design system with Morado Nazareno palette (#4D0E4E), systematic typography (Plus Jakarta Sans, Playfair Display, Geist Mono), and 8px spacing grid. |
+| **[iNNfo](./skills/nn-innfo/)** | Semantic modeling with iNNfo V_0-2-0 (`_NN` markers), template-based authoring, marker-based matrices, and spec-driven dashboard renderers. |
 
 ## Getting Started
 
 ```bash
 # Clone the repository
-git clone https://github.com/innV0/iNNv0_skills.git
+git clone https://github.com/cogNNitive/actioNN.git
 
 # Start OpenCode in the directory
 opencode .
@@ -48,14 +48,14 @@ opencode .
 ## Project Structure
 
 ```
-iNNv0_skills/
+actioNN/
 ├── skills/                        # Skill modules (one per directory)
-│   ├── innv0-innfo/               #   iNNfo semantic modeling
-│   ├── innv0-opencode-model-router/  #   Model adequacy evaluator
-│   ├── innv0-workflow-orchestrator/  #   Multi-skill workflow orchestration
-│   ├── innv0-skills-manager/      #   Skills lifecycle management
-│   ├── innv0-trannsform/          #   Document ingestion pipeline
-│   └── innv0-web-design-guide/    #   Design system & brand guidelines
+│   ├── nn-innfo/               #   iNNfo semantic modeling
+│   ├── nn-dev-opencode-model-router/  #   Model adequacy evaluator
+│   ├── nn-workflow-orchestrator/  #   Multi-skill workflow orchestration
+│   ├── nn-skills-manager/      #   Skills lifecycle management
+│   ├── nn-trannsform/          #   Document ingestion pipeline
+│   └── nn-design-presets/    #   Design system & brand guidelines
 ├── docs/                          # Public site (Docsify + static HTML)
 │   ├── index.html                 #   Landing page
 │   ├── documentation/             #   Full skill documentation
@@ -77,7 +77,7 @@ version: "V_x-y-z"
 last_updated: YYYY-MM-DD
 metadata:
   source_type: "original" | "mirrored" | "integrated"
-  source: "https://github.com/innV0/<repo>"
+  source: "https://github.com/cogNNitive/actioNN"
 license: MIT
 ---
 ```
@@ -99,4 +99,4 @@ license: MIT
 
 ---
 
-Built with [iNNv0 Web Design Guide](https://skills.innv0.com/innv0-web-design-guide).
+Built with [iNNv0 Web Design Guide](https://skills.innv0.com/nn-design-presets).

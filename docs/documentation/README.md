@@ -2,7 +2,7 @@
 title: "iNNv0 — Documentation"
 description: "Technical documentation for the iNNv0 skills ecosystem"
 html_url: https://skills.innv0.com/documentation/
-generator: https://skills.innv0.com/innv0-web-design-guide
+generator: https://skills.innv0.com/nn-design-presets
 ---
 
 # iNNv0 — Documentation
@@ -21,8 +21,8 @@ generator: https://skills.innv0.com/innv0-web-design-guide
 ## Installation
 
 ```bash
-git clone https://github.com/innV0/innv0-skills.git
-cd iNNv0_skills
+git clone https://github.com/cogNNitive/actioNN.git
+cd actioNN
 ```
 
 Then launch your AI agent from the directory (`opencode .`, `claude .`, or equivalent).

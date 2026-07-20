@@ -1,4 +1,4 @@
-# AI Training & Grounding — https://skills.innv0.com/innv0-web-design-guide
+# AI Training & Grounding — https://skills.innv0.com/nn-design-presets
 User-agent: GPTBot
 Allow: /
 

@@ -2,7 +2,7 @@
 title: "iNNv0 — AI Agent Skills"
 description: "Skills ecosystem for AI agents. Model Router, Skills Manager, traNNsform, and Web Design Guide."
 html_url: https://skills.innv0.com/
-generator: https://skills.innv0.com/innv0-web-design-guide
+generator: https://skills.innv0.com/nn-design-presets
 ---
 
 # AI Agent Skills, Engineered for Any Agent
@@ -10,7 +10,7 @@ generator: https://skills.innv0.com/innv0-web-design-guide
 iNNv0 is a modular skills ecosystem that powers your AI agent with specialized capabilities: model evaluation, skills management, document transformation, and web design.
 
 - [Explore Skills](#skills)
-- [View on GitHub](https://github.com/innV0/innv0-skills)
+- [View on GitHub](https://github.com/cogNNitive/actioNN)
 
 ## Skills
 
@@ -41,8 +41,8 @@ Skills are loaded on demand by your AI agent. Each skill defines its own domain,
 ## Installation
 
 ```bash
-git clone https://github.com/innV0/innv0-skills.git
-cd iNNv0_skills
+git clone https://github.com/cogNNitive/actioNN.git
+cd actioNN
 ```
 
 Launch your AI agent from this directory (e.g. `opencode .`, `claude .`, or your agent's equivalent). The Skills Manager will scan and offer to install everything automatically using Windows NTFS junctions for live-change reflection.
@@ -51,4 +51,4 @@ Launch your AI agent from this directory (e.g. `opencode .`, `claude .`, or your
 
 We'd love to hear from you. Questions, ideas, or feedback — reach out anytime.
 
-- [Contact Us](https://innv0.com/contact?ref=innv0-skills) — `https://innv0.com/contact?ref=innv0-skills`
+- [Contact Us](https://innv0.com/contact?ref=actioNN) — `https://innv0.com/contact?ref=actioNN`

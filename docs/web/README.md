@@ -1,17 +1,17 @@
 # iNNv0 Web — Site Documentation
 
-This folder contains the source files for the [iNNv0 skills website](https://skills.innv0.com), a static site generated using the [innv0-web-design-guide](https://skills.innv0.com/innv0-web-design-guide) AI agent skill.
+This folder contains the source files for the [iNNv0 skills website](https://skills.innv0.com), a static site generated using the [nn-design-presets](https://skills.innv0.com/nn-design-presets) AI agent skill.
 
 ## Links
 
 - **Live site**: [https://skills.innv0.com](https://skills.innv0.com)
-- **GitHub repo**: [https://github.com/innV0/innv0-skills](https://github.com/innV0/innv0-skills)
-- **Web Design Guide skill**: `skills/innv0-web-design-guide/SKILL.md`
+- **GitHub repo**: [https://github.com/cogNNitive/actioNN](https://github.com/cogNNitive/actioNN)
+- **Web Design Guide skill**: `skills/nn-design-presets/SKILL.md`
 - **Umami dashboard**: [https://cloud.umami.is](https://cloud.umami.is)
 
 ## How the Web Design Guide Skill Works
 
-The `innv0-web-design-guide` skill is an AI agent skill that defines a complete design system and generates a static website from it. When invoked, the skill:
+The `nn-design-presets` skill is an AI agent skill that defines a complete design system and generates a static website from it. When invoked, the skill:
 
 1. Reads the design system tokens (palette, typography, spacing grid)
 2. Generates HTML pages applying those tokens as inline styles or CSS variables
@@ -87,14 +87,14 @@ To point analytics to a different Umami project, get the new script tag from you
 
 ## Contact Section
 
-Every page includes a contact section. The current site uses a **URL-based contact** pointing to `https://innv0.com/contact?ref=innv0-skills`.
+Every page includes a contact section. The current site uses a **URL-based contact** pointing to `https://innv0.com/contact?ref=actioNN`.
 
 ### Option A: External URL (current)
 
 The contact section renders as a styled button linking to an external page:
 
 ```html
-<a href="https://innv0.com/contact?ref=innv0-skills" class="btn-primary">
+<a href="https://innv0.com/contact?ref=actioNN" class="btn-primary">
   Contact Us
 </a>
 ```
@@ -151,7 +151,7 @@ Every page follows the **Markdown twin pattern**: a `.md` source and an `.html` 
 title: Page Title
 description: Page description for SEO and AI crawlers
 html_url: https://skills.innv0.com/path/to/page
-generator: https://skills.innv0.com/innv0-web-design-guide
+generator: https://skills.innv0.com/nn-design-presets
 ---
 
 # Page Title
@@ -241,7 +241,7 @@ git push origin main
 
 ## Design Tokens
 
-The site uses these core values from the `innv0-web-design-guide` skill:
+The site uses these core values from the `nn-design-presets` skill:
 
 | Token | Value | Usage |
 |---|---|---|

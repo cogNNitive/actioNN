@@ -18,7 +18,7 @@ Six independent deliverables grouped into a single change. The core infrastructu
 **Alternatives**: Directory listing hash; stat on whole directory tree; no cache.
 **Rationale**: Cheap (no I/O beyond the stat calls already needed), accurate (catches any SKILL.md change), deterministic. MD5 is fine here — this is a change detector, not a security boundary.
 
-### Decision: `innv0-format` — clean end-of-file after deletion
+### Decision: `nn-format` — clean end-of-file after deletion
 
 **Choice**: Delete from `## Source Ingestion Pipeline` heading through line 241 (end of file). The `Validation Gate` section (lines 148–185) becomes the new last section. No trailing blank lines.
 **Alternatives**: Truncate at line 186; replace section with a placeholder comment.
@@ -29,8 +29,8 @@ Six independent deliverables grouped into a single change. The core infrastructu
 **Choice**: Both refactored skills get `z` (patch) version bumps.
 | Skill | Current | New |
 |-------|---------|-----|
-| `innv0-format` | `V_0-1-1` | `V_0-1-2` |
-| `innv0-skills-manager` | `V_1-0-0` | `V_1-0-1` |
+| `nn-format` | `V_0-1-1` | `V_0-1-2` |
+| `nn-skills-manager` | `V_1-0-0` | `V_1-0-1` |
 **Rationale**: Changes are non-breaking (removing optional content). Follows repo's semantic versioning convention from `AGENTS.md`.
 
 ### Decision: Installed junction backward compatibility
@@ -75,12 +75,12 @@ Six independent deliverables grouped into a single change. The core infrastructu
 | `.gitignore` | Modify | `.atl/` → `.innv0/` reference |
 | `openspec/config.yaml` | Modify | Line 34: `.atl/` → `.innv0/` |
 | `AGENTS.md` | Modify | Add `.innv0/` + build-registry documentation |
-| `skills/innv0-format/SKILL.md` | Modify | Remove ~55 lines + fix frontmatter `description` |
-| `skills/innv0-skills-manager/SKILL.md` | Modify | Remove Copy option + fix frontmatter `description` |
+| `skills/nn-format/SKILL.md` | Modify | Remove ~55 lines + fix frontmatter `description` |
+| `skills/nn-skills-manager/SKILL.md` | Modify | Remove Copy option + fix frontmatter `description` |
 
 ## SKILL.md Diffs
 
-### innv0-format frontmatter
+### nn-format frontmatter
 
 ```diff
  description: |
@@ -99,7 +99,7 @@ Six independent deliverables grouped into a single change. The core infrastructu
 
 Remove entire `## Source Ingestion Pipeline` section (lines 187–241), including all sub-sections: Purpose, When to Offer, Installation Prompt, Coordination Protocol, Provenance Chain, When NOT to Install.
 
-### innv0-skills-manager frontmatter
+### nn-skills-manager frontmatter
 
 ```diff
  description: |
@@ -174,8 +174,8 @@ No test runner exists in this repo. Verification is manual:
 |-------------|-------------|
 | build-registry script | Run `node scripts/build-registry.js` — confirm both `.innv0/` files exist with correct content. Run again — confirm no crash. |
 | `.atl/` → `.innv0/` | Confirm `.atl/` does not exist; `.innv0/` has registry files; `git status` shows no untracked `.atl` |
-| innv0-format refactor | Confirm `## Source Ingestion Pipeline` heading and all sub-content are gone; frontmatter has no `traNNsform` reference |
-| innv0-skills-manager refactor | Confirm no `[c] Copy` option, no `Copy-Item` block, description says "junction or symlink" |
+| nn-format refactor | Confirm `## Source Ingestion Pipeline` heading and all sub-content are gone; frontmatter has no `traNNsform` reference |
+| nn-skills-manager refactor | Confirm no `[c] Copy` option, no `Copy-Item` block, description says "junction or symlink" |
 | AGENTS.md | Confirm `.innv0/` section + build-registry usage instructions exist |
 | config.yaml | Confirm line 34 references `.innv0/skill-registry.md` |
 
@@ -193,6 +193,6 @@ None — all decisions are resolved by the proposal and spec.
 | `.gitignore` modify | 2 |
 | `openspec/config.yaml` modify | 1 |
 | `AGENTS.md` modify | ~20 |
-| `innv0-format/SKILL.md` modify | −55 + 4 (frontmatter) |
-| `innv0-skills-manager/SKILL.md` modify | −10 + 4 (frontmatter) |
+| `nn-format/SKILL.md` modify | −55 + 4 (frontmatter) |
+| `nn-skills-manager/SKILL.md` modify | −10 + 4 (frontmatter) |
 | **Total** | **~150** |

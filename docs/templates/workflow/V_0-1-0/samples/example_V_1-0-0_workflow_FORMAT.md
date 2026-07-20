@@ -3,7 +3,7 @@ specification_version: "V_0-1-0"
 title: "Video a Comercial"
 model_version: "V_1-0-0"
 documentation_location: "docs/templates/workflow/V_0-1-0/"
-type: "innv0-workflow"
+type: "nn-workflow"
 template:
   name: "workflow"
   version: "V_0-1-0"
@@ -52,7 +52,7 @@ template:
   ```yaml
   id: "raw-ingestion"
   description: "Ingiere el video raw y lo normaliza a Markdown estructurado usando traNNsform en modo normalize-only"
-  skill: "innv0-trannsform"
+  skill: "nn-trannsform"
   template: null
   input: "raw/"
   output: "sources/"
@@ -62,7 +62,7 @@ template:
   ```yaml
   id: "format-model"
   description: "Procesa los sources normalizados y genera un modelo de negocio FORMAT usando el template business"
-  skill: "innv0-innfo"
+  skill: "nn-innfo"
   template: "business"
   input: "sources/"
   output: "models/"
@@ -72,7 +72,7 @@ template:
   ```yaml
   id: "anydeo-script"
   description: "Toma el modelo FORMAT y genera un script de AnyDeo para el comercial final"
-  skill: "innv0-trannsform"
+  skill: "nn-trannsform"
   template: "anydeo"
   input: "models/"
   output: "scripts/"
@@ -84,16 +84,16 @@ template:
 
 * _F SkillRef: traNNsform Normalization
   ```yaml
-  name: "innv0-trannsform"
+  name: "nn-trannsform"
   trigger: "trannsform, transform, normalize, scan documents"
-  path: "skills/innv0-trannsform/SKILL.md"
+  path: "skills/nn-trannsform/SKILL.md"
   ```
 
 * _F SkillRef: iNNfo Model Authoring
   ```yaml
-  name: "innv0-innfo"
+  name: "nn-innfo"
   trigger: "innfo, model, iNNfo"
-  path: "skills/innv0-innfo/SKILL.md"
+  path: "skills/nn-innfo/SKILL.md"
   ```
 
 ---
@@ -155,11 +155,11 @@ template:
 
 ## Stage-Skill Matrix
 
-| Stage \ SkillRef | innv0-trannsform | innv0-innfo |
+| Stage \ SkillRef | nn-trannsform | nn-innfo |
 | :--- | :---: | :---: |
-| **Raw Ingestion** | innv0-trannsform | |
-| **FORMAT Model** | | innv0-innfo |
-| **AnyDeo Script** | innv0-trannsform | |
+| **Raw Ingestion** | nn-trannsform | |
+| **FORMAT Model** | | nn-innfo |
+| **AnyDeo Script** | nn-trannsform | |
 
 ## Stage-Artifact Matrix
 
@@ -179,7 +179,7 @@ template:
 raw/  ──[Raw Ingestion]──▶  sources/  ──[FORMAT Model]──▶  models/  ──[AnyDeo Script]──▶  scripts/
  Daily                         │                             │                             │
  │  tipo: raw                │  tipo: markdown             │  tipo: format-model        │  tipo: script
- │  skill: innv0-trannsform  │  skill: innv0-innfo          │  skill: innv0-trannsform   │
+ │  skill: nn-trannsform  │  skill: nn-innfo          │  skill: nn-trannsform   │
  │  modo: normalize-only     │  template: business         │  template: anydeo          │
 ```
 

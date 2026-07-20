@@ -146,7 +146,7 @@ Template (*traNNsform.md)             Source (md/_all.md)
 
 | File | Action | Description |
 |------|--------|-------------|
-| `skills/innv0-trannsform/SKILL.md` | Modify | Add frontmatter field, insert §3c-ii, update §3d reference |
+| `skills/nn-trannsform/SKILL.md` | Modify | Add frontmatter field, insert §3c-ii, update §3d reference |
 | `openspec/specs/empty-sections-mode/spec.md` | New | Already written (capability spec with GWT scenarios) |
 | `openspec/changes/empty-sections-mode/design.md` | New | This document |
 
@@ -157,13 +157,13 @@ Template (*traNNsform.md)             Source (md/_all.md)
 **Current** (lines 1-10):
 ```yaml
 ---
-name: innv0-trannsform
+name: nn-trannsform
 description: "Bootstrap projects, scan raw documents..."
 license: MIT
 metadata:
   version: "1.2"
   source_type: "integrated"
-  source: "https://github.com/innV0/iNNv0_skills/tree/main/skills/innv0-trannsform"
+  source: "https://github.com/innV0/actioNN/tree/main/skills/nn-trannsform"
   installed_at: "2026-06-27"
 ---
 ```
@@ -171,14 +171,14 @@ metadata:
 **Replace with**:
 ```yaml
 ---
-name: innv0-trannsform
+name: nn-trannsform
 description: "Bootstrap projects, scan raw documents..."
 empty_sections_mode: "ask-per-section"
 license: MIT
 metadata:
   version: "1.3"
   source_type: "integrated"
-  source: "https://github.com/innV0/iNNv0_skills/tree/main/skills/innv0-trannsform"
+  source: "https://github.com/innV0/actioNN/tree/main/skills/nn-trannsform"
   installed_at: "2026-06-27"
 ---
 ```
@@ -358,7 +358,7 @@ Exception: for `template-default` and `keep placeholder`, no content is generate
 
 ## Backward Compatibility
 
-- **Existing skills**: Junctions and symlinks to `skills/innv0-trannsform/` pick up the modified SKILL.md on next skill load. No configuration changes needed.
+- **Existing skills**: Junctions and symlinks to `skills/nn-trannsform/` pick up the modified SKILL.md on next skill load. No configuration changes needed.
 - **Existing templates**: Template format is unchanged. No new markers or structural requirements.
 - **Existing projects**: Projects already in `Documents/traNNsform/` are unaffected. The new step only activates when the user reaches §3c-ii during a new transformation.
 - **Default behavior**: When `empty_sections_mode` is absent (existing installs), default is `ask-per-section` — the step runs but prompts the user explicitly. No silent change to existing behavior.

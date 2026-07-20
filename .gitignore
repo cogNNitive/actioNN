@@ -4,6 +4,9 @@ skills/*/node_modules/
 # SDD skill registry cache (regenerated on init)
 .innv0/.skill-registry.cache.json
 
+# MCP server bundle (downloaded from cogNNitive via update-mcp.js)
+scripts/bin/
+
 # Local tooling artifacts
 .atl/
 .playwright-mcp/

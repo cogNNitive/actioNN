@@ -13,7 +13,7 @@ Use this template when you need to:
 - Chain multiple agent skills in a defined sequence
 - Document a multi-step transformation workflow
 - Create reusable processing workflows for content ingestion, model authoring, or script generation
-- Coordinate skills like `innv0-trannsform`, `innv0-innfo`, and others in a single declarative file
+- Coordinate skills like `nn-trannsform`, `nn-innfo`, and others in a single declarative file
 
 ## Concepts
 

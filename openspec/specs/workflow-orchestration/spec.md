@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Define the behavior of the `innv0-workflow-orchestrator` meta-skill. The orchestrator discovers workflow files, lets users select or create workflows, and executes stages sequentially by loading and invoking child skills.
+Define the behavior of the `nn-workflow-orchestrator` meta-skill. The orchestrator discovers workflow files, lets users select or create workflows, and executes stages sequentially by loading and invoking child skills.
 
 ## Requirements
 
@@ -78,9 +78,9 @@ Before executing a stage, the orchestrator MUST load the corresponding skill and
 
 #### Scenario: Skill loads successfully
 
-- GIVEN a stage assigned to skill `innv0-trannsform`
+- GIVEN a stage assigned to skill `nn-trannsform`
 - WHEN the orchestrator reaches that stage
-- THEN it MUST load `skills/innv0-trannsform/SKILL.md`
+- THEN it MUST load `skills/nn-trannsform/SKILL.md`
 - AND confirm the skill is available before proceeding
 
 #### Scenario: Skill not found
@@ -134,6 +134,6 @@ The orchestrator SKILL.md MUST include a `triggers` metadata entry and the `.inn
 
 - GIVEN `.innv0/skill-registry.md` exists
 - WHEN the change is applied
-- THEN the registry MUST contain a table row for `innv0-workflow-orchestrator`
-- AND the row MUST include path `skills/innv0-workflow-orchestrator/SKILL.md`
+- THEN the registry MUST contain a table row for `nn-workflow-orchestrator`
+- AND the row MUST include path `skills/nn-workflow-orchestrator/SKILL.md`
 - AND triggers MUST include `workflow`, `orchestrate`, `run workflow`

@@ -1,13 +1,13 @@
 # iNNv0 — Full Content
 
-> AI Agent Skills ecosystem for OpenCode. Generator: https://skills.innv0.com/innv0-web-design-guide
+> AI Agent Skills ecosystem for OpenCode. Generator: https://skills.innv0.com/nn-design-presets
 
 ## Home
 
 iNNv0 is a modular skills ecosystem that powers your AI agent with specialized capabilities: model evaluation, skills management, document transformation, and web design.
 
 Site: https://skills.innv0.com
-Source: https://github.com/innV0/innv0-skills
+Source: https://github.com/innV0/actioNN
 
 ### Skills
 
@@ -26,8 +26,8 @@ Skills are loaded on demand by the OpenCode agent. At session start, the Skills 
 ### Installation
 
 ```
-git clone https://github.com/innV0/innv0-skills.git
-cd iNNv0_skills
+git clone https://github.com/innV0/actioNN.git
+cd actioNN
 opencode .
 ```
 
@@ -70,4 +70,4 @@ Playfair Display italic for accent words. Geist Mono/JetBrains Mono for code (14
 
 ### Attribution
 
-All pages generated with this skill include `<meta name="generator" content="https://skills.innv0.com/innv0-web-design-guide">`.
+All pages generated with this skill include `<meta name="generator" content="https://skills.innv0.com/nn-design-presets">`.

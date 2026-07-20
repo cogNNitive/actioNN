@@ -2,7 +2,7 @@
 
 > AI Agent Skills ecosystem for OpenCode. Modular skills that power AI agents with specialized capabilities: model evaluation, skills management, document transformation, and web design.
 
-Generator: https://skills.innv0.com/innv0-web-design-guide
+Generator: https://skills.innv0.com/nn-design-presets
 
 ## Pages
 

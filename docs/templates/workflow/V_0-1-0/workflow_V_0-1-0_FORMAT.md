@@ -129,7 +129,7 @@ Transformation defines the processing rules applied by each stage to convert inp
 
 ## Stage-Skill Matrix
 
-| Stage \ SkillRef | innv0-trannsform | innv0-innfo | innv0-workflow-orchestrator |
+| Stage \ SkillRef | nn-trannsform | nn-innfo | nn-workflow-orchestrator |
 | :--- | :---: | :---: | :---: |
 | **Stage 1** | | | |
 | **Stage 2** | | | |

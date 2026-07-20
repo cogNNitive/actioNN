@@ -92,8 +92,8 @@ Render a numbered menu from `workflows[]`:
 
 On selection:
 - Route to the corresponding `{workflow.skill}` by invoking the skill
-- For "cognnitive": load `innv0-innfo` skill and guide through model creation
-- For "transform": load `innv0-trannsform` skill
+- For "cognnitive": load `nn-innfo` skill and guide through model creation
+- For "transform": load `nn-trannsform` skill
 - Invalid input → reprompt: "Invalid selection. Enter a valid option or 'x' to exit"
 - If `workflows[]` is empty → "No workflows available. Skills installed — use /{name} to invoke each."
 
@@ -128,7 +128,7 @@ After all steps, report:
 User: Quiero usar eNNvironment https://innv0.github.io/eNNvironment
 Agent: 🔧 Agent Web Bootstrap Skill activado.
        Leí la página de eNNvironment.
-       Skills a instalar: innv0-innfo, innv0-trannsform, innv0-workflow-orchestrator
+       Skills a instalar: nn-innfo, nn-trannsform, nn-workflow-orchestrator
        MCP a descargar: innfo-mcp (~1.2MB)
        ¿Damos aprobación?
 User: Sí

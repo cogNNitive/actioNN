@@ -44,13 +44,13 @@ The project MUST migrate its canonical state directory from `.atl/` to `.innv0/`
 - WHEN checking the repo root
 - THEN `.atl/` MUST NOT exist in the filesystem or in git tracking
 
-### Requirement: innv0-format Refactor
+### Requirement: nn-format Refactor
 
-The `innv0-format` skill MUST remove the "Source Ingestion Pipeline" section (~55 lines, lines 187–241) and update its frontmatter `description` to remove coordination references to `traNNsform`.
+The `nn-format` skill MUST remove the "Source Ingestion Pipeline" section (~55 lines, lines 187–241) and update its frontmatter `description` to remove coordination references to `traNNsform`.
 
 #### Scenario: Pipeline section removed
 
-- GIVEN `skills/innv0-format/SKILL.md` has a `## Source Ingestion Pipeline` heading
+- GIVEN `skills/nn-format/SKILL.md` has a `## Source Ingestion Pipeline` heading
 - WHEN the refactor is applied
 - THEN that heading and all content between it and the end of the file are removed
 - AND the skill no longer references traNNsform coordination in its operational instructions
@@ -61,9 +61,9 @@ The `innv0-format` skill MUST remove the "Source Ingestion Pipeline" section (~5
 - WHEN the refactor is applied
 - THEN the description no longer mentions `traNNsform`
 
-### Requirement: innv0-skills-manager Refactor
+### Requirement: nn-skills-manager Refactor
 
-The `innv0-skills-manager` skill MUST remove the "Copy" install option from its interactive menu and all associated instructions.
+The `nn-skills-manager` skill MUST remove the "Copy" install option from its interactive menu and all associated instructions.
 
 #### Scenario: Copy option removed from menu
 

@@ -39,10 +39,10 @@ Chain strategy: size-exception
 
 ## Phase 3: Skill Refactors
 
-- [x] 3.1 **innv0-format**: Remove `traNNsform` coordination line from frontmatter `description`
-- [x] 3.2 **innv0-format**: Delete `## Source Ingestion Pipeline` section (lines 187–241); bump `version` to `V_0-1-2`
-- [x] 3.3 **innv0-skills-manager**: Remove `[c] Copy` menu option, Copy-Item block (step 3), "Copy" from Type column header
-- [x] 3.4 **innv0-skills-manager**: Update description to "via junction (recommended) or symlink"; bump `version` to `V_1-0-1`
+- [x] 3.1 **nn-format**: Remove `traNNsform` coordination line from frontmatter `description`
+- [x] 3.2 **nn-format**: Delete `## Source Ingestion Pipeline` section (lines 187–241); bump `version` to `V_0-1-2`
+- [x] 3.3 **nn-skills-manager**: Remove `[c] Copy` menu option, Copy-Item block (step 3), "Copy" from Type column header
+- [x] 3.4 **nn-skills-manager**: Update description to "via junction (recommended) or symlink"; bump `version` to `V_1-0-1`
 
 ## Phase 4: Documentation & Config
 
@@ -56,7 +56,7 @@ Chain strategy: size-exception
 |-------------|---------------|
 | `.atl/` → `.innv0/` | `.atl/` gone; `.innv0/` has registry files; `git status` clean |
 | build-registry.js | Run script — both `.innv0/` files generated; re-run — no crash |
-| innv0-format refactor | No `## Source Ingestion Pipeline` heading; no `traNNsform` in description |
-| innv0-skills-manager refactor | No `[c] Copy` in menu; no `Copy-Item` block; description says "junction or symlink" |
+| nn-format refactor | No `## Source Ingestion Pipeline` heading; no `traNNsform` in description |
+| nn-skills-manager refactor | No `[c] Copy` in menu; no `Copy-Item` block; description says "junction or symlink" |
 | AGENTS.md | `.innv0/` section + build-registry instructions present |
 | config.yaml | Line 34 references `.innv0/skill-registry.md` |

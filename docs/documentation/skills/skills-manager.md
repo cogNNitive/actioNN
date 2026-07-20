@@ -2,7 +2,7 @@
 title: "Skills Manager — iNNv0 Skill"
 description: "Meta-skill that manages the lifecycle of all repository skills"
 html_url: https://skills.innv0.com/docs/#/skills/skills-manager
-generator: https://skills.innv0.com/innv0-web-design-guide
+generator: https://skills.innv0.com/nn-design-presets
 ---
 
 # Skills Manager
@@ -26,9 +26,9 @@ Loaded **mandatorily at the start of each session** by order of the root `AGENTS
 
 | Repo Skill | ~/.config/opencode/skills | ~/.agents/skills | Type | Status |
 |---|---|---|---|---|
-| innv0-opencode-model-router | ❌ | ✅ | Junction | Installed |
-| innv0-trannsform | ❌ | ✅ | Junction | Installed |
-| innv0-web-design-guide | ❌ | ✅ | Junction | Installed |
+| nn-dev-opencode-model-router | ❌ | ✅ | Junction | Installed |
+| nn-trannsform | ❌ | ✅ | Junction | Installed |
+| nn-design-presets | ❌ | ✅ | Junction | Installed |
 
 5. **Asks** if you want to install missing skills or change the link type
 6. **Executes** the installation using the chosen method
@@ -44,7 +44,7 @@ Loaded **mandatorily at the start of each session** by order of the root `AGENTS
 ## Files
 
 ```
-skills/innv0-skills-manager/
+skills/nn-skills-manager/
   SKILL.md
   README.md
 ```

@@ -2,7 +2,7 @@
 title: "traNNsform — iNNv0 Skill"
 description: "Document ingestion and transformation pipeline from PDF/DOCX to unified Markdown"
 html_url: https://skills.innv0.com/docs/#/skills/trannsform
-generator: https://skills.innv0.com/innv0-web-design-guide
+generator: https://skills.innv0.com/nn-design-presets
 ---
 
 # traNNsform
@@ -50,7 +50,7 @@ The skill includes functional Node.js scripts:
 ## Files
 
 ```
-skills/innv0-trannsform/
+skills/nn-trannsform/
   SKILL.md
   README.md
   TESTING.md

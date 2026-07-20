@@ -26,7 +26,7 @@ const BUNDLE_FILE = path.join(BIN_DIR, 'innfo-mcp.bundle.js');
  */
 function fetchString(url) {
   return new Promise((resolve, reject) => {
-    https.get(url, { headers: { 'User-Agent': 'iNNv0-Skills-Updater' } }, (res) => {
+    https.get(url, { headers: { 'User-Agent': 'actioNN-Skills-Updater' } }, (res) => {
       if (res.statusCode !== 200) {
         return reject(new Error(`Failed to fetch ${url}, status: ${res.statusCode}`));
       }
@@ -43,7 +43,7 @@ function fetchString(url) {
 function downloadFile(url, destPath) {
   return new Promise((resolve, reject) => {
     const file = fs.createWriteStream(destPath);
-    https.get(url, { headers: { 'User-Agent': 'iNNv0-Skills-Updater' } }, (res) => {
+    https.get(url, { headers: { 'User-Agent': 'actioNN-Skills-Updater' } }, (res) => {
       if (res.statusCode !== 200) {
         file.close();
         fs.unlink(destPath, () => {});
