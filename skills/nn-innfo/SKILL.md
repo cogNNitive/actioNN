@@ -102,11 +102,11 @@ The `innfo-mcp` server exposes six tools. It is **publisher-agnostic**: it never
 
 Use these **stable `latest` URLs** for human reference and authoring guidance. They always point to the current published version:
 
-- **defiNNe** (level 0): `https://raw.githubusercontent.com/innV0/cogNNitive/main/specs/latest/level0/defiNNe_NN.md`
-- **iNNfo** (level 1): `https://raw.githubusercontent.com/innV0/cogNNitive/main/specs/latest/level1/iNNfo_NN.md`
-- **Business** (level 2): `https://raw.githubusercontent.com/innV0/cogNNitive/main/specs/latest/level2/business/business_NN.md`
-- **Procedures** (level 2): `https://raw.githubusercontent.com/innV0/cogNNitive/main/specs/latest/level2/procedures/procedures_NN.md`
-- **Catalog** (level 2): `https://raw.githubusercontent.com/innV0/cogNNitive/main/specs/latest/level2/catalog/catalog_NN.md`
+- **defiNNe** (level 0): `https://raw.githubusercontent.com/cogNNitive/cogNNitive/main/specs/latest/level0/defiNNe_NN.md`
+- **iNNfo** (level 1): `https://raw.githubusercontent.com/cogNNitive/cogNNitive/main/specs/latest/level1/iNNfo_NN.md`
+- **Business** (level 2): `https://raw.githubusercontent.com/cogNNitive/cogNNitive/main/specs/latest/level2/business/business_NN.md`
+- **Procedures** (level 2): `https://raw.githubusercontent.com/cogNNitive/cogNNitive/main/specs/latest/level2/procedures/procedures_NN.md`
+- **Catalog** (level 2): `https://raw.githubusercontent.com/cogNNitive/cogNNitive/main/specs/latest/level2/catalog/catalog_NN.md`
 
 > **Stable vs immutable:** `latest/` URLs are convenience aliases that move with each release — use them for authoring guidance. A level-3 model's own `parent_spec.url` MUST pin an **immutable** versioned URL (e.g. `.../specs/v0.1.0/level2/business/business_V_0-1-1_NN.md`) so validation is reproducible. The MCP resolves whatever URL the model declares.
 

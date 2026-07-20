@@ -12,8 +12,8 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 
-const REMOTE_PKG_URL = 'https://raw.githubusercontent.com/innV0/cogNNitive/main/packages/innfo-mcp/package.json';
-const REMOTE_BUNDLE_URL = 'https://raw.githubusercontent.com/innV0/cogNNitive/main/packages/innfo-mcp/bin/innfo-mcp.bundle.js';
+const REMOTE_PKG_URL = 'https://raw.githubusercontent.com/cogNNitive/cogNNitive/main/packages/innfo-mcp/package.json';
+const REMOTE_BUNDLE_URL = 'https://raw.githubusercontent.com/cogNNitive/cogNNitive/main/packages/innfo-mcp/bin/innfo-mcp.bundle.js';
 
 const ROOT_DIR = path.resolve(__dirname, '..');
 const STATE_DIR = path.join(ROOT_DIR, '.innv0');

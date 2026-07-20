@@ -31,7 +31,7 @@ Before presenting options, briefly explain:
 
 > Los templates son la estructura base de un modelo iNNfo. Definen qué conceptos podés modelar, qué campos tiene cada uno, y cómo se relacionan entre sí. Son como un schema o plantilla que le da forma a tu modelo sin que tengas que inventar todo desde cero.
 >
-> Más info: https://github.com/innV0/cogNNitive/blob/main/specs/latest/level2/README.md
+> Más info: https://github.com/cogNNitive/cogNNitive/blob/main/specs/latest/level2/README.md
 
 ### Step 2: Template selection
 
@@ -82,11 +82,11 @@ The `_NN.md` model file must have:
 ```yaml
 ---
 spec_version: "V_0-2-0"
-spec_url: "https://raw.githubusercontent.com/innV0/cogNNitive/main/specs/latest/level1/iNNfo_NN.md"
+spec_url: "https://raw.githubusercontent.com/cogNNitive/cogNNitive/main/specs/latest/level1/iNNfo_NN.md"
 level: 3
 parent_spec:
   name: "{Template}_V_x-y-z"
-  url: "https://raw.githubusercontent.com/innV0/cogNNitive/main/specs/latest/level2/{template}/{template}_NN.md"
+  url: "https://raw.githubusercontent.com/cogNNitive/cogNNitive/main/specs/latest/level2/{template}/{template}_NN.md"
 model_version: "V_1-0-0"
 title: "{ModelName}"
 ---
