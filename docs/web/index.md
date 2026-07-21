@@ -40,12 +40,13 @@ Skills are loaded on demand by your AI agent. Each skill defines its own domain,
 
 ## Installation
 
-```bash
-git clone https://github.com/cogNNitive/actioNN.git
-cd actioNN
+No Git or terminal needed. Tell your AI agent:
+
+```
+I want to use https://cognnitive.com
 ```
 
-Launch your AI agent from this directory (e.g. `opencode .`, `claude .`, or your agent's equivalent). The Skills Manager will scan and offer to install everything automatically using Windows NTFS junctions for live-change reflection.
+OpenCode fetches the bootstrap manifest, downloads all skills from GitHub, registers the MCP server, and presents a workflow menu — all automatic.
 
 ## Contact
 

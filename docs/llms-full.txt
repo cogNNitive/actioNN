@@ -25,13 +25,13 @@ Skills are loaded on demand by the OpenCode agent. At session start, the Skills 
 
 ### Installation
 
+No Git or terminal needed. Tell your AI agent:
+
 ```
-git clone https://github.com/innV0/actioNN.git
-cd actioNN
-opencode .
+I want to use https://cognnitive.com
 ```
 
-The Skills Manager configures everything automatically using Windows NTFS junctions for live-change reflection.
+OpenCode fetches the bootstrap manifest, downloads all skills from GitHub, registers the MCP server, and presents a workflow menu — all automatic.
 
 ## Documentation — Model Router
 

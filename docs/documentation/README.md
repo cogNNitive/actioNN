@@ -20,14 +20,15 @@ generator: https://actionn.cognnitive.com/nn-design-presets
 
 ## Installation
 
-```bash
-git clone https://github.com/cogNNitive/actioNN.git
-cd actioNN
+No Git or terminal needed. Tell your AI agent:
+
+```
+I want to use https://cognnitive.com
 ```
 
-Then launch your AI agent from the directory (`opencode .`, `claude .`, or equivalent).
+OpenCode fetches the bootstrap manifest, downloads all skills from GitHub, registers the MCP server, and presents a workflow menu — all automatic.
 
-The **Skills Manager** activates automatically at session start. It scans the `skills/` directory, detects available skills, and guides you through installation using **Windows NTFS junctions**, which reflect repo changes live.
+The **Skills Manager** activates automatically at session start. It scans installed skills and guides you through configuration using **Windows NTFS junctions**, which reflect updates live.
 
 ## Sample ActioNNs
 

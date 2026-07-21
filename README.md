@@ -1,6 +1,6 @@
 # actioNN Skills
 
-**Modular AI Agent skills ecosystem for [OpenCode](https://opencode.ai).**
+**Modular AI Agent skills ecosystem for [OpenCode Desktop](https://opencode.ai).**
 
 actioNN is a collection of self-contained, domain-specialized skills that teach your AI agent to solve specific types of tasks — from model evaluation and document transformation to web design and skills lifecycle management. Each skill is an autonomous module with its own triggers, instructions, and behavior rules.
 
@@ -21,21 +21,17 @@ actioNN is a collection of self-contained, domain-specialized skills that teach 
 
 ## Getting Started
 
-```bash
-# Clone the repository
-git clone https://github.com/cogNNitive/actioNN.git
+No Git or terminal needed. Tell your AI agent:
 
-# Start OpenCode in the directory
-opencode .
-
-# The Skills Manager activates automatically at session start.
-# It scans skills/, detects available skills, and guides you
-# through installation using Windows NTFS junctions.
 ```
+I want to use https://cognnitive.com
+```
+
+OpenCode fetches the bootstrap manifest, downloads all skills from GitHub, registers the MCP server, and presents a workflow menu — all automatic.
 
 ### Requirements
 
-- [OpenCode](https://opencode.ai) — conversational AI agent runtime
+- [OpenCode Desktop](https://opencode.ai) — conversational AI agent desktop application and runtime
 - **Windows** (recommended) — NTFS junctions for live-change reflection
 - **Node.js 18+** — required by the traNNsform skill CLI tool
 

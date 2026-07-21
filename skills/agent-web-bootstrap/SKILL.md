@@ -7,8 +7,8 @@ description: >
   Installs declared skills from GitHub, downloads and registers MCP bundles,
   validates frontmatter with skill-origin-guard, and presents available
   workflows. Only needs to run once per environment.
-version: "1.0"
-last_updated: 2026-07-15
+version: "1.1"
+last_updated: 2026-07-21
 license: MIT
 compatibility: opencode, claude-code, cursor, any agent supporting skills
 metadata:
@@ -22,37 +22,54 @@ Bootstrap the cogNNitive ecosystem from a manifest URL. One-shot: installs skill
 ## Trigger
 
 When the user says something like:
+- "I want to use https://cognnitive.com"
 - "Quiero usar eNNvironment https://cogNNitive.github.io/eNNvironment"
 - "Usa eNNvironment <URL>"
 - "/bootstrap <URL>"
+- Any message containing "bootstrap" + a URL
 
-The URL must point to a page with YAML frontmatter containing `agent-bootstrap:` as the root key.
+The URL should point to a page containing an `agent-bootstrap:` manifest (either as YAML frontmatter or discoverable via fallbacks).
 
 ## Flow
 
 ### Step 1: Fetch and parse the manifest
 
-1. Use `webfetch` to retrieve the URL.
+1. Use `webfetch` to retrieve the URL (markdown format).
 2. Extract the YAML frontmatter block between `---` delimiters.
 3. Parse the `agent-bootstrap:` key:
    - `skills[]`: array of `{name, repo, path, description?, mcp[]?}`
    - `workflows[]`: array of `{id, label, description, skill}`
 
-If YAML is malformed â†’ error: "Failed to parse manifest: {detail} at line N"
-If URL is unreachable â†’ error: "Could not reach {URL}: HTTP {code}"
-If no `skills[]` or `workflows[]` â†’ error: "Manifest has no skills or workflows declared"
+If YAML is malformed: error "Failed to parse manifest: {detail} at line N"
+If URL is unreachable: error "Could not reach {URL}: HTTP {code}"
+
+#### Step 1b: Fallback — no frontmatter found
+
+If the fetched content has NO YAML frontmatter with `agent-bootstrap:` (common when the URL is an HTML page), try these fallbacks **in order** until one succeeds:
+
+1. **Markdown twin**: Re-fetch in HTML format (`webfetch(url, format="html")`). Search for `<link rel="alternate" type="text/markdown" href="...">`. If found, fetch the referenced URL and re-parse.
+
+2. **README at root**: Try fetching `{origin}/README.md` (strip any path/filename from the URL). If it resolves and has valid `agent-bootstrap:` frontmatter, use it.
+
+3. **GitHub raw README**: If the page links to a GitHub repo (nav, footer, or `<meta name="generator">`), extract `org/repo` and try `https://raw.githubusercontent.com/{org}/{repo}/main/README.md`. If valid, use it.
+
+4. **llms.txt hints**: Fetch `{origin}/llms.txt`. If it contains "Manifest file:" followed by a path, fetch that path and re-parse.
+
+If ALL fallbacks fail: error "Could not find a bootstrap manifest at {URL} or any alternates. The page must expose agent-bootstrap YAML frontmatter."
+
+If frontmatter found but has no `skills[]` or `workflows[]`: error "Manifest has no skills or workflows declared"
 
 ### Step 2: Provision skills
 
 For each skill in `skills[]`:
 
 ```
-1. Check if ~/.agents/skills/{name}/SKILL.md exists â†’ skip, report "Already installed: {name}"
+1. Check if ~/.agents/skills/{name}/SKILL.md exists: skip, report "Already installed: {name}"
 2. Clone {repo} to a temp directory (git clone --depth 1)
 3. Copy {path} to ~/.agents/skills/{name}/
 4. If skill-origin-guard is available, validate frontmatter
-   - If validation fails â†’ warn but continue
-   - If skill-origin-guard not found â†’ warn "frontmatter validation skipped" and continue
+   - If validation fails: warn but continue
+   - If skill-origin-guard not found: warn "frontmatter validation skipped" and continue
 5. Update skill registry (~/.agents/skills is auto-discovered by most agents)
 ```
 
@@ -63,9 +80,9 @@ For each skill that declares `mcp[]`:
 ```
 1. For each mcp entry: {name, url}
 2. Create ~/.agents/mcp/ if it doesn't exist
-3. Check if ~/.agents/mcp/{name}.bundle.js exists â†’ skip, report "MCP already present: {name}"
+3. Check if ~/.agents/mcp/{name}.bundle.js exists: skip, report "MCP already present: {name}"
 4. Download {url} to ~/.agents/mcp/{name}.bundle.js
-5. If download fails (HTTP error, timeout) â†’ warn and mark skill as "MCP unavailable"
+5. If download fails (HTTP error, timeout): warn and mark skill as "MCP unavailable"
 6. Register the MCP server in the current workspace's .opencode/opencode.json:
    {
      "mcp": {
@@ -85,7 +102,7 @@ The MCP path must be absolute (resolved from `~/.agents/mcp/{name}.bundle.js`) s
 Render a numbered menu from `workflows[]`:
 
 ```markdown
-[a] {workflow.label} â€” {workflow.description}
+[a] {workflow.label} — {workflow.description}
 [b] ...  
 [x] Salir
 ```
@@ -94,24 +111,24 @@ On selection:
 - Route to the corresponding `{workflow.skill}` by invoking the skill
 - For "cognnitive": load `nn-innfo` skill and guide through model creation
 - For "transform": load `nn-trannsform` skill
-- Invalid input â†’ reprompt: "Invalid selection. Enter a valid option or 'x' to exit"
-- If `workflows[]` is empty â†’ "No workflows available. Skills installed â€” use /{name} to invoke each."
+- Invalid input: reprompt "Invalid selection. Enter a valid option or 'x' to exit"
+- If `workflows[]` is empty: "No workflows available. Skills installed — use /{name} to invoke each."
 
 ## Post-install summary
 
 After all steps, report:
 
 ```
-âœ… Skills instalados:
-  â€¢ {name} â€” {status}
-  â€¢ {name} â€” {status}
+Skills installed:
+  - {name} — {status}
+  - {name} — {status}
 
-âœ… MCP bundles:
-  â€¢ {name} â€” {status}
+MCP bundles:
+  - {name} — {status}
 
-ðŸ“‹ Workflows disponibles:
-  â€¢ {label}
-  â€¢ {label}
+Workflows disponibles:
+  - {label}
+  - {label}
 ```
 
 ## Edge cases
@@ -125,12 +142,14 @@ After all steps, report:
 ## Example conversation
 
 ```
-User: Quiero usar eNNvironment https://cogNNitive.github.io/eNNvironment
-Agent: ðŸ”§ Agent Web Bootstrap Skill activado.
-       LeÃ­ la pÃ¡gina de eNNvironment.
-       Skills a instalar: nn-innfo, nn-trannsform, nn-workflow-orchestrator
-       MCP a descargar: innfo-mcp (~1.2MB)
-       Â¿Damos aprobaciÃ³n?
-User: SÃ­
-Agent: âœ… Todo instalado. Workflows disponibles: CogNNitive, traNNsform
+User: I want to use https://cognnitive.com
+Agent: Fetching https://cognnitive.com...
+       HTML page detected, looking for markdown twin...
+       Found index.md, parsing frontmatter...
+       Found agent-bootstrap manifest.
+       Skills to install: nn-innfo, nn-trannsform, nn-workflow-orchestrator
+       MCP to download: innfo-mcp
+       Shall I proceed?
+User: Yes
+Agent: All installed. Workflows available: CogNNitive, traNNsform
 ```
