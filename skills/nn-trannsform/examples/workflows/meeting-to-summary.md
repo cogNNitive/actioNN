@@ -1,22 +1,25 @@
 # Sample ActioNN: Meeting Notes to Executive Summary
 
-Use the **nn-trannsform** skill to turn raw meeting notes into a stakeholder-ready executive summary.
+Use the **nn-trannsform** skill to turn a YouTube video transcript into a stakeholder-ready executive summary.
+
+The sample uses the transcript of the **"Better Off Ted — Let's Do It"** scene ([YouTube](https://www.youtube.com/watch?v=NeFafCEqeh0)).
 
 ## How to run
 
-1. Place your notes or transcript in `input/`
+1. The sample transcript is at `traNNsform/input/better-off-ted-lets-do-it_source_NN.md`
 2. Activate the nn-trannsform skill
 3. Say:
 
-> Run the sample workflow meeting-to-summary. Read the file in `input/`, extract decisions, action items, and blockers, and produce an executive summary in `output/`. Name the file `<MeetingTopic>_executive_summary.md`.
+> Run the sample workflow meeting-to-summary on `traNNsform/input/better-off-ted-lets-do-it_source_NN.md`. Read the transcript, extract decisions, action items, and blockers, and produce an executive summary in `traNNsform/output/`. Name the file `BetterOffTed_executive_summary.md`.
 
 ## Example
 
 ```bash
-cp ~/notes/sprint-review.md input/
+# The sample is already in place — just run the prompt above
 
-# Then tell your agent:
-# "Run meeting-to-summary on input/sprint-review.md"
+# Replace with your own transcript:
+# cp ~/Downloads/my-meeting-transcript.txt input/
+# Then: "Run meeting-to-summary on input/my-meeting-transcript.txt"
 ```
 
 ## Output
@@ -24,23 +27,23 @@ cp ~/notes/sprint-review.md input/
 A structured Markdown file:
 
 ```markdown
-# Sprint Review - Executive Summary
-**Date**: 2026-07-15 | **Attendees**: @alice, @bob
+# Better Off Ted — Executive Summary
+**Source**: https://www.youtube.com/watch?v=NeFafCEqeh0 | **Duration**: 0:56
 
 ## Executive Brief
-The team reviewed sprint 14 results...
+Phil presented the Viridian solar-powered oven project. While the team has made progress on a military contract to airdrop ovens as a goodwill gesture, a critical safety issue was identified: the plastic casing leeches toxins into food when exposed to sunlight — which is the only condition under which solar ovens function.
 
 ## Decisions
-- Ship v2.1 without the reporting module
+- Proceed with fixing the toxicity issue rather than scrapping the project
 
 ## Action Items
 | Owner | Task | Deadline |
 |-------|------|----------|
-| @alice | Migration plan | 2026-08-01 |
+| @phil | Investigate non-toxic materials for the oven casing | TBD |
 
 ## Blockers
-- Reporting API dependency (waiting on platform team)
+- Fundamental conflict: sunlight triggers both the oven function and the toxin release
 
 ## Next Meeting
-- Review migration plan
+- Review material alternatives and toxicity test results
 ```

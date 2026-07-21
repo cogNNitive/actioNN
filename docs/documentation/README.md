@@ -31,14 +31,14 @@ The **Skills Manager** activates automatically at session start. It scans the `s
 
 ## Sample ActioNNs
 
-Ready-to-run transformation recipes that demonstrate the skills in action:
+Ready-to-run transformation recipes on the [landing page](/):
 
 | Sample | What it does |
 |--------|-------------|
-| [Paper to YouTube Script](sample-actionns.md?id=paper-to-youtube-script) | Convert a scientific PDF into a YouTube video script |
-| [Meeting Notes to Executive Summary](sample-actionns.md?id=meeting-notes-to-executive-summary) | Transform raw notes into a structured summary with decisions and action items |
+| [Paper to YouTube Script](/samples/paper-to-youtube/) | Convert a scientific PDF into a YouTube video script |
+| [Meeting Notes to Executive Summary](/samples/meeting-to-summary/) | Transform a video transcript into a structured summary with decisions and action items |
 
-Each sample includes concrete bash commands and agent prompts &mdash; drop in a file, run the prompt, get the result.
+Each sample includes a downloadable input, step-by-step instructions, and an output preview.
 
 ---
 

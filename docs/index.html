@@ -332,6 +332,92 @@
       line-height: 1.6;
     }
 
+    /* --- Sample cards --- */
+    .sample-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-lg);
+      margin-top: var(--space-xl);
+    }
+
+    .sample-card {
+      display: flex;
+      flex-direction: column;
+      background: var(--canvas);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .sample-card:hover {
+      border-color: var(--brand);
+      box-shadow: 0 4px 20px rgba(77, 14, 78, 0.08);
+    }
+
+    .sample-card-preview {
+      height: 140px;
+      background: var(--canvas-inert);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      color: var(--brand);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sample-card-body {
+      padding: var(--space-lg);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sample-card-body .tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--brand);
+      background: #F6EEF6;
+      padding: 3px 10px;
+      border-radius: 4px;
+      margin-bottom: var(--space-sm);
+      align-self: flex-start;
+    }
+
+    .sample-card-body h3 {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      margin-bottom: var(--space-sm);
+    }
+
+    .sample-card-body .arrow-hint {
+      font-size: 13px;
+      color: var(--ink-muted);
+      margin-bottom: var(--space-sm);
+    }
+
+    .sample-card-body p {
+      font-size: 14px;
+      color: var(--ink-muted);
+      line-height: 1.6;
+      margin-bottom: var(--space-md);
+      flex: 1;
+    }
+
+    .sample-card-body a {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--brand);
+      text-decoration: none;
+      align-self: flex-start;
+    }
+
+    .sample-card-body a:hover { text-decoration: underline; }
+
     /* --- Installation --- */
     .code-block {
       background: var(--canvas-inert);
@@ -413,6 +499,7 @@
       .hero h1 { font-size: 34px; }
       .section-title { font-size: 26px; }
       .skills-grid { grid-template-columns: 1fr; }
+      .sample-grid { grid-template-columns: 1fr; }
       .steps { grid-template-columns: 1fr; gap: var(--space-lg); }
       .hero { padding: 80px 0 var(--space-xl); }
       section { padding: var(--space-xl) 0; }
@@ -427,6 +514,7 @@
     <a href="." class="logo">cogNNitive</a>
     <ul class="nav-links">
       <li><a href="#skills">Skills</a></li>
+      <li><a href="#try-it">Try it</a></li>
       <li><a href="#how-it-works">How it works</a></li>
       <li><a href="#install">Install</a></li>
       <li><a href="https://innv0.com/contact?ref=actioNN" target="_blank" rel="noopener noreferrer">Contact</a></li>
@@ -513,6 +601,39 @@
       <div class="step">
         <h4>Modular by design</h4>
         <p>Each skill is self-contained with its own domain rules. Skills can be installed, updated, and removed independently.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Try it yourself -->
+<section id="try-it">
+  <div class="container">
+    <span class="section-label">Try it yourself</span>
+    <h2 class="section-title">Ready-to-run <span class="accent">samples</span></h2>
+    <p class="section-desc">Download the input, run the prompt in your AI agent, and get the transformed result. Each sample is a complete end-to-end workflow.</p>
+
+    <div class="sample-grid">
+      <div class="sample-card">
+        <div class="sample-card-preview">&#x1F4D1;&#x279C;&#x1F3AC;</div>
+        <div class="sample-card-body">
+          <span class="tag">traNNsform</span>
+          <h3>Paper to YouTube Script</h3>
+          <div class="arrow-hint">Scientific PDF &rarr; Timestamped script</div>
+          <p>Extract the core narrative from a research paper and structure it into a ready-to-record YouTube script with hook, key findings, limitations, and call to action.</p>
+          <a href="samples/paper-to-youtube/">Try this sample &rarr;</a>
+        </div>
+      </div>
+
+      <div class="sample-card">
+        <div class="sample-card-preview">&#x1F39E;&#xFE0F;&#x279C;&#x1F4CB;</div>
+        <div class="sample-card-body">
+          <span class="tag">traNNsform</span>
+          <h3>Meeting Notes to Executive Summary</h3>
+          <div class="arrow-hint">Video transcript &rarr; Structured summary</div>
+          <p>Turn a YouTube video transcript into a clean executive summary with decisions, action items, blockers, and next-meeting agenda. Uses the "Better Off Ted" scene.</p>
+          <a href="samples/meeting-to-summary/">Try this sample &rarr;</a>
+        </div>
       </div>
     </div>
   </div>

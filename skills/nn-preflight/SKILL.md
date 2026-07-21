@@ -115,16 +115,46 @@ The `innfo-mcp` bundle must be present. Search in order:
 - **Fail**: `⛔ MCP bundle not found. Run \`node scripts/update-mcp.js\` in the actioNN directory.`
 - **Severity**: blocker
 
-### 2.2 MCP server alive
+### 2.2 `.opencode/opencode.json` exists
 
-Verify the MCP server responds by calling a simple tool:
+Check if the MCP server is configured for this workspace:
 
-1. List available MCP servers from `list_mcp_resources` or `list_mcp_resource_templates` targeting `innfo-mcp`
+1. Check if `.opencode/opencode.json` exists in the workspace directory (CWD)
+2. If it exists, verify it contains `mcp.innfo-mcp` with the correct `command` path
+3. If the path in the config points to a non-existent file, note that the bundle is missing
+
+- **Pass**: config exists with valid bundle path
+- **Fail (no config)**: Offer to generate it:
+  ```
+  .opencode/opencode.json is missing. Create it with the innfo-mcp config?
+  ```
+  If user agrees, resolve the bundle path (same search order as §2.1) and write:
+  ```json
+  {
+    "$schema": "https://opencode.ai/config.json",
+    "mcp": {
+      "innfo-mcp": {
+        "type": "local",
+        "command": ["node", "<resolved-absolute-bundle-path>"],
+        "enabled": true
+      }
+    }
+  }
+  ```
+  Then inform: "Created. Restart your agent in this folder to enable the MCP."
+- **Fail (wrong path)**: Note the mismatch and offer to update the path
+- **Severity**: warning (the server can't start without this config)
+
+### 2.3 MCP server alive
+
+Verify the MCP server actually responds (only if §2.2 passed):
+
+1. Call `list_mcp_resources` or `list_mcp_resource_templates` targeting `innfo-mcp`
 2. If the server is listed, call `innfo-mcp_list_models` with a short timeout (5s)
 3. Any non-error response counts as alive
 
 - **Pass**: server responds
-- **Fail**: `⛔ MCP server innfo-mcp not responding. Check .opencode/opencode.json and ensure the server is enabled.`
+- **Fail**: `⛔ MCP server innfo-mcp not responding. If you just created .opencode/opencode.json, restart your agent.`
 - **Severity**: warning (the server may start lazily on first real call)
 
 ---

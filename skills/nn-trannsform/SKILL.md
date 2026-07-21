@@ -26,6 +26,14 @@ When this skill is activated, the agent MUST print exactly:
 
 as its very first output — before any questions, analysis, or tool calls. Session-scoped: only once per conversation.
 
+## Preflight Gate (MANDATORY — run before any transformation)
+
+Before any other action:
+1. Load `nn-preflight` via `skill("nn-preflight")`
+2. Tell it: "Run Tier 1 with dependencies nn-innfo. Workspace is [CWD]."
+3. If the task involves iNNfo model output (business, procedure, catalog, etc.), also request: "Also run Tier 2."
+4. Read the report. If any blocker exists, ask the user before continuing. If all checks pass (or user overrides), continue.
+
 This skill enables the agent to interactively guide the user through document ingestion, normalization, and transformation.
 
 All file paths in this skill are relative to the skill's base directory (e.g., `~/.agents/skills/nn-trannsform/`). The CLI tool lives at `scripts/index.js`. If dependencies are missing at first use, the agent detects the error and runs `npm install` in the skill directory automatically.
@@ -42,6 +50,30 @@ Then run:
 ```bash
 node scripts/index.js --src "<source-folder>" --dest "<destination-parent-folder>" --name "<project-name>"
 ```
+
+#### 1a. Generate `.opencode/opencode.json` (MCP config)
+
+After creating the project directory, generate `.opencode/opencode.json` in the project root so the innfo-mcp server is available when the agent opens this folder.
+
+1. **Resolve the MCP bundle path**: Find `innfo-mcp.bundle.js` by checking (in order):
+   - `~/.agents/skills/nn-trannsform/` — if it's a junction, follow the target → `../../scripts/bin/innfo-mcp.bundle.js`
+   - `~/.agents/skills/actioNN/scripts/bin/innfo-mcp.bundle.js`
+   - `D:\Users\lucas\Documents\GitHub\cogNNitive\actioNN\scripts\bin\innfo-mcp.bundle.js` (fallback)
+2. Resolve to an absolute path
+3. Generate `.opencode/opencode.json`:
+   ```json
+   {
+     "$schema": "https://opencode.ai/config.json",
+     "mcp": {
+       "innfo-mcp": {
+         "type": "local",
+         "command": ["node", "<resolved-absolute-bundle-path>"],
+         "enabled": true
+       }
+     }
+   }
+   ```
+4. Inform the user: "`.opencode/opencode.json` created. Restart your agent in this folder to enable the iNNfo MCP server."
 
 ### 2. Capability Scan & Ingestion
 

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Paper to YouTube Script — Try it · actioNN</title>
+  <meta name="description" content="Transform a scientific PDF into a ready-to-record YouTube video script using the traNNsform skill. Step-by-step sample with downloadable input.">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;1,400;1,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --canvas: #FFFFFF;
+      --canvas-inert: #FAFAFC;
+      --brand: #4D0E4E;
+      --brand-light: #6A1B6B;
+      --border: #F2F2F7;
+      --ink: #111112;
+      --ink-muted: #636366;
+      --sans: 'Plus Jakarta Sans', 'Geist Sans', system-ui, sans-serif;
+      --serif: 'Playfair Display', Georgia, serif;
+      --mono: 'JetBrains Mono', 'Geist Mono', monospace;
+      --max-w: 880px;
+      --radius: 10px;
+      --space-sm: 8px;
+      --space-md: 16px;
+      --space-lg: 24px;
+      --space-xl: 48px;
+      --space-xxl: 80px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--sans); font-size: 16px; line-height: 1.6;
+      color: var(--ink); background: var(--canvas); -webkit-font-smoothing: antialiased;
+    }
+    .container { max-width: var(--max-w); margin: 0 auto; padding: 0 var(--space-lg); }
+    .wide { max-width: 1080px; }
+
+    nav { padding: var(--space-md) 0; border-bottom: 1px solid var(--border); background: var(--canvas); position: sticky; top: 0; z-index: 100; }
+    nav .container { display: flex; align-items: center; justify-content: space-between; }
+    .logo { font-weight: 800; font-size: 22px; color: var(--brand); text-decoration: none; letter-spacing: -0.02em; }
+    .nav-back { font-size: 14px; color: var(--ink-muted); text-decoration: none; font-weight: 500; }
+    .nav-back:hover { color: var(--brand); }
+
+    .hero { padding: 80px 0 var(--space-xl); }
+    .hero h1 { font-size: 40px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; margin-bottom: var(--space-sm); }
+    .hero h1 .accent { font-family: var(--serif); font-weight: 600; font-style: italic; color: var(--brand); }
+    .hero .subtitle { font-size: 18px; color: var(--ink-muted); margin-bottom: var(--space-md); }
+    .hero .arrow { display: inline-flex; align-items: center; gap: var(--space-sm); font-size: 15px; font-weight: 600; color: var(--brand); background: #F6EEF6; padding: 8px 20px; border-radius: var(--radius); }
+
+    section { padding: var(--space-xl) 0; }
+    section + section { border-top: 1px solid var(--border); }
+    .section-label { font-size: 13px; font-weight: 600; color: var(--brand); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: var(--space-sm); }
+    .section-title { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: var(--space-md); }
+    .section-title .accent { font-family: var(--serif); font-weight: 400; font-style: italic; color: var(--brand); }
+    .section-desc { color: var(--ink-muted); max-width: 640px; font-size: 16px; }
+
+    .input-box { background: var(--canvas-inert); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-lg); margin: var(--space-lg) 0; }
+    .input-box .filename { font-weight: 600; font-size: 14px; margin-bottom: var(--space-sm); color: var(--brand); }
+    .input-box .preview { font-family: var(--mono); font-size: 13px; line-height: 1.7; color: var(--ink-muted); white-space: pre-wrap; max-height: 240px; overflow-y: auto; background: #fff; padding: var(--space-md); border-radius: 6px; border: 1px solid var(--border); margin-bottom: var(--space-md); }
+    .input-box .preview strong { color: var(--ink); }
+    .btn-download { display: inline-flex; align-items: center; gap: var(--space-sm); background: var(--brand); color: #fff; text-decoration: none; padding: 10px 24px; border-radius: var(--radius); font-weight: 600; font-size: 14px; transition: background 0.2s; }
+    .btn-download:hover { background: var(--brand-light); }
+
+    .steps { display: flex; flex-direction: column; gap: var(--space-lg); margin-top: var(--space-lg); }
+    .step-card { counter-increment: step; border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-lg); position: relative; padding-left: 72px; background: var(--canvas); }
+    .steps { counter-reset: step; }
+    .step-card::before { content: counter(step); position: absolute; left: var(--space-lg); top: var(--space-lg); font-family: var(--mono); font-size: 14px; font-weight: 600; color: var(--brand); background: #F6EEF6; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .step-card h4 { font-size: 18px; font-weight: 600; margin-bottom: var(--space-sm); }
+    .step-card p { font-size: 14px; color: var(--ink-muted); line-height: 1.6; margin-bottom: var(--space-sm); }
+    .step-card .code-snip { background: var(--canvas-inert); border-radius: 6px; padding: var(--space-md); font-family: var(--mono); font-size: 13px; line-height: 1.5; white-space: pre-wrap; color: var(--ink); margin-top: var(--space-sm); }
+
+    .output-box { background: #F8F4F8; border: 1px solid var(--brand); border-radius: var(--radius); padding: var(--space-lg); margin-top: var(--space-lg); }
+    .output-box .label { font-size: 13px; font-weight: 600; color: var(--brand); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: var(--space-sm); }
+    .output-box .preview { font-family: var(--mono); font-size: 13px; line-height: 1.7; color: var(--ink); white-space: pre-wrap; background: #fff; padding: var(--space-md); border-radius: 6px; border: 1px solid var(--border); }
+
+    .tip { background: #FFF9E6; border: 1px solid #F0D78E; border-radius: var(--radius); padding: var(--space-md) var(--space-lg); margin-top: var(--space-lg); font-size: 14px; color: #6B5200; }
+    .tip strong { color: #4A3800; }
+
+    footer { border-top: 1px solid var(--border); padding: var(--space-xl) 0 var(--space-lg); text-align: center; font-size: 13px; color: var(--ink-muted); }
+    footer a { color: var(--brand); text-decoration: none; }
+
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 30px; }
+      .section-title { font-size: 22px; }
+      .step-card { padding-left: var(--space-lg); padding-top: 56px; }
+      .step-card::before { left: var(--space-lg); top: var(--space-md); }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="/" class="logo">cogNNitive</a>
+    <a href="/" class="nav-back">&larr; Back to home</a>
+  </div>
+</nav>
+
+<main class="container wide">
+
+  <!-- Hero -->
+  <section class="hero">
+    <span class="section-label">Sample ActioNN</span>
+    <h1>Paper to <span class="accent">YouTube Script</span></h1>
+    <p class="subtitle">Extract the core narrative from a scientific PDF and structure it into a ready-to-record YouTube script with hook, findings, and call to action.</p>
+    <div class="arrow">&#x1F4D1; Scientific PDF &rarr; &#x1F3AC; YouTube Script</div>
+  </section>
+
+  <!-- Input -->
+  <section>
+    <span class="section-label">1 &mdash; The input</span>
+    <h2 class="section-title">What you'll <span class="accent">transform</span></h2>
+    <p class="section-desc">The paper <strong>"What makes a video go viral?"</strong> by Munz (2009) — a study on emotional contagion and network structure in viral video spread.</p>
+
+    <div class="input-box">
+      <div class="filename">&#x1F4D1; munz2009a.pdf</div>
+      <div class="preview"><strong>munz2009a.pdf</strong>  (PDF — preview not available inline)
+
+Title: What makes a video go viral?
+Author: Philip Munz, 2009
+Pages: 8
+Field: Computational Social Science
+
+<strong>Abstract:</strong>
+Why do some online videos spread like a virus while others languish
+in obscurity? We examine the role of emotional valence, network
+topology, and content novelty in predicting viral propagation
+using agent-based modeling on empirical data from YouTube...</div>
+      <a href="https://pdodds.w3.uvm.edu/files/papers/others/2009/munz2009a.pdf" target="_blank" rel="noopener noreferrer" class="btn-download">&#x1F4E5; Download paper</a>
+    </div>
+  </section>
+
+  <!-- Steps -->
+  <section>
+    <span class="section-label">2 &mdash; The workflow</span>
+    <h2 class="section-title">Follow the <span class="accent">steps</span></h2>
+    <p class="section-desc">Run these steps in your AI agent (OpenCode, Claude Code, etc.).</p>
+
+    <div class="steps">
+      <div class="step-card">
+        <h4>Download and place the input</h4>
+        <p>Download the paper PDF and place it in <code>traNNsform/input/</code>.</p>
+        <div class="code-snip">curl -o traNNsform/input/munz2009a.pdf https://pdodds.w3.uvm.edu/files/papers/others/2009/munz2009a.pdf</div>
+      </div>
+
+      <div class="step-card">
+        <h4>Run the workflow</h4>
+        <p>Tell your agent to execute the paper-to-youtube workflow on the PDF.</p>
+        <div class="code-snip">Run the sample workflow paper-to-youtube on traNNsform/input/munz2009a.pdf. Read the paper, identify the central question and key findings, and produce a timestamped YouTube script with visual cues in traNNsform/output/. Name the file munz2009a_youtube_script.md.</div>
+      </div>
+
+      <div class="step-card">
+        <h4>Agent ingests the PDF</h4>
+        <p>The agent reads the PDF, extracts the abstract, methodology, key findings, and limitations. It identifies the central narrative arc.</p>
+      </div>
+
+      <div class="step-card">
+        <h4>Agent structures the script</h4>
+        <p>The agent organizes the content into a YouTube-friendly structure: hook, context, key findings, limitations, and call to action — each with estimated timestamps.</p>
+      </div>
+
+      <div class="step-card">
+        <h4>Agent adds visual cues</h4>
+        <p>The agent suggests visual elements for each segment: charts to display, text overlays, b-roll concepts, and on-screen graphics to keep viewers engaged.</p>
+      </div>
+
+      <div class="step-card">
+        <h4>Review your output</h4>
+        <p>Find the result at <code>traNNsform/output/munz2009a_youtube_script.md</code>. The agent will confirm and offer to adjust tone or level of detail.</p>
+        <div class="code-snip">cat traNNsform/output/munz2009a_youtube_script.md</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Output -->
+  <section>
+    <span class="section-label">3 &mdash; The result</span>
+    <h2 class="section-title">What you'll <span class="accent">get</span></h2>
+    <p class="section-desc">The agent produces a timestamped YouTube script like this:</p>
+
+    <div class="output-box">
+      <div class="label">&#x1F3AC; munz2009a_youtube_script.md</div>
+      <div class="preview"><strong># YouTube Script: What makes a video go viral?</strong>
+
+<strong>## Hook (0:00–0:15)</strong>
+[Visual: Rapid montage of viral videos — cat, dance, fail compilations]
+"Some videos explode overnight. Others die in silence. What's the difference?"
+
+<strong>## Intro (0:15–0:45)</strong>
+[Visual: Host on camera + title card]
+"Today we're breaking down a 2009 paper by Philip Munz that used
+agent-based modeling to figure out what makes a video spread."
+
+<strong>## Finding 1: Emotional contagion (0:45–1:45)</strong>
+[Visual: Chart showing high-arousal emotions vs. views]
+"Content that triggers high-arousal emotions — awe, anger, amusement —
+is 3x more likely to be shared than neutral content."
+
+<strong>## Finding 2: Network structure (1:45–2:45)</strong>
+[Visual: Network graph animation showing weak ties]
+"It's not just what you share, but who you are. Weak-tie networks
+spread content faster than dense friend clusters."
+
+<strong>## Limitations (5:00–5:30)</strong>
+[Visual: Text overlay — "2009 data, small sample"]
+"The study used 2009 YouTube data and a small sample. Platform
+algorithms have changed dramatically since then."
+
+<strong>## CTA (5:30–6:00)</strong>
+[Visual: Host on camera + subscribe overlay]
+"What's a video you've seen go viral recently? Drop it in the comments."</div>
+    </div>
+  </section>
+
+  <!-- Tip -->
+  <div class="tip">
+    <strong>&#x1F4A1; Try it with any paper:</strong> Drop any scientific PDF (arxiv, researchgate, etc.) into <code>traNNsform/input/</code> and run the same workflow with your filename.
+  </div>
+
+</main>
+
+<footer>
+  <div class="container">
+    <p><a href="/">cogNNitive</a> &middot; Open source under MIT license &middot; <a href="/documentation/">Documentation</a></p>
+  </div>
+</footer>
+
+</body>
+</html>
