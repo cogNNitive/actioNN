@@ -1,8 +1,8 @@
 ---
 title: "iNNv0 — Documentation"
 description: "Technical documentation for the iNNv0 skills ecosystem"
-html_url: https://actionn.cognitive.com/documentation/
-generator: https://actionn.cognitive.com/nn-design-presets
+html_url: https://actionn.cognnitive.com/documentation/
+generator: https://actionn.cognnitive.com/nn-design-presets
 ---
 
 # iNNv0 — Documentation
@@ -28,6 +28,19 @@ cd actioNN
 Then launch your AI agent from the directory (`opencode .`, `claude .`, or equivalent).
 
 The **Skills Manager** activates automatically at session start. It scans the `skills/` directory, detects available skills, and guides you through installation using **Windows NTFS junctions**, which reflect repo changes live.
+
+## Sample ActioNNs
+
+Ready-to-run transformation recipes that demonstrate the skills in action:
+
+| Sample | What it does |
+|--------|-------------|
+| [Paper to YouTube Script](sample-actionns.md?id=paper-to-youtube-script) | Convert a scientific PDF into a YouTube video script |
+| [Meeting Notes to Executive Summary](sample-actionns.md?id=meeting-notes-to-executive-summary) | Transform raw notes into a structured summary with decisions and action items |
+
+Each sample includes concrete bash commands and agent prompts &mdash; drop in a file, run the prompt, get the result.
+
+---
 
 ## Philosophy
 

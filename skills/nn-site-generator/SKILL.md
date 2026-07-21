@@ -4,6 +4,8 @@ description: Create or edit websites, add analytics, or add contact forms. Invok
 disable-model-invocation: true
 license: MIT
 compatibility: ">=1.0.0"
+version: "V_0-1-0"
+last_updated: 2026-07-21
 metadata:
   source_type: original
 ---
@@ -50,5 +52,5 @@ Load `components/contact.md` and follow its instructions. Ask which approach, th
 
 After any change, ask if the user wants a local preview:
 ```powershell
-python -m http.server 8080 --directory docs
+npx serve docs -p 8080
 ```

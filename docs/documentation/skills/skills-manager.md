@@ -1,8 +1,8 @@
 ---
 title: "Skills Manager — iNNv0 Skill"
 description: "Meta-skill that manages the lifecycle of all repository skills"
-html_url: https://actionn.cognitive.com/docs/#/skills/skills-manager
-generator: https://actionn.cognitive.com/nn-design-presets
+html_url: https://actionn.cognnitive.com/docs/#/skills/skills-manager
+generator: https://actionn.cognnitive.com/nn-design-presets
 ---
 
 # Skills Manager

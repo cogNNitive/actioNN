@@ -1,8 +1,8 @@
 ---
 title: "Model Router — iNNv0 Skill"
 description: "Evaluates AI model suitability for each task across 4 task scales"
-html_url: https://actionn.cognitive.com/docs/#/skills/opencode-model-router
-generator: https://actionn.cognitive.com/nn-design-presets
+html_url: https://actionn.cognnitive.com/docs/#/skills/opencode-model-router
+generator: https://actionn.cognnitive.com/nn-design-presets
 ---
 
 # Model Router

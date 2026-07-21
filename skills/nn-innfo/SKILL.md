@@ -317,7 +317,7 @@ When a user requests adding new fields to a concept, OR when you determine that 
 Examine the source data to determine:
 - What values will each field hold? (free text, enumerated list, markdown bullets, numeric score, date, cross-reference)
 - Is the value single or multi-instance?
-- How will Cognitive render it? (table column, detail panel, card)
+- How will cogNNitive render it? (table column, detail panel, card)
 
 ### Step 2 â€” Propose
 
@@ -329,7 +329,7 @@ Field Name | Proposed Type | Rationale | Config / Values
 
 Use this type-selection guide:
 
-| iNNfo Type | When to Use | Renders in Cognitive Table As |
+| iNNfo Type | When to Use | Renders in cogNNitive Table As |
 |---|---|---|
 | `string` | Short text, names, identifiers, single-line values | Raw text, truncated if long |
 | `markdown_inline` | Bullet lists, multi-line formatted text, rich descriptions | Rendered Markdown (bullet lists, emphasis) |
@@ -373,7 +373,7 @@ When a model needs custom fields, concepts, or markers that are not in the base 
 ### Hard Rules
 
 1. **NEVER modify** a published template spec in `specs/` â€” they are immutable.
-2. **NEVER modify** a `.specs/` local copy that Cognitive downloaded from a URL â€” it is a cache, not a workspace file.
+2. **NEVER modify** a `.specs/` local copy that cogNNitive downloaded from a URL â€” it is a cache, not a workspace file.
 3. **NEVER modify** the original template's `concepts[]`, `markers[]`, or `matrices[]` in place.
 
 ### Specialization Procedure

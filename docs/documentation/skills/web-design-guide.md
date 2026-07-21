@@ -1,8 +1,8 @@
 ---
 title: "Web Design Guide — iNNv0 Skill"
 description: "Light-mode design system with Morado Nazareno palette, systematic typography, and 8px grid"
-html_url: https://actionn.cognitive.com/docs/#/skills/web-design-guide
-generator: https://actionn.cognitive.com/nn-design-presets
+html_url: https://actionn.cognnitive.com/docs/#/skills/web-design-guide
+generator: https://actionn.cognnitive.com/nn-design-presets
 ---
 
 # Web Design Guide

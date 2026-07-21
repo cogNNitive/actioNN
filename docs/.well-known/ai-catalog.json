@@ -5,9 +5,9 @@
   "description": "AI Agent Skills ecosystem — modular skills that power AI agents with specialized capabilities",
   "generator": {
     "@type": "SoftwareApplication",
-    "url": "https://actionn.cognitive.com/nn-design-presets"
+    "url": "https://actionn.cognnitive.com/nn-design-presets"
   },
-  "url": "https://actionn.cognitive.com",
+  "url": "https://actionn.cognnitive.com",
   "inLanguage": "en",
   "isAccessibleForFree": true,
   "keywords": ["ai-agent", "skills", "model-router", "document-transformation", "web-design"],
