@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env node
+#!/usr/bin/env node
 /**
  * scripts/build-registry.js
  *
@@ -24,7 +24,7 @@ const crypto = require('crypto');
 // ---------------------------------------------------------------------------
 const args = process.argv.slice(2);
 const extraRoots = [];
-let outputDir = '.innv0';
+let outputDir = '.cogNNitive';
 let showHelp = false;
 let showVersion = false;
 
@@ -80,6 +80,9 @@ if (showVersion) {
  * @returns {object|null} { name, description, firstLine, scope } or null on error
  */
 function parseFrontmatter(content, dirName) {
+  // Strip UTF-8 BOM if present (defense-in-depth, some editors add it)
+  content = content.replace(/^\uFEFF/, '');
+
   // Match content between --- markers (handles \n and \r\n line endings)
   const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
   if (!match) {
@@ -97,15 +100,21 @@ function parseFrontmatter(content, dirName) {
   }
   const name = nameMatch[1].trim();
 
-  // Extract description â€” try folded block (|) first, then single-line
+  // Extract description - try literal block (|), folded block (>), then single-line
   let description = '';
-  const foldedMatch = fm.match(/^description:\s*\|\s*\r?\n((?: {2}.*(?:\r?\n|$))*)/m);
-  if (foldedMatch) {
-    // Remove the 2-space indent from each continuation line
-    description = foldedMatch[1]
+  const literalMatch = fm.match(/^description:\s*\|\s*\r?\n((?: {2}.*(?:\r?\n|$))*)/m);
+  const foldedMatch = fm.match(/^description:\s*>\s*\r?\n((?: {2}.*(?:\r?\n|$))*)/m);
+  if (literalMatch) {
+    description = literalMatch[1]
       .split(/\r?\n/)
       .map(line => line.replace(/^ {2}/, ''))
       .join('\n')
+      .trim();
+  } else if (foldedMatch) {
+    description = foldedMatch[1]
+      .split(/\r?\n/)
+      .map(line => line.replace(/^ {2}/, ''))
+      .join(' ')
       .trim();
   } else {
     const singleMatch = fm.match(/^description:\s*(.*)/m);

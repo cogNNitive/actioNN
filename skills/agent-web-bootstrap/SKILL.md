@@ -1,4 +1,4 @@
-﻿---
+---
 name: agent-web-bootstrap
 description: >
   Bootstrap the cogNNitive ecosystem from a manifest URL. Trigger when the user

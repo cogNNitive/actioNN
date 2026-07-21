@@ -1,4 +1,4 @@
-﻿---
+---
 name: nn-innfo
 version: "V_2-1-1"
 last_updated: 2026-07-12
