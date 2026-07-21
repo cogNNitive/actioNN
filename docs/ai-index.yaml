@@ -1,6 +1,6 @@
 # AI Content Index — https://actionn.cognnitive.com/nn-design-presets
 site:
-  name: "iNNv0"
+  name: "cogNNitive"
   url: "https://actionn.cognnitive.com"
   description: "AI Agent Skills ecosystem — modular skills that power AI agents with specialized capabilities"
   generator: "https://actionn.cognnitive.com/nn-design-presets"
@@ -8,14 +8,14 @@ site:
   updated: "2026-06-27"
 pages:
   - path: "/"
-    title: "iNNv0 — AI Agent Skills"
+    title: "cogNNitive — AI Agent Skills"
     description: "Skills ecosystem for AI agents. Model Router, Skills Manager, traNNsform, and Design System."
     last_modified: "2026-06-27"
     format: markdown
     url: "https://actionn.cognnitive.com/web/index.md"
   - path: "/documentation/"
-    title: "iNNv0 — Documentation"
-    description: "Technical documentation for the iNNv0 skills ecosystem"
+    title: "cogNNitive — Documentation"
+    description: "Technical documentation for the cogNNitive skills ecosystem"
     last_modified: "2026-06-27"
     format: markdown
     url: "https://actionn.cognnitive.com/documentation/README.md"

@@ -1,6 +1,6 @@
-# iNNv0 Web — Site Documentation
+# cogNNitive Web — Site Documentation
 
-This folder contains the source files for the [iNNv0 skills website](https://actionn.cognnitive.com), a static site generated using the [nn-design-presets](https://actionn.cognnitive.com/nn-design-presets) AI agent skill.
+This folder contains the source files for the [cogNNitive skills website](https://actionn.cognnitive.com), a static site generated using the [nn-design-presets](https://actionn.cognnitive.com/nn-design-presets) AI agent skill.
 
 ## Links
 
@@ -76,7 +76,7 @@ For the Docsify documentation section, a `doneEach` hook in `docs/documentation/
 ### Viewing Statistics
 
 1. Go to [https://cloud.umami.is](https://cloud.umami.is) and log in
-2. Select the `iNNv0` website from the dashboard
+2. Select the `cogNNitive` website from the dashboard
 3. View metrics: pageviews, visitors, bounce rate, visit duration, top pages, referrers, devices, and locations
 4. Use filters by date range, country, page, or referrer
 5. Export data as CSV or JSON from Settings > Export Data

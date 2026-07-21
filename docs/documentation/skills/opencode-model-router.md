@@ -1,5 +1,5 @@
 ---
-title: "Model Router — iNNv0 Skill"
+title: "Model Router — cogNNitive Skill"
 description: "Evaluates AI model suitability for each task across 4 task scales"
 html_url: https://actionn.cognnitive.com/docs/#/skills/opencode-model-router
 generator: https://actionn.cognnitive.com/nn-design-presets
@@ -27,7 +27,7 @@ Evaluates whether the current AI model is adequate for the task at hand. Classif
 **MATCH** — the current model is correct for this task:
 
 ```
-iNNv0 Model Router v1.0.0 (2026-06-27)
+cogNNitive Model Router v1.0.0 (2026-06-27)
 Model: deepseek-v4-flash
 Tier: Flash
 Task scale: Trivial
@@ -37,7 +37,7 @@ Verdict: MATCH
 **MISMATCH** — the model falls short:
 
 ```
-iNNv0 Model Router v1.0.0 (2026-06-27)
+cogNNitive Model Router v1.0.0 (2026-06-27)
 Model: deepseek-v4-flash
 Tier: Flash
 Task scale: Refactor

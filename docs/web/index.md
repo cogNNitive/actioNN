@@ -1,5 +1,5 @@
 ---
-title: "iNNv0 — AI Agent Skills"
+title: "cogNNitive — AI Agent Skills"
 description: "Skills ecosystem for AI agents. Model Router, Skills Manager, traNNsform, and Web Design Guide."
 html_url: https://actionn.cognnitive.com/
 generator: https://actionn.cognnitive.com/nn-design-presets
@@ -7,7 +7,7 @@ generator: https://actionn.cognnitive.com/nn-design-presets
 
 # AI Agent Skills, Engineered for Any Agent
 
-iNNv0 is a modular skills ecosystem that powers your AI agent with specialized capabilities: model evaluation, skills management, document transformation, and web design.
+cogNNitive is a modular skills ecosystem that powers your AI agent with specialized capabilities: model evaluation, skills management, document transformation, and web design.
 
 - [Explore Skills](#skills)
 - [View on GitHub](https://github.com/cogNNitive/actioNN)

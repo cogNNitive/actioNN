@@ -1,13 +1,13 @@
 ---
-title: "iNNv0 — Documentation"
-description: "Technical documentation for the iNNv0 skills ecosystem"
+title: "cogNNitive — Documentation"
+description: "Technical documentation for the cogNNitive skills ecosystem"
 html_url: https://actionn.cognnitive.com/documentation/
 generator: https://actionn.cognnitive.com/nn-design-presets
 ---
 
-# iNNv0 — Documentation
+# cogNNitive — Documentation
 
-**iNNv0** is a **skills** ecosystem for AI agents. Each skill is an autonomous module that teaches the agent to solve a specific type of task with domain knowledge.
+**cogNNitive** is a **skills** ecosystem for AI agents. Each skill is an autonomous module that teaches the agent to solve a specific type of task with domain knowledge.
 
 ## Included Skills
 
