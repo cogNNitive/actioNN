@@ -42,7 +42,7 @@ template:
 # _F concepts: Workflow
 
 > [!NOTE]
-> Workflow template for the iNNv0 ecosystem. Defines multi-skill processing workflows as declarative FORMAT documents.
+> Workflow template for the cogNNitive ecosystem. Defines multi-skill processing workflows as declarative FORMAT documents.
 > **Version:** V_0-1-0 | **Template:** workflow
 
 The Workflow concept defines the root entity of a processing workflow. It captures the identity and purpose of the workflow.

@@ -1,4 +1,4 @@
-# Model Matrix — iNNv0 Model Router
+# Model Matrix — cogNNitive Model Router
 
 > Last updated: 2026-06-27 | Skill version: 1.0.0
 >

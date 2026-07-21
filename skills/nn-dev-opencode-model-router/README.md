@@ -1,4 +1,4 @@
-# iNNv0 OpenCode Model Router
+# cogNNitive OpenCode Model Router
 
 A self-contained skill that evaluates the scale of your request at session start and confirms whether the active model is cost-effective for the job. If not, it suggests a better tier.
 

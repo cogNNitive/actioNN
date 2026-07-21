@@ -1,6 +1,6 @@
 ---
 name: nn-router
-description: Entry point for iNNv0 skills. Tells you which skill to use for what. Invoke with /nn-router.
+description: Entry point for cogNNitive skills. Tells you which skill to use for what. Invoke with /nn-router.
 version: "1.0"
 last_updated: 2026-07-12
 license: MIT
@@ -23,7 +23,7 @@ Pick what you need below.
 | `/nn-skills-lifecycle` | Instalar, crear, auditar o mantener skills del ecosistema |
 | `/nn-trannsform` | Procesar documentos crudos (PDF, DOCX, XLSX, etc.) a Markdown |
 | `/nn-site-generator` | Crear o editar sitios web, agregar analytics o formularios de contacto |
-| `/agent-web-bootstrap` | Arrancar el ecosistema iNNv0 desde una URL manifest (eNNvironment) |
+| `/agent-web-bootstrap` | Arrancar el ecosistema cogNNitive desde una URL manifest (eNNvironment) |
 | `/nn-onboarding-wizard` | Wizard conversacional para crear un modelo iNNfo paso a paso |
 | `/nn-workflow-orchestrator` | Ejecutar o crear pipelines multi-skill con stages secuenciales |
 

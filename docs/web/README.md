@@ -87,14 +87,14 @@ To point analytics to a different Umami project, get the new script tag from you
 
 ## Contact Section
 
-Every page includes a contact section. The current site uses a **URL-based contact** pointing to `https://innv0.com/contact?ref=actioNN`.
+Every page includes a contact section. The current site uses a **URL-based contact** pointing to `https://actionn.cognnitive.com/contact?ref=actioNN`.
 
 ### Option A: External URL (current)
 
 The contact section renders as a styled button linking to an external page:
 
 ```html
-<a href="https://innv0.com/contact?ref=actioNN" class="btn-primary">
+<a href="https://actionn.cognnitive.com/contact?ref=actioNN" class="btn-primary">
   Contact Us
 </a>
 ```

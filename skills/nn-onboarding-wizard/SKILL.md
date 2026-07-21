@@ -13,7 +13,7 @@ metadata:
   source_type: original
 ---
 
-# iNNv0 Onboarding Wizard
+# cogNNitive Onboarding Wizard
 
 Conversational wizard that guides the user through creating an iNNfo model from scratch. Designed to be invoked after bootstrap (as the CogNNitive workflow) or standalone.
 

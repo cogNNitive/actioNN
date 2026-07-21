@@ -94,9 +94,9 @@ Rules that apply regardless of project context. Safe to use in any repository.
 <!-- /gentle-ai:generic-rules -->
 
 <!-- gentle-ai:nn-rules -->
-## iNNv0-Specific Rules
+## cogNNitive-Specific Rules
 
-Rules specific to the iNNv0 ecosystem. These apply to ALL files in this repository.
+Rules specific to the cogNNitive ecosystem. These apply to ALL files in this repository.
 
 ### Skill Versioning Convention
 

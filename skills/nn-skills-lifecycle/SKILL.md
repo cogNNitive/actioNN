@@ -1,6 +1,6 @@
 ---
 name: nn-skills-lifecycle
-description: Install, create, audit, and maintain iNNv0 skills. Entry point for the skill ecosystem. Invoke with /nn-skills-lifecycle.
+description: Install, create, audit, and maintain cogNNitive skills. Entry point for the skill ecosystem. Invoke with /nn-skills-lifecycle.
 disable-model-invocation: true
 version: "1.0"
 last_updated: 2026-07-12

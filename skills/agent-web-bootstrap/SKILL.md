@@ -1,7 +1,7 @@
 ﻿---
 name: agent-web-bootstrap
 description: >
-  Bootstrap the iNNv0 ecosystem from a manifest URL. Trigger when the user
+  Bootstrap the cogNNitive ecosystem from a manifest URL. Trigger when the user
   says "usar eNNvironment", "bootstrap", or provides a URL referencing an
   agent-bootstrap manifest (e.g., "Quiero usar eNNvironment <URL>").
   Installs declared skills from GitHub, downloads and registers MCP bundles,
@@ -17,7 +17,7 @@ metadata:
 
 # Agent Web Bootstrap
 
-Bootstrap the iNNv0 ecosystem from a manifest URL. One-shot: installs skills, downloads MCP bundles, registers servers, and presents a workflow menu.
+Bootstrap the cogNNitive ecosystem from a manifest URL. One-shot: installs skills, downloads MCP bundles, registers servers, and presents a workflow menu.
 
 ## Trigger
 

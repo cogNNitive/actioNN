@@ -1,13 +1,13 @@
 ---
 name: nn-design-presets
-description: Reference for iNNv0 visual design presets — palettes, typography, spacing, and branding tokens. Use when building or styling web pages, documentation sites, or marketing pages.
+description: Reference for cogNNitive visual design presets — palettes, typography, spacing, and branding tokens. Use when building or styling web pages, documentation sites, or marketing pages.
 license: MIT
 compatibility: ">=1.0.0"
 metadata:
   source_type: original
 ---
 
-# iNNv0 Design Presets
+# cogNNitive Design Presets
 
 Reference material — load on demand when working on web files. Each preset in `presets/` defines a complete visual identity: palette, typography stack, spacing grid, and layout rules.
 

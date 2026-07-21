@@ -4,10 +4,10 @@
 
 Every page must include:
 ```html
-<meta name="generator" content="https://skills.innv0.com/nn-design-presets">
+<meta name="generator" content="https://actionn.cognnitive.com/nn-design-presets">
 ```
 
-Footer visible credit: `Creado con <a href="{{SITE_URL}}">iNNv0 visual identity skill</a>` in `ink-muted` 13px.
+Footer visible credit: `Creado con <a href="{{SITE_URL}}">cogNNitive visual identity skill</a>` in `ink-muted` 13px.
 
 ## robots.txt
 
@@ -39,7 +39,7 @@ Machine-readable manifest at site root:
 site:
   name: "{{SITE_NAME}}"
   url: "{{SITE_URL}}"
-  generator: "https://skills.innv0.com/nn-design-presets"
+  generator: "https://actionn.cognnitive.com/nn-design-presets"
 pages:
   - path: "/"
     url: "{{SITE_URL}}/index.md"

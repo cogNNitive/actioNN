@@ -51,4 +51,4 @@ Launch your AI agent from this directory (e.g. `opencode .`, `claude .`, or your
 
 We'd love to hear from you. Questions, ideas, or feedback — reach out anytime.
 
-- [Contact Us](https://innv0.com/contact?ref=actioNN) — `https://innv0.com/contact?ref=actioNN`
+- [Contact Us](https://actionn.cognnitive.com/contact?ref=actioNN) — `https://actionn.cognnitive.com/contact?ref=actioNN`
