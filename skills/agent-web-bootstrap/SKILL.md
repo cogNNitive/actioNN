@@ -21,23 +21,27 @@ Bootstrap the cogNNitive ecosystem from a manifest URL. One-shot: installs skill
 
 ## Trigger
 
-When the user says something like:
-- "I want to use https://cognnitive.com"
-- "Quiero usar eNNvironment https://cogNNitive.github.io/eNNvironment"
+The **canonical entry point** is a single phrase:
+
+- **"I want to use https://cognnitive.com/use"**
+
+Also accept these equivalent forms:
+- "Quiero usar eNNvironment https://cognnitive.com/use"
 - "Usa eNNvironment <URL>"
 - "/bootstrap <URL>"
 - Any message containing "bootstrap" + a URL
 
-The URL should point to a page containing an `agent-bootstrap:` manifest (either as YAML frontmatter or discoverable via fallbacks).
+`https://cognnitive.com/use` is the always-on entry point for both first-time setup and returning use. The page exposes an `agent-bootstrap:` manifest (YAML frontmatter or discoverable via fallbacks) **and** plain-language self-bootstrap instructions in its body, so even an agent that does not yet have this skill installed can follow it.
 
 ## Flow
 
 ### Environment Rule (MANDATORY)
 
 All resource resolution MUST use web fetches to canonical URLs only:
+- `https://cognnitive.com/use` — canonical entry point (manifest + self-bootstrap instructions)
 - `https://cognnitive.com` — eNNvironment gateway
 - `https://raw.githubusercontent.com/cogNNitive/...` — raw files from GitHub repos
-- `https://github.com/cogNNitive/...` — for clone operations
+- `https://codeload.github.com/cogNNitive/...` — repo tarballs (HTTPS skill download, no git)
 
 Do NOT read files from the local filesystem (no `Read` tool, no `Glob` tool, no `Bash` with file paths). The user may not have the repository cloned. If you already have context about local files from your session, ignore it — always fetch from the canonical URL.
 
@@ -107,8 +111,10 @@ For each skill in `skills[]`:
 
 ```
 1. Check if ~/.agents/skills/{name}/SKILL.md exists: skip, report "Already installed: {name}"
-2. Clone {repo} to a temp directory (git clone --depth 1)
-3. Copy {path} to ~/.agents/skills/{name}/
+2. Download the repo tarball over HTTPS (no git required). `{repo}` is the `org/repo`
+   from the manifest: https://codeload.github.com/{repo}/tar.gz/refs/heads/main
+   (if that 404s, retry with the `master` branch). Extract to a temp directory.
+3. Copy {path} from the extracted tree to ~/.agents/skills/{name}/
 4. If skill-origin-guard is available, validate frontmatter
    - If validation fails: warn but continue
    - If skill-origin-guard not found: warn "frontmatter validation skipped" and continue
@@ -212,14 +218,14 @@ Next step: Run a workflow with [{workflow.id}] or type the workflow name.
 - **Repeated run**: skills already installed are skipped (idempotent). MCP bundles already present are skipped. Only new or missing items are processed.
 - **Partial failure**: if one skill fails to clone, continue with the rest. Report failures at the end.
 - **No MCP dir**: create `~/.agents/mcp/` on first MCP provision.
-- **No git**: if `git` is unavailable, error "git is required to clone skill repositories".
-- **GitHub rate limit**: if clone fails with rate limit, suggest waiting or using a token.
+- **No git required**: skills are fetched over HTTPS as `.tar.gz` tarballs, so `git` does NOT need to be installed. Never fall back to `git clone`.
+- **GitHub rate limit**: if a tarball download fails with a rate limit, suggest waiting or using a token.
 
 ## Example conversation
 
 ```
-User: I want to use https://cognnitive.com
-Agent: Fetching https://cognnitive.com...
+User: I want to use https://cognnitive.com/use
+Agent: Fetching https://cognnitive.com/use...
        HTML page detected, looking for markdown twin...
        Found index.md, parsing frontmatter...
        Found agent-bootstrap manifest.
