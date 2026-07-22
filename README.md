@@ -35,7 +35,7 @@ actioNN is a collection of self-contained, domain-specialized skills that teach 
 No Git or terminal needed. Tell your AI agent:
 
 ```
-I want to use https://cognnitive.com
+I want to use https://cognnitive.com/use
 ```
 
 OpenCode fetches the bootstrap manifest, downloads all skills from GitHub, registers the MCP server, and presents a workflow menu — all automatic.

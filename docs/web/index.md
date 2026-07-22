@@ -43,7 +43,7 @@ Skills are loaded on demand by your AI agent. Each skill defines its own domain,
 No Git or terminal needed. Tell your AI agent:
 
 ```
-I want to use https://cognnitive.com
+I want to use https://cognnitive.com/use
 ```
 
 OpenCode fetches the bootstrap manifest, downloads all skills from GitHub, registers the MCP server, and presents a workflow menu — all automatic.

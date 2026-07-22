@@ -655,11 +655,26 @@
   <div class="container">
     <span class="section-label">Getting started</span>
     <h2 class="section-title">Install in <span class="accent">seconds</span></h2>
-    <p class="section-desc">Tell your AI agent to load the bootstrap URL. It handles everything — skill installation, MCP registration, and workflow discovery.</p>
+    <p class="section-desc">Paste this one line into the OpenCode Desktop chat. It's the same entry point every time — first setup or returning use. It handles everything: skill installation, MCP registration, and workflow discovery.</p>
 
-    <div class="code-block" style="text-align:center;font-size:18px;font-weight:700;color:var(--brand);background:var(--canvas-inert);border:2px solid var(--brand);padding:var(--space-xl);">
-I want to use https://cognnitive.com</div>
+    <div class="code-block" style="display:flex;gap:var(--space-md);align-items:center;justify-content:center;flex-wrap:wrap;text-align:center;font-size:18px;font-weight:700;color:var(--brand);background:var(--canvas-inert);border:2px solid var(--brand);padding:var(--space-xl);">
+      <span id="bootstrap-cmd">I want to use https://cognnitive.com/use</span>
+      <button type="button" class="copy-cmd-btn" data-copy="I want to use https://cognnitive.com/use" style="font-size:13px;font-weight:600;color:#fff;background:var(--brand);border:none;border-radius:var(--radius);padding:8px 14px;cursor:pointer;">Copy command</button>
+    </div>
+    <p style="text-align:center;font-size:14px;color:var(--ink-muted);margin-top:var(--space-sm);">Don't have OpenCode Desktop yet? <a href="https://opencode.ai" target="_blank" rel="noopener noreferrer" style="color:var(--brand);">Download it here</a>, then paste the line above into its chat.</p>
   </div>
+
+  <script>
+    document.querySelectorAll('.copy-cmd-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        navigator.clipboard.writeText(btn.dataset.copy).then(function () {
+          var original = btn.textContent;
+          btn.textContent = 'Copied!';
+          setTimeout(function () { btn.textContent = original; }, 1500);
+        });
+      });
+    });
+  </script>
 </section>
 
 <!-- Contact -->
