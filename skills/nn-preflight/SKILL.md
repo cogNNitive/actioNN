@@ -1,9 +1,9 @@
 ---
 name: nn-preflight
-description: "Preflight checks for actioNN skills. Verifies Node.js, data structure, dependency skills, npm deps, MCP bundle, and MCP server health. Invoked by other skills before execution. Two tiers: Basic (always) and iNNfo (when MCP needed)."
+description: "Preflight checks for actioNN skills. Verifies Node.js, data structure, dependency skills, npm deps, MCP bundle, and MCP server health. Post-check discovers iNNfo models and provides workspace loading instructions. Invoked by other skills before execution. Two tiers: Basic (always) and iNNfo (when MCP needed)."
 disable-model-invocation: true
-version: "1.0"
-last_updated: 2026-07-21
+version: "1.1"
+last_updated: 2026-07-22
 license: MIT
 compatibility: opencode, claude-code, cursor, any agent supporting skills
 metadata:
@@ -72,11 +72,9 @@ Verify these directories exist under the workspace (CWD unless overridden):
 
 ### 1.3 Dependency skills
 
-For each skill in the dependency list:
-
-1. Check `available_skills` (from system prompt) — look for a matching `name` field in the `<available_skills>` block
-2. If not found, check filesystem: `Test-Path "~/.agents/skills/<name>/SKILL.md"`
-3. If not found, check: `Test-Path "~/.config/opencode/skills/<name>/SKILL.md"`
+For each skill in the dependency list, run the canonical detection defined in
+[`reference/skill-locations.md`](reference/skill-locations.md) (available_skills →
+`~/.agents/skills` → `~/.config/opencode/skills`).
 
 - **Pass**: all found
 - **Fail**: list each missing one. Offer: "Run nn-skills-lifecycle to install missing skills?"
@@ -184,6 +182,40 @@ Severity icons:
 - `⚠️` — warning (advisory, non-blocking)
 
 After showing the report, ask the user before taking any remediation action. Do not auto-fix without consent.
+
+---
+
+## Post-Check: iNNfo Model Discovery
+
+After the report is shown (and any blockers resolved), run this discovery scan regardless of tier:
+
+### 3.1 Scan for iNNfo models
+
+Search for iNNfo model files under the workspace directory:
+
+```powershell
+Get-ChildItem -Recurse -Filter "*_NN.md" | Select-Object FullName
+```
+
+- **Models found**: Print a bullet list of all discovered `*_NN.md` files.
+- **No models**: Print `ℹ️ No iNNfo models found — skip workspace instructions.`
+
+### 3.2 Workspace loading instructions
+
+If at least one model was found, print these instructions **verbatim**:
+
+```
+📂 iNNfo models detected in this workspace.
+
+To load them in the iNNfo Modeler:
+
+  1. Open https://innfo.cognnitive.com/app/ in Chrome, Edge, or Opera
+     (requires File System Access API).
+  2. Click "Open Folder" and select the workspace root directory.
+  3. The app will parse all *_NN.md models and display them.
+
+The iNNfo Modeler lets you browse, edit, and export models visually.
+```
 
 ---
 

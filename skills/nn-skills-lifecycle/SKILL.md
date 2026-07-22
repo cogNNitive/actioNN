@@ -2,8 +2,8 @@
 name: nn-skills-lifecycle
 description: Install, create, audit, and maintain cogNNitive skills. Entry point for the skill ecosystem. Invoke with /nn-skills-lifecycle.
 disable-model-invocation: true
-version: "1.0"
-last_updated: 2026-07-12
+version: "1.1"
+last_updated: 2026-07-22
 metadata:
   source: actioNN
   audience: maintainer
@@ -22,17 +22,14 @@ Single entry point for the skill ecosystem. Classify the request into one branch
 
 ### Steward — scan, install, junction
 
-Check what skills exist in `skills/`, cross-reference against `~/.config/opencode/skills/` and `~/.agents/skills/`, present a status table, and offer to install missing ones via Junction (recommended) or Symlink.
+Check what skills exist in `skills/`, cross-reference against the canonical
+install locations, present a status table, and offer to install missing ones via
+Junction (recommended) or Symlink.
 
-Use PowerShell to detect LinkType:
-```
-Get-Item -Path "~/.agents/skills/<name>" | Select-Object LinkType, Target
-```
-
-For installation:
-```
-New-Item -ItemType Junction -Path "~/.agents/skills/<name>" -Target "<abs-path>\skills\<name>"
-```
+Locations, detection, and the exact PowerShell for LinkType detection and
+Junction creation are defined once in the canonical convention:
+[`nn-preflight/reference/skill-locations.md`](../nn-preflight/reference/skill-locations.md).
+Use it — do not hardcode paths here.
 
 After any operation, re-render the table.
 

@@ -10,14 +10,25 @@ actioNN is a collection of self-contained, domain-specialized skills that teach 
 
 ## Skills
 
-| Skill | Description |
+<!-- skills:start -->
+
+| Skill | Invocation | Description |
 |---|---|---|
-| **[Model Router](./skills/nn-dev-opencode-model-router/)** | Evaluates whether the active AI model is cost-effective for the task at hand. Classifies requests across 4 tiers and recommends optimal model tiers. |
-| **[Workflow Orchestrator](./skills/nn-workflow-orchestrator/)** | Meta-skill that reads declarative workflow FORMAT files and coordinates multi-skill execution sequences (traNNsform, FORMAT, etc.) in sequential stages. |
-| **[Skills Manager](./skills/nn-skills-manager/)** | Meta-skill that scans, audits, and installs all skills in the repository. Supports NTFS junctions, symlinks, and copy install modes. |
-| **[traNNsform](./skills/nn-trannsform/)** | Document ingestion and transformation pipeline. Converts PDF, DOCX, XLSX, and more to unified Markdown using the agent's own LLM as the transformation engine. Ships with a Node.js CLI tool. |
-| **[Web Design Guide](./skills/nn-design-presets/)** | Complete light-mode design system with Morado Nazareno palette (#4D0E4E), systematic typography (Plus Jakarta Sans, Playfair Display, Geist Mono), and 8px spacing grid. |
-| **[iNNfo](./skills/nn-innfo/)** | Semantic modeling with iNNfo V_0-2-0 (`_NN` markers), template-based authoring, marker-based matrices, and spec-driven dashboard renderers. |
+| **[agent-web-bootstrap](./skills/agent-web-bootstrap/)** | Automatic | Bootstrap the cogNNitive ecosystem from a manifest URL. Trigger when the user says "usar eNNvironment", "bootstrap", or provides a URL referencing an agent-bootstrap manifest (e.g., "Quiero usar eNNvironment <URL>"). Installs declared skills from GitHub, downloads and registers MCP bundles, validates frontmatter with skill-origin-guard, and presents available workflows. Only needs to run once per environment. |
+| **[nn-design-presets](./skills/nn-design-presets/)** | Automatic | Reference for cogNNitive visual design presets — palettes, typography, spacing, and branding tokens. Use when building or styling web pages, documentation sites, or marketing pages. |
+| **[nn-dev-opencode-model-router](./skills/nn-dev-opencode-model-router/)** | `/nn-dev-opencode-model-router` | Route any task to the right OpenCode model — trivial, bug, feature, or refactor. Invoke with /nn-dev-opencode-model-router. |
+| **[nn-innfo](./skills/nn-innfo/)** | Automatic | MANDATORY trigger: MUST activate this skill whenever the user is creating, editing, validating, or discussing any iNNfo model, template, specialization, sample, or specification file. |
+| **[nn-onboarding-wizard](./skills/nn-onboarding-wizard/)** | Automatic | Conversational wizard for creating an iNNfo model from scratch. Walks the user through template selection, model naming, and workspace scaffolding. Trigger after bootstrap (CogNNitive flow) or when the user wants to create a new model step by step. |
+| **[nn-preflight](./skills/nn-preflight/)** | `/nn-preflight` | Preflight checks for actioNN skills. Verifies Node.js, data structure, dependency skills, npm deps, MCP bundle, and MCP server health. Post-check discovers iNNfo models and provides workspace loading instructions. Invoked by other skills before execution. Two tiers: Basic (always) and iNNfo (when MCP needed). |
+| **[nn-router](./skills/nn-router/)** | `/nn-router` | Entry point for cogNNitive skills. Reads the generated skill registry and tells you which skill to use for what. Invoke with /nn-router. |
+| **[nn-site-generator](./skills/nn-site-generator/)** | `/nn-site-generator` | Create or edit websites, add analytics, or add contact forms. Invoke with /nn-site-generator. |
+| **[nn-skills-lifecycle](./skills/nn-skills-lifecycle/)** | `/nn-skills-lifecycle` | Install, create, audit, and maintain cogNNitive skills. Entry point for the skill ecosystem. Invoke with /nn-skills-lifecycle. |
+| **[nn-trannsform](./skills/nn-trannsform/)** | Automatic | Bootstrap projects, scan raw documents, normalize them to Markdown, and apply template-based transformations. Includes a Node.js CLI tool for document ingestion, format conversion (txt, md, csv, json, docx, pdf, xlsx), and transformation orchestration. Uses the agent's own LLM for the actual content transformation. Triggers: trannsform, transform, normalize, scan documents, document ingestion, document transformation, document processing, markdown conversion, project bootstrap |
+| **[nn-workflow-orchestrator](./skills/nn-workflow-orchestrator/)** | `/nn-workflow-orchestrator` | Run, create, or discover multi-skill workflows. Entry point for document transformation pipelines. Invoke with /nn-workflow-orchestrator. |
+
+<!-- skills:end -->
+
+> This table is auto-generated from each skill's frontmatter by `scripts/build-registry.js`. Do not edit it by hand — run the script after adding or changing a skill.
 
 ## Getting Started
 
@@ -49,7 +60,9 @@ actioNN/
 │   ├── nn-innfo/               #   iNNfo semantic modeling
 │   ├── nn-dev-opencode-model-router/  #   Model adequacy evaluator
 │   ├── nn-workflow-orchestrator/  #   Multi-skill workflow orchestration
-│   ├── nn-skills-manager/      #   Skills lifecycle management
+│   ├── nn-skills-lifecycle/    #   Skills lifecycle management
+│   ├── nn-preflight/           #   Readiness gate (env checks) for other skills
+│   ├── nn-router/              #   Entry-point index over the skill registry
 │   ├── nn-trannsform/          #   Document ingestion pipeline
 │   └── nn-design-presets/    #   Design system & brand guidelines
 ├── docs/                          # Public site (Docsify + static HTML)
