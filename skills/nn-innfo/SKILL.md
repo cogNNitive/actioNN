@@ -1,4 +1,4 @@
----
+﻿---
 name: nn-innfo
 version: "V_2-1-1"
 last_updated: 2026-07-12
@@ -102,11 +102,11 @@ The `innfo-mcp` server exposes six tools. It is **publisher-agnostic**: it never
 
 Use these **stable `latest` URLs** for human reference and authoring guidance. They always point to the current published version:
 
-- **defiNNe** (level 0): `https://raw.githubusercontent.com/cogNNitive/cogNNitive/main/specs/latest/level0/defiNNe_NN.md`
-- **iNNfo** (level 1): `https://raw.githubusercontent.com/cogNNitive/cogNNitive/main/specs/latest/level1/iNNfo_NN.md`
-- **Business** (level 2): `https://raw.githubusercontent.com/cogNNitive/cogNNitive/main/specs/latest/level2/business/business_NN.md`
-- **Procedures** (level 2): `https://raw.githubusercontent.com/cogNNitive/cogNNitive/main/specs/latest/level2/procedures/procedures_NN.md`
-- **Catalog** (level 2): `https://raw.githubusercontent.com/cogNNitive/cogNNitive/main/specs/latest/level2/catalog/catalog_NN.md`
+- **defiNNe** (level 0): `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level0/defiNNe_NN.md`
+- **iNNfo** (level 1): `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level1/iNNfo_NN.md`
+- **Business** (level 2): `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level2/business/business_NN.md`
+- **Procedures** (level 2): `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level2/procedures/procedures_NN.md`
+- **Catalog** (level 2): `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level2/catalog/catalog_NN.md`
 
 > **Stable vs immutable:** `latest/` URLs are convenience aliases that move with each release â€” use them for authoring guidance. A level-3 model's own `parent_spec.url` MUST pin an **immutable** versioned URL (e.g. `.../specs/v0.1.0/level2/business/business_V_0-1-1_NN.md`) so validation is reproducible. The MCP resolves whatever URL the model declares.
 
@@ -191,9 +191,48 @@ asset_mode: "centralized"    # optional, default "centralized"
 
 ### Generate a model
 1. Obtain the template: `get_template({ url })` with the user-provided template URL (or `{ model_id }` if extending an existing model). If none is given, offer the templates from Â§2.
-2. Parse the returned concepts/markers/matrices and author the model body with `_NN` markers.
-3. Set the model's `parent_spec.url` to the **immutable** template URL.
-4. Validate before finishing: `validate_model({ content })` (inline) or `validate_model({ id })` (on disk).
+
+2. **Show and confirm concepts** — use the `question` tool to present the template's concepts:
+
+   ```markdown
+   Template `{name}` defines these concepts:
+     - {ConceptName} ({type}) — {description}
+     ...
+
+   Do you want to include all of them?
+   - **[a]** Include all (Recommended)
+   - **[b]** Select specific concepts
+   - **[x]** Cancel
+   ```
+
+   If [b], ask which concepts to include and only use those.
+   If [x], stop and report "Model creation cancelled by user."
+
+3. **For each confirmed concept, present its fields and ask for approval** — use the `question` tool:
+
+   ```markdown
+   Concept `{name}` ({type})
+   Fields:
+     {field_name} ({type}) — {rationale}
+     ...
+
+   Do you approve these fields?
+   - **[a]** Approve and continue (Recommended)
+   - **[b]** Modify field configuration
+   ```
+
+   Do NOT proceed until the user confirms. If [b], follow Â§8 (Field Creation Protocol) to let the user customize.
+
+4. Author the model body with `_NN` markers using only the confirmed concepts and fields.
+
+5. Set the model's `parent_spec.url` to the **immutable** template URL.
+
+6. Validate before finishing: `validate_model({ content })` (inline) or `validate_model({ id })` (on disk).
+
+7. **Preview link** — provide a link to view the model:
+
+   > ð Preview in iNNfo Modeler: https://innfo.cognnitive.com/app/
+   > To preview, open the iNNfo Modeler in your browser and load the model's folder.
 
 ### Validate a model
 - Call `validate_model({ id })` or `validate_model({ content })`. The template is resolved from the model's `parent_spec.url`.
@@ -465,15 +504,14 @@ After successful validation, ask the user:
 > (Recommended: [b] for field additions, [c] for new concepts)"
 
 If the user chooses [b] or [c], update `model_version` in the model's frontmatter. If [x], revert the changes.
+### Step 4 - Confirm
 
-### Step 4 â€” Confirm
-
-Print the final state:
+Print the final state and a preview link:
 ```
-âœ… {Model} v{new_version} â€” valid, saved to {path}
+{Model} v{new_version} - valid, saved to {path}
+Preview in iNNfo Modeler: https://innfo.cognnitive.com/app/
+    Open the iNNfo Modeler and load the model's folder to view it.
 ```
-
----
 
 ## Core Rules
 

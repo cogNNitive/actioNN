@@ -32,6 +32,17 @@ The URL should point to a page containing an `agent-bootstrap:` manifest (either
 
 ## Flow
 
+### Environment Rule (MANDATORY)
+
+All resource resolution MUST use web fetches to canonical URLs only:
+- `https://cognnitive.com` — eNNvironment gateway
+- `https://raw.githubusercontent.com/cogNNitive/...` — raw files from GitHub repos
+- `https://github.com/cogNNitive/...` — for clone operations
+
+Do NOT read files from the local filesystem (no `Read` tool, no `Glob` tool, no `Bash` with file paths). The user may not have the repository cloned. If you already have context about local files from your session, ignore it — always fetch from the canonical URL.
+
+Exception: if the user explicitly says they are in a development environment with repos cloned, you MAY use local files for efficiency.
+
 ### Step 1: Fetch and parse the manifest
 
 1. Use `webfetch` to retrieve the URL (markdown format).
@@ -59,6 +70,37 @@ If ALL fallbacks fail: error "Could not find a bootstrap manifest at {URL} or an
 
 If frontmatter found but has no `skills[]` or `workflows[]`: error "Manifest has no skills or workflows declared"
 
+### Step 1c — Manifest summary and confirmation
+
+After successfully parsing the manifest, use the `question` tool to present the parsed result and wait for user confirmation:
+
+Do you want to proceed with installation?
+- **[a]** Yes, install everything (Recommended)
+- **[b]** Install only specific skills (user will list them)
+- **[x]** Cancel
+
+If [a]: proceed with all skills.
+If [b]: ask which skills to include, install only those listed.
+If [x]: stop. Report "Bootstrap cancelled by user."
+
+Show what was found before asking:
+
+```
+Found bootstrap manifest at {url}.
+
+Skills to install:
+  - {name} — {description or "already installed"}
+  ...
+
+MCP bundles to download:
+  - {name} ({url})
+
+Workflows available:
+  - {id}: {label}
+```
+
+This confirmation is MANDATORY. Do not skip it.
+
 ### Step 2: Provision skills
 
 For each skill in `skills[]`:
@@ -73,6 +115,12 @@ For each skill in `skills[]`:
 5. Update skill registry (~/.agents/skills is auto-discovered by most agents)
 ```
 
+After provisioning ALL skills, report the per-skill status:
+
+`{name}` — ✅ Installed (or ⏭️ Already present)
+
+This intermediate report is MANDATORY. Show it even if all skills were already present.
+
 ### Step 3: Provision MCP bundles
 
 For each skill that declares `mcp[]`:
@@ -82,7 +130,14 @@ For each skill that declares `mcp[]`:
 2. Create ~/.agents/mcp/ if it doesn't exist
 3. Check if ~/.agents/mcp/{name}.bundle.js exists: skip, report "MCP already present: {name}"
 4. Download {url} to ~/.agents/mcp/{name}.bundle.js
-5. If download fails (HTTP error, timeout): warn and mark skill as "MCP unavailable"
+5. If download fails (HTTP error, timeout):
+   - Report the error immediately:
+     ⚠️ Error HTTP {code} downloading MCP bundle for {name}
+     URL: {failed_url}
+   - Try the actioNN fallback URL:
+     `https://raw.githubusercontent.com/cogNNitive/actioNN/main/scripts/bin/{name}.bundle.js`
+   - If fallback succeeds: report "✅ MCP bundle downloaded from fallback URL"
+   - If fallback also fails: mark skill as "MCP unavailable" and warn the user
 6. Register the MCP server in the current workspace's .opencode/opencode.json:
    {
      "mcp": {
@@ -96,6 +151,24 @@ For each skill that declares `mcp[]`:
 ```
 
 The MCP path must be absolute (resolved from `~/.agents/mcp/{name}.bundle.js`) so it works from any workspace directory.
+
+### Step 3b — Verify MCP connectivity
+
+After registering all MCP servers, verify they respond:
+
+1. Call `innfo-mcp_list_models` with the workspace root.
+2. If it returns a result (even empty list):
+   "✅ MCP connected — `innfo-mcp` is responding."
+3. If the tool is not available (MCP not yet loaded by the session):
+   - Read `.opencode/opencode.json` and verify the `innfo-mcp` entry was written correctly
+   - Tell the user:
+     > ⚠️ MCP server registered but not yet loaded. OpenCode will pick it up on next startup.
+     > To use it now: restart OpenCode (close and reopen).
+4. If the tool is available but returns errors:
+   - Report the error
+   - Suggest fixes: wrong bundle path, missing Node.js dependencies, corrupted download
+
+This verification is MANDATORY. Do not skip it.
 
 ### Step 4: Present workflow menu
 
@@ -114,21 +187,24 @@ On selection:
 - Invalid input: reprompt "Invalid selection. Enter a valid option or 'x' to exit"
 - If `workflows[]` is empty: "No workflows available. Skills installed — use /{name} to invoke each."
 
-## Post-install summary
+## Post-install summary (MANDATORY)
 
-After all steps, report:
+After ALL steps complete (including verification), render this summary. Do NOT skip it.
 
 ```
-Skills installed:
-  - {name} — {status}
-  - {name} — {status}
+✅ Bootstrap complete — {manifest_url}
 
-MCP bundles:
-  - {name} — {status}
+Skills:
+  {name}	{status}	{version or "—"}
+  ...
 
-Workflows disponibles:
-  - {label}
-  - {label}
+MCP:
+  {name}	{status}	{connected ⚡ / disconnected ⚠️}
+
+Workflows available:
+  [{workflow.id}] {workflow.label}
+
+Next step: Run a workflow with [{workflow.id}] or type the workflow name.
 ```
 
 ## Edge cases

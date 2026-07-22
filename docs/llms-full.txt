@@ -7,7 +7,7 @@
 cogNNitive is a modular skills ecosystem that powers your AI agent with specialized capabilities: model evaluation, skills management, document transformation, and web design.
 
 Site: https://actionn.cognnitive.com
-Source: https://github.com/innV0/actioNN
+Source: https://github.com/cogNNitive/actioNN
 
 ### Skills
 

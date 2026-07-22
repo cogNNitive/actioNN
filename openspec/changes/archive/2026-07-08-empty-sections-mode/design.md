@@ -163,7 +163,7 @@ license: MIT
 metadata:
   version: "1.2"
   source_type: "integrated"
-  source: "https://github.com/innV0/actioNN/tree/main/skills/nn-trannsform"
+  source: "https://github.com/cogNNitive/actioNN/tree/main/skills/nn-trannsform"
   installed_at: "2026-06-27"
 ---
 ```
@@ -178,7 +178,7 @@ license: MIT
 metadata:
   version: "1.3"
   source_type: "integrated"
-  source: "https://github.com/innV0/actioNN/tree/main/skills/nn-trannsform"
+  source: "https://github.com/cogNNitive/actioNN/tree/main/skills/nn-trannsform"
   installed_at: "2026-06-27"
 ---
 ```
