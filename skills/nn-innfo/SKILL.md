@@ -169,7 +169,7 @@ asset_mode: "centralized"    # optional, default "centralized"
 - **Document Notice (Required)** â€” the first body content MUST be:
   ```markdown
   > [!NOTE]
-  > This is a **iNNfo document** â€” a plain-text Markdown file that carries its own schema in the YAML frontmatter.
+  > This is an **iNNfo document** â€” a plain-text Markdown file. Open it with any text editor or view and edit it with [cogNNitive](https://innfo.cognnitive.com/app/info-doc).
   ```
 - **Index Block** â€” `# _NN index` followed by nested Markdown lists (WikiLinks `[[...]]`, Markdown links, or `_NN index:` syntax).
 - **Concept Blocks** â€” `# _NN <ConceptName>` (visible) or `# <!-- _NN --> <ConceptName>` (hidden).
@@ -341,7 +341,7 @@ The `innfo-mcp` exposes the following validation contract that pipeline gates co
 
 **Naming convention** (defiNNe Â§6): Model files MUST follow `<Name>_V_x-y-z_<Template>_NN.md`. Draft status goes in frontmatter (`status: "Draft"`), never in filename (`_NN_draft.md` is INVALID).
 
-**Frontmatter requirements** (level 3): MUST include `spec_version`, `spec_url`, `level: 3`, `parent_spec { name, url }`, `model_version`, `title`. Body MUST start with `> [!NOTE] This is a **iNNfo document**...`.
+**Frontmatter requirements** (level 3): MUST include `spec_version`, `spec_url`, `level: 3`, `parent_spec { name, url }`, `model_version`, `title`. Body MUST start with `> [!NOTE] This is an **iNNfo document**...`.
 
 These rules are enforced by `packages/pipeline-gates/src/validate.ts` and the corresponding CLI `scripts/pipeline-gate.mjs validate`.
 
