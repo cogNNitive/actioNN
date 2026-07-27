@@ -140,8 +140,8 @@ For each skill that declares `mcp[]`:
    - Report the error immediately:
      ⚠️ Error HTTP {code} downloading MCP bundle for {name}
      URL: {failed_url}
-   - Try the actioNN fallback URL:
-     `https://raw.githubusercontent.com/cogNNitive/actioNN/main/scripts/bin/{name}.bundle.js`
+   - Try the iNNfo fallback URL:
+     `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/packages/innfo-mcp/bin/{name}.bundle.js`
    - If fallback succeeds: report "✅ MCP bundle downloaded from fallback URL"
    - If fallback also fails: mark skill as "MCP unavailable" and warn the user
 6. Register the MCP server in the current workspace's .opencode/opencode.json:

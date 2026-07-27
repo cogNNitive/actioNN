@@ -71,9 +71,9 @@ node scripts/index.js --src "<source-folder>" --dest "<destination-parent-folder
 After creating the project directory, generate `.opencode/opencode.json` in the project root so the innfo-mcp server is available when the agent opens this folder.
 
 1. **Resolve the MCP bundle path**: Find `innfo-mcp.bundle.js` by checking (in order):
-   - `~/.agents/skills/nn-trannsform/` — if it's a junction, follow the target → `../../scripts/bin/innfo-mcp.bundle.js`
+   - `~/.agents/mcp/innfo-mcp.bundle.js` (standard global location downloaded by agent-web-bootstrap)
    - `~/.agents/skills/actioNN/scripts/bin/innfo-mcp.bundle.js`
-   - `D:\Users\lucas\Documents\GitHub\cogNNitive\actioNN\scripts\bin\innfo-mcp.bundle.js` (fallback)
+   - `packages/innfo-mcp/bin/innfo-mcp.bundle.js` in the iNNfo repository (fallback)
 2. Resolve to an absolute path
 3. Generate `.opencode/opencode.json`:
    ```json
