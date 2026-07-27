@@ -11,7 +11,7 @@ generator: https://actionn.cognnitive.com/nn-design-presets
 
 ## Purpose
 
-Complete document ingestion and transformation pipeline. Takes files in multiple formats and converts them to unified Markdown using the agent's own LLM as the transformation engine.
+Unified document ingestion, template-based transformation, and multi-step procedure orchestrator (`procedures_V_0-2-0_NN.md`). Takes raw files in multiple formats, normalizes them to Markdown, and executes multi-step transformation procedures using the agent's LLM.
 
 ## Supported Formats
 
@@ -24,15 +24,26 @@ Complete document ingestion and transformation pipeline. Takes files in multiple
 | `docx` | ❌ | `mammoth` |
 | `xlsx` | ❌ | `xlsx` |
 
+## Canonical Workspace Layout
+
+```
+[project-name]/
+├── raw/                 # Original user source files (PDFs, Word, CSV, TXT, Excel...)
+├── models/              # Structured semantic iNNfo Level 3 models (*_NN.md)
+├── procedures/          # Transformation procedure specs (*_procedures_V_x-y-z_NN.md)
+├── artifacts/           # Deliverables and generated outputs
+│   ├── exports/         # Final deliverables (clean Markdown, HTML, PDF)
+│   └── reports/         # Validation reports and audit trails
+└── index.md             # Semantic workspace index (# _NN index)
+```
+
 ## Workflow
 
-1. **Bootstrap**: creates `raw/`, `md/`, `traNNsformations/`, `output/` structure
-2. **Scan & normalization**: reads files and unifies to Markdown
-3. **Diagnosis**: the agent presents a panel with detected formats
-4. **Transformation**: the agent's own LLM transforms the consolidated content guided by templates
-5. **Output**: generates two versions:
-   - **Draft** (`_draft.md`): with source citations, review notes, uncertainty markers
-   - **Final** (`_v_0-1-0.md`): clean version with semver
+1. **Bootstrap**: Creates the standard workspace directory structure (`raw/`, `models/`, `procedures/`, `artifacts/`).
+2. **Scan & normalization**: Reads files from `raw/`, converts formats to Markdown, and unifies content in `md/_all.md`.
+3. **Diagnosis**: The agent presents a diagnostic panel for non-text formats.
+4. **Transformation & Orchestration**: The agent applies templates or executes multi-step procedures defined in `procedures_V_0-2-0_NN.md`.
+5. **Post-Transformation Feedback Protocol**: If transformation behavior was modified during the conversation, the agent prompts the user to save a new `procedures` spec, update the existing spec, or leave specs unchanged.
 
 ## Included CLI
 

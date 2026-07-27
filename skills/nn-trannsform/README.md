@@ -4,13 +4,14 @@ Agent skill for document ingestion, normalization, and template-based transforma
 
 ## How it works
 
-The skill ships with a Node.js CLI tool (`scripts/index.js`) that handles file operations — scanning directories, converting binary formats (docx, pdf, xlsx) to Markdown, and maintaining an ingestion manifest. The actual content transformation (summarization, restructuring, drafting) is done by the agent's built-in LLM, not by an external API.
+The skill ships with a Node.js CLI tool (`scripts/index.js`) that handles file operations — scanning directories, converting binary formats (docx, pdf, xlsx) to Markdown, and maintaining an ingestion manifest. The actual content transformation and multi-step procedure orchestration is executed using the agent's LLM and `procedures_V_0-2-0_NN.md` specifications.
 
 The workflow is:
 
-1. **Bootstrap** — The agent creates a project directory with `raw/`, `md/`, `traNNsformations/`, and `output/` folders, then copies source files into `raw/`.
-2. **Scan & normalize** — The CLI tool reads files from `raw/`, converts supported formats to Markdown in `md/`, and generates an ingestion manifest (`index.md`) plus a consolidated document (`md/_all.md`).
-3. **Transform** — The agent reads the consolidated document and the user's chosen template, then generates a transformed output using its own LLM. The CLI tool serves as a fallback if the agent's context is insufficient.
+1. **Bootstrap** — The agent creates a project directory with standard workspace folders: `raw/` (source files), `models/` (iNNfo Level 3 models), `procedures/` (transformation specs), and `artifacts/` (`exports/` for deliverables, `reports/` for audit logs).
+2. **Scan & normalize** — The CLI tool reads files from `raw/`, converts supported formats to Markdown, and generates an ingestion manifest (`index.md`) plus consolidated content (`md/_all.md`).
+3. **Transform & Orchestrate** — The agent applies template-based transformations or multi-step procedure specs (`procedures_V_0-2-0_NN.md`) to generate models or final deliverable artifacts.
+4. **Post-Transformation Feedback Protocol** — If modifications to the transformation logic occurred during the conversation, the agent prompts the user to save a new `procedures` spec, update the existing one, or leave specs unchanged.
 
 ## Installation
 

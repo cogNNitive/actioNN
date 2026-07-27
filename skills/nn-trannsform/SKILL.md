@@ -1,6 +1,6 @@
 ---
 name: nn-trannsform
-description: "Bootstrap projects, scan raw documents, normalize them to Markdown, and apply template-based transformations. Includes a Node.js CLI tool for document ingestion, format conversion (txt, md, csv, json, docx, pdf, xlsx), and transformation orchestration. Uses the agent's own LLM for the actual content transformation. Triggers: trannsform, transform, normalize, scan documents, document ingestion, document transformation, document processing, markdown conversion, project bootstrap"
+description: "Bootstrap projects, scan raw documents, normalize them to Markdown, apply template-based transformations, and execute multi-step transformation procedures compliant with procedures_V_0-2-0_NN.md. Includes document ingestion, format conversion (txt, md, csv, json, docx, pdf, xlsx), procedure orchestration, and export generation. Triggers: trannsform, transform, workflow, pipeline, procedure, normalize, scan documents, document ingestion, document transformation, document processing, markdown conversion, project bootstrap"
 empty_sections_mode: "ask-per-section"
 license: MIT
 metadata:
@@ -44,7 +44,22 @@ All file paths in this skill are relative to the skill's base directory (e.g., `
 
 Ask the user:
 1. **Source Folder**: Where are the raw files?
-2. **Project Name & Destination**: Name for the project and where to save it (recommend `Documents/traNNsform/[project-name]`).
+2. **Project Name & Destination**: Name for the project and where to save it (recommend `%USERPROFILE%\Documents\_NN\[project-name]`).
+
+#### Standard Workspace Directory Layout
+
+Every project workspace MUST adhere to the following clean structure:
+
+```
+[project-name]/
+├── raw/                 # Original user files (PDFs, Word, CSV, TXT, Excel...)
+├── models/              # Structured semantic iNNfo Level 3 models (*_NN.md)
+├── procedures/          # Reusable transformation procedure specs (*_procedures_V_x-y-z_NN.md)
+├── artifacts/           # Derivative deliverables and generated output products
+│   ├── exports/         # Final deliverables (clean Markdown, HTML, PDF)
+│   └── reports/         # Validation reports and audit trails
+└── index.md             # Semantic workspace index (# _NN index)
+```
 
 Then run:
 ```bash
@@ -434,12 +449,41 @@ This increments the patch version, moves the file to the workspace root, and upd
 
 After manual validation, proceed with versioning per nn-innfo §10.
 
-### 5. Output Convention
+### 5. Output Directory & Entity Conventions
 
-Each transformation creates a subfolder inside `output/` named after the template. All artifacts for that transformation (drafts, finals, bib files) live in that subfolder.
+Transformations generate models, artifacts, and procedures in strict accordance with the workspace directory layout:
 
-| Type | Path | Example |
-|------|------|---------|
-| Draft | `output/[template-name]/V_x-y-z_draft.md` | `output/Summary_Bands/V_0-1-0_draft.md` |
-| Final | `output/[template-name]/V_x-y-z.md` | `output/Summary_Bands/V_0-1-0.md` |
-| Final (next version) | `output/[template-name]/V_x-y-z.md` | `output/Summary_Bands/V_0-2-0.md` |
+| Entity Type | Target Directory | Example File Path | Notes |
+|------|------|---------|-------|
+| **Model** (`*_NN.md`) | `models/` | `models/Business_Plan_V_0-1-0_NN.md` | iNNfo Level 3 semantic models |
+| **Export Deliverable** | `artifacts/exports/` | `artifacts/exports/Executive_Summary_V_0-1-0.md` | Clean Markdown, HTML, or PDF final outputs |
+| **Draft Deliverable** | `artifacts/exports/` | `artifacts/exports/Executive_Summary_V_0-1-0_draft.md` | Annotated draft for review |
+| **Validation Report** | `artifacts/reports/` | `artifacts/reports/Validation_Report_2026-07-27.md` | Diagnostic logs and validation output |
+| **Procedure Spec** | `procedures/` | `procedures/Document_Ingest_V_1-0-0_procedures_NN.md` | Transformation procedure compliant with `procedures_V_0-2-0_NN.md` |
+
+### 6. Post-Transformation Conversation Feedback Protocol (MANDATORY)
+
+At the conclusion of any transformation workflow, if the user or agent modified any aspect of the transformation logic, prompt rules, mapping strategy, or template structure during the conversation, the agent **MUST** run this closing protocol before ending the interaction:
+
+1. **Summarize modifications**: State clearly what parameters or behaviors were adjusted during the session.
+2. **Present the decision menu**:
+
+```
+💡 Post-Transformation Options:
+
+During this conversation, we modified the following aspects of the transformation:
+  - [Summarize change 1]
+  - [Summarize change 2]
+
+How would you like to handle this transformation spec for future runs?
+
+  [a] Save as a new transformation spec   — Create a new, reproducible procedures file in procedures/ (e.g. procedures/[Name]_V_1-0-0_procedures_NN.md)
+  [b] Update original transformation spec — Overwrite the existing procedures spec with these modifications
+  [c] Do nothing                           — Keep generated models and artifacts, but do not save or modify any transformation spec
+```
+
+3. **Execute choice**:
+   - If **[a]**: Write out a new `procedures_V_0-2-0_NN.md` spec file into `procedures/` documenting the steps (`Work`), tools (`Tools`), deliverables (`Artifact`), and roles (`Roles`).
+   - If **[b]**: Update the target file in `procedures/`.
+   - If **[c]**: Acknowledge and finalize without altering procedure specs.
+
