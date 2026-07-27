@@ -110,6 +110,27 @@ Use these **stable `latest` URLs** for human reference and authoring guidance. T
 
 > **Stable vs immutable:** `latest/` URLs are convenience aliases that move with each release â€” use them for authoring guidance. A level-3 model's own `parent_spec.url` MUST pin an **immutable** versioned URL (e.g. `.../specs/v0.1.0/level2/business/business_V_0-1-1_NN.md`) so validation is reproducible. The MCP resolves whatever URL the model declares.
 
+### 2a. Local / unpublished templates (MANDATORY reading for non-MCP workflows)
+
+When creating templates that are NOT published to the official iNNfo GitHub repo, follow these rules to ensure the iNNfo Modeler (https://innfo.cognnitive.com/app/) can discover and resolve them:
+
+| Rule | Detail |
+|------|--------|
+| **Co-locate** | Place the template `.md` file in the same directory as the model, or at a path within the same folder tree the user will open in the Modeler. |
+| **`parent_spec.url`** in the model | Use a simple relative path: `"./templateName_V_x-y-z_NN.md"`. Avoid `../` cross-directory paths — the Modeler may not resolve them. |
+| **Template `specification_url`** | Set this to the template's own local path (`"./templateName_V_x-y-z_NN.md"`), NOT a non-existent GitHub URL. |
+| **Workspace `index.md`** | The workspace root MUST contain an `index.md` with a `# _NN index` block listing all model files as Markdown links. Without this, the Modeler shows an empty tree. |
+| **File extension** | All files use `_NN.md` suffix. NO `_FORMAT.md` or `_F.md`. |
+
+**`index.md` example:**
+```markdown
+# _NN index
+
+* [Singin' in the Rain](./output/Singin_in_the_Rain_V_0-1-1_film_sheet_NN.md)
+```
+
+**Why this matters:** The iNNfo Modeler scans for `index.md` at the opened folder root and parses the `# _NN index` block to discover models. It then reads each model's `parent_spec.url` to resolve the template. If the template path is unreachable (wrong directory, non-existent file, dead GitHub URL), the model loads but concepts won't render in the tree.
+
 ---
 
 ## 3. Frontmatter by Level
@@ -225,7 +246,10 @@ asset_mode: "centralized"    # optional, default "centralized"
 
 4. Author the model body with `_NN` markers using only the confirmed concepts and fields.
 
-5. Set the model's `parent_spec.url` to the **immutable** template URL.
+5. Set the model's `parent_spec.url`:
+   - **Published template** — use the **immutable** GitHub raw URL (e.g. `https://raw.githubusercontent.com/.../business_V_0-2-0_NN.md`).
+   - **Local / unpublished template** — use a **relative path** from the model's location (e.g. `"./film_sheet_V_0-1-0_NN.md"`). See §2a for rules.
+   - NEVER use `../` cross-directory paths.
 
 6. Validate before finishing: `validate_model({ content })` (inline) or `validate_model({ id })` (on disk).
 
@@ -323,10 +347,12 @@ Check `docs/mcp-setup.md` in the workspace. If absent, research how OpenCode reg
 ### Step 4 â€” If MCP is still unavailable after activation
 
 Degrade gracefully (fallback):
-1. Fetch the relevant spec/template on demand from the URL declared in the model's `parent_spec.url`, or from the stable URLs in Â§2.
-2. Resolve the parent chain manually up to level 0, caching under a local `specs/` directory.
-3. Validate by hand against the resolved template: frontmatter by level, `_NN` markers, concept headers, element syntax, matrix headers, and the parent chain.
-4. Tell the user you are in fallback mode and that validation is not engine-backed.
+1. Check if `parent_spec.url` is a **local relative path** (e.g. `"./template.md"`). If so, resolve it relative to the model's directory. Read the template content directly from the filesystem.
+2. If `parent_spec.url` is an HTTP URL (GitHub raw, etc.), fetch it on demand via `webfetch`. If that fails, try the stable URLs in Â§2.
+3. Resolve the parent chain manually up to level 0, caching under a local `specs/` directory.
+4. Validate by hand against the resolved template: frontmatter by level, `_NN` markers, concept headers, element syntax, matrix headers, and the parent chain.
+5. Ensure the workspace root has an `index.md` with `# _NN index` — the Modeler requires it. If missing, create or update it.
+6. Tell the user you are in fallback mode and that validation is not engine-backed.
 
 ---
 

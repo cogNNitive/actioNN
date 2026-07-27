@@ -11,7 +11,7 @@ metadata:
   depends_on:
     skills: ["nn-innfo"]
     mcp_servers: ["innfo-mcp"]
-    cli_tools: ["scripts/pipeline-gate.mjs"]
+    cli_tools: ["scripts/index.js"]
 ---
 
 # Skill: nn-trannsform
@@ -186,7 +186,36 @@ Check if there are `*traNNsform.md` files in the project root. If there are, ask
 If there is no local template or the user prefers another option, ask: **"Do you want to apply an existing transformation or create a new one?"**
 
 - **Apply existing**: Read templates in `traNNsformations/`, list them, let them choose.
-- **Create new**: Guide step by step (name, purpose, instructions, structure, location).
+- **Create new**: Guide step by step.
+
+##### 3b-i. Template type: Markdown vs iNNfo
+
+When the user chooses "Create new", FIRST ask:
+
+**"What kind of template do you want to create?"**
+
+- **[a]** Generic Markdown template — free-form document with sections (e.g. summary, report, article)
+- **[b]** iNNfo template — structured model with typed concepts, fields, and markers (loads `nn-innfo` skill)
+- **[x]** Cancel
+
+If **[a]**: Follow the existing flow (name, purpose, instructions, structure, location).
+
+If **[b]** (iNNfo):
+1. Load `nn-innfo` via `skill("nn-innfo")`
+2. Let `nn-innfo` guide the user through template creation (concepts, fields, markers, matrices per §4 of the iNNfo skill)
+3. After the template is created, load `nn-innfo`'s "Generate a model" flow (§4) to populate it with source data from `md/_all.md`
+4. During model generation, set `parent_spec.url` to a **relative path** resolved from the model's location (see §3b-ii below)
+5. Ensure the workspace `index.md` includes a `# _NN index` block pointing to the generated model
+
+##### 3b-ii. iNNfo local template rules (MANDATORY when MCP is unavailable)
+
+When creating iNNfo templates and models without an MCP server, follow these rules to ensure the iNNfo Modeler can discover and resolve them:
+
+1. **Co-locate template and model**: Copy the template `.md` file to the same directory as the model, OR place it at a path the Modeler can traverse from the workspace root.
+2. **`parent_spec.url`**: Use a relative path from the model's location, e.g. `"./film_sheet_V_0-1-0_NN.md"`. Do NOT use `../` traversal paths — the Modeler may not resolve them.
+3. **Template `specification_url`**: For unpublished local templates, set this to a self-referential relative path (`"./templateName_V_x-y-z_NN.md"`), not a non-existent GitHub URL.
+4. **Workspace `index.md`**: Append a `# _NN index` block with standard Markdown links to all `*_NN.md` models. Without this block the Modeler shows an empty tree.
+5. **Naming**: Model files MUST follow `<Name>_V_x-y-z_<Template>_NN.md`. Template files MUST follow `<Name>_V_x-y-z_NN.md`.
 
 #### 3c. Ask version type — BEFORE transforming
 
@@ -377,7 +406,9 @@ When the user selects a citation format (from SS3c-i), load [`citations.md`](cit
 
 ### 4b. Post-Generation Validation (iNNfo models only)
 
-When the transformation target is an iNNfo template (business, procedures, catalog, etc.), the generated model MUST pass through the pipeline validation gate before delivery:
+When the transformation target is an iNNfo template (business, procedures, catalog, etc.), the generated model SHOULD be validated before delivery.
+
+**If `scripts/pipeline-gate.mjs` exists** in the skill directory, run:
 
 ```bash
 node scripts/pipeline-gate.mjs validate "<output-path>"
@@ -390,6 +421,18 @@ node scripts/pipeline-gate.mjs integrate "<output-path>" [--target-dir <workspac
 ```
 
 This increments the patch version, moves the file to the workspace root, and updates index.md.
+
+**If `scripts/pipeline-gate.mjs` does NOT exist** (common for standalone skill installations), fall back to manual validation:
+
+1. Verify the model's frontmatter: `level: 3`, `parent_spec { name, url }`, `model_version`, `title`.
+2. Verify the template at `parent_spec.url` is accessible (file exists).
+3. Verify the body starts with `> [!NOTE] This is an **iNNfo document**...`.
+4. Verify `# _NN index` contains WikiLinks that resolve to actual concept blocks.
+5. Verify each `# _NN <Concept>` heading matches a concept declared in the template.
+6. Verify element syntax: `* _NN <Concept>: <Element Name>` with optional indented YAML.
+7. Inform the user this is fallback validation (not engine-backed).
+
+After manual validation, proceed with versioning per nn-innfo §10.
 
 ### 5. Output Convention
 
