@@ -1,4 +1,4 @@
-﻿---
+---
 name: nn-innfo
 version: "V_2-1-1"
 last_updated: 2026-07-12
@@ -7,13 +7,13 @@ metadata:
   mcp: "innfo-mcp"
 license: MIT
 description: |
-  MANDATORY trigger: MUST activate this skill whenever the user is creating, editing, validating, or discussing any iNNfo model, template, specialization, sample, or specification file.
+  MANDATORY trigger: MUST activate this skill whenever the user is creating, editing, validating, scaffolding, or discussing any iNNfo model, template, specialization, sample, or specification file. Includes the conversational Model Creation Wizard.
   This includes but is not limited to:
+  - Creating a new model step-by-step using templates (Business, Procedures, Organization, Blank)
   - Creating or editing any file matching *_NN.md or *_FORMAT.md
   - Authoring or modifying business models, procedure models, or any model following an iNNfo template
   - Creating, editing, or modifying templates or specializations under docs/templates/
   - Discussing the iNNfo specification, concepts, markers, matrices, or naming conventions
-  - Generating dashboard renderers for templates
   - Any conversation about how iNNfo works, how to use it, or how to structure iNNfo files
 ---
 
@@ -21,9 +21,19 @@ description: |
 
 > **ACTIVATION = GREETING REQUIRED**: When this skill is loaded, the agent MUST greet the user. See Greeting Protocol below.
 
-This skill guides LLMs and agents in authoring, editing, and validating **iNNfo-compliant files** (V_0-2-0+ with `_NN` structural markers).
+This skill guides LLMs and agents in authoring, creating from scratch (wizard), editing, and validating **iNNfo-compliant files** (V_0-2-0+ with `_NN` structural markers).
 
-**Resolution, validation, and mutation are delegated to the `innfo-mcp` server** â€” a deterministic engine wrapping `@cognnitive/innfo-core`. The agent does NOT hand-resolve spec chains or hand-validate models when the MCP is available. See Â§1 (MCP Operating Model) and Â§7 (Delegation Contract).
+**Resolution, validation, and mutation are delegated to the `innfo-mcp` server** — a deterministic engine wrapping `@cognnitive/innfo-core`. The agent does NOT hand-resolve spec chains or hand-validate models when the MCP is available. See §1 (MCP Operating Model) and §7 (Delegation Contract).
+
+## 0. Conversational Model Creation Wizard
+
+When the user asks to "create a new model", "start a model from scratch", or selects model creation from a menu:
+
+1. **Explain Templates**: Briefly explain that templates define concepts, fields, and matrices (Business 🏢, Procedures 📋, Organization 👥, Blank ⬜).
+2. **Template Selection**: Present the selection menu (Business, Procedures, Organization, Blank, Cancel).
+3. **Model Naming**: Prompt for `{ModelName}` and generate `{ModelName}_V_1-0-0_{Template}_NN.md`.
+4. **Scaffolding**: Create the workspace directory structure (`models/`, `raw/`, `procedures/`, `artifacts/`, `index.md`).
+5. **Validation**: Validate the generated model via `innfo-mcp_validate_model` (or fallback).
 
 ## Greeting Protocol (MANDATORY)
 
