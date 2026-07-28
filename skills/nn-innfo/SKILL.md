@@ -200,7 +200,7 @@ asset_mode: "centralized"    # optional, default "centralized"
 - **Document Notice (Required)** â€” the first body content MUST be:
   ```markdown
   > [!NOTE]
-  > This is an **iNNfo document** â€” a plain-text Markdown file. Open it with any text editor or view and edit it with [cogNNitive](https://innfo.cognnitive.com/app/info-doc).
+  > This is an **iNNfo document** â€” a plain-text Markdown file. Open it with any text editor or view and edit it with [cogNNitive](https://innfo.cognnitive.com/app/innfo-doc).
   ```
 - **Index Block** â€” `# _NN index` followed by nested Markdown lists (WikiLinks `[[...]]`, Markdown links, or `_NN index:` syntax).
 - **Concept Blocks** â€” `# _NN <ConceptName>` (visible) or `# <!-- _NN --> <ConceptName>` (hidden).
