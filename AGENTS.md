@@ -1,5 +1,22 @@
-﻿<!-- gentle-ai:nn-skills-manager -->
-## nn-skills-manager â€” Mandatory Load
+﻿<!-- gentle-ai:bootstrap-rule -->
+## cogNNitive Bootstrap Rule
+
+When the user types **"I want to use https://cognnitive.com/use"** or similar bootstrap/intent phrases:
+
+1. Fetch the manifest at https://raw.githubusercontent.com/cogNNitive/eNNvironment/main/docs/use/manifest.md
+2. Parse the `agent-bootstrap:` block for skills to install
+3. For each skill: download tarball from `https://codeload.github.com/{repo}/tar.gz/refs/heads/main` (retry `master` on 404), extract into `~/.agents/skills/{name}/`
+4. For skills with `mcp[]`: download the bundle `url` into `~/.agents/mcp/{name}.bundle.js` and register in opencode.jsonc
+5. Present the `workflows[]` menu
+
+If already installed, report status and offer to update.
+
+Skills provide specialized instructions and workflows for specific tasks.
+Use the skill tool to load a skill when a task matches its description.
+<!-- /gentle-ai:bootstrap-rule -->
+
+<!-- gentle-ai:nn-skills-manager -->
+## nn-skills-manager — Mandatory Load
 
 At the **start of every session** (first user message), you MUST:
 
