@@ -249,7 +249,7 @@ Agent skill: https://github.com/cogNNitive/actioNN/tree/main/skills/nn-trannsfor
       try {
         fs.unlinkSync(rhythmicPath);
       } catch (err) {
-        // Ignore
+        console.warn(`Warning: could not remove stale "Rhythmic" file: ${err.message}`);
       }
     }
   }
@@ -314,15 +314,15 @@ async function runProjectMenu(projectDir) {
     const detected = scanner.detectFormats(rawDir);
     const extList = Object.keys(detected);
 
-    console.log('\nFormatos detectados en la carpeta fuente:');
+    console.log('\nFormats detected in the source folder:');
     for (const ext of extList) {
       const label = scanner.EXT_LABELS[ext] || ext;
-      console.log(`  - ${label}: ${detected[ext]} archivos`);
+      console.log(`  - ${label}: ${detected[ext]} files`);
     }
 
     // Offer supported format choices using prompts multiselect
     const formatChoices = extList.map(ext => ({
-      title: `${scanner.EXT_LABELS[ext] || ext} (${detected[ext]} archivos)`,
+      title: `${scanner.EXT_LABELS[ext] || ext} (${detected[ext]} files)`,
       value: ext,
       selected: true
     }));
@@ -331,13 +331,13 @@ async function runProjectMenu(projectDir) {
       const fmtResponse = await prompts({
         type: 'multiselect',
         name: 'formats',
-        message: '¿Qué formatos querés procesar?',
-        instructions: '(Space para seleccionar/deseleccionar, Enter para confirmar)',
+        message: 'Which formats do you want to process?',
+        instructions: '(Space to select/deselect, Enter to confirm)',
         choices: formatChoices
       });
 
       if (!fmtResponse.formats || fmtResponse.formats.length === 0) {
-        console.log('No se seleccionaron formatos. Omitiendo scan.');
+        console.log('No formats selected. Skipping scan.');
         return runProjectMenu(projectDir);
       }
 
@@ -348,7 +348,7 @@ async function runProjectMenu(projectDir) {
         const confirm = await prompts({
           type: 'confirm',
           name: 'value',
-          message: `El formato ${scanner.EXT_LABELS[ext]} requiere instalar \`${dep.pkg}\`. ¿Querés instalarlo ahora?`,
+          message: `The ${scanner.EXT_LABELS[ext]} format requires installing \`${dep.pkg}\`. Install it now?`,
           initial: true
         });
         if (confirm.value) {
@@ -448,7 +448,7 @@ async function runCreateTemplateFlow(projectDir) {
     {
       type: 'text',
       name: 'name',
-      message: 'Enter template name (e.g., Resumen de Bandas):',
+      message: 'Enter template name (e.g., Bands Summary):',
       validate: value => value.trim().length > 0 ? true : 'Template name cannot be empty'
     },
     {
@@ -487,12 +487,12 @@ async function runCreateTemplateFlow(projectDir) {
   }
 
   const templatePath = path.join(transDir, fileName);
-  const content = `# Transformación: ${answers.name}
+  const content = `# Transformation: ${answers.name}
 
-## Propósito
+## Purpose
 ${answers.purpose}
 
-## Instrucciones
+## Instructions
 ${answers.instructions}
 
 ## Template

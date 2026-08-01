@@ -40,10 +40,9 @@ async function applyTransformation(projectDir, templateName, options = {}) {
     throw new Error('Consolidated markdown file md/_all.md not found. Please run scan first.');
   }
 
-  const templateContent = fs.readFileSync(templatePath, 'utf8');
   const sourceContent = fs.readFileSync(allMdFile, 'utf8');
 
-  const transformedOutput = runHeuristicTransformation(templateName, templateContent, sourceContent);
+  const transformedOutput = runHeuristicTransformation(templateName, sourceContent);
 
   // Save Output
   const timestamp = getFormattedTimestamp();
@@ -61,63 +60,13 @@ async function applyTransformation(projectDir, templateName, options = {}) {
 
 /**
  * Heuristic/mock transformer — basic structural transformation based on headers.
+ *
+ * This is the CLI fallback only: it splits the consolidated source on `---`
+ * separators, reads the first `# ` heading of each section as a title, and
+ * scaffolds a uniform Description/History/Members block. The real, content-aware
+ * transformation is performed by the agent's LLM (see SKILL.md).
  */
-function runHeuristicTransformation(templateName, templateContent, sourceContent) {
-  const isBandsSummary = templateName.toLowerCase().includes('summary') ||
-                          templateName.toLowerCase().includes('resumen') ||
-                          templateContent.toLowerCase().includes('bands') ||
-                          templateContent.toLowerCase().includes('bandas');
-
-  if (isBandsSummary && sourceContent.includes('Beach Boys') && sourceContent.includes('Beatles')) {
-    return `# Transformation Result: Bands Summary
-
-### The Beach Boys
-**Description:** American rock band formed in Hawthorne, California, in 1961, pioneer of surf rock and famous for their complex vocal harmonies.
-
-**History:** They started singing about California's surf culture and romance, then evolved under the creative genius of Brian Wilson towards highly complex studio productions, creating the acclaimed album Pet Sounds.
-
-**Members:**
-| Member | Instrument |
-| --- | --- |
-| Brian Wilson | Bass and Keyboards |
-| Dennis Wilson | Drums |
-| Carl Wilson | Lead guitar |
-| Mike Love | Lead vocals |
-| Al Jardine | Rhythm guitar |
-
----
-
-### The Beatles
-**Description:** English rock band formed in Liverpool in 1960, widely regarded as the most influential band in popular music history.
-
-**History:** After performing in clubs in Hamburg and Liverpool, they sparked "Beatlemania". Under producer George Martin, they revolutionized studio experimentation before splitting up in 1970.
-
-**Members:**
-| Member | Instrument |
-| --- | --- |
-| John Lennon | Rhythm guitar and Lead vocals |
-| Paul McCartney | Bass and Lead vocals |
-| George Harrison | Lead guitar and Backing vocals |
-| Ringo Starr | Drums |
-
----
-
-### The Rolling Stones
-**Description:** Iconic English rock band formed in London in 1962, characterized by their raw sound and onstage longevity.
-
-**History:** They led the British Invasion wave of hard rock in the 1960s with a gritty, blues-influenced sound, releasing legendary albums like Let It Bleed and Sticky Fingers.
-
-**Members:**
-| Member | Instrument |
-| --- | --- |
-| Mick Jagger | Lead vocals |
-| Keith Richards | Rhythm guitar |
-| Brian Jones | Lead guitar |
-| Bill Wyman | Bass |
-| Charlie Watts | Drums |
-`;
-  }
-
+function runHeuristicTransformation(templateName, sourceContent) {
   const sections = sourceContent.split('---');
   let result = `# Transformation Result: ${path.basename(templateName, '.md')}\n\n`;
 

@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const { execSync } = require('child_process');
 
 const TRANNNSFORM_VERSION = (() => {
   try {
@@ -144,6 +145,186 @@ function getSupportedFormats() {
 }
 
 /**
+ * Strip a leading YAML frontmatter block from raw content, if present.
+ * Avoids emitting double frontmatter when a source .md already carries one.
+ */
+function stripFrontmatter(content) {
+  if (content.startsWith('---\n') || content.startsWith('---\r\n')) {
+    const endIdx = content.indexOf('\n---', 3);
+    if (endIdx !== -1) return content.slice(endIdx + 5);
+  }
+  return content;
+}
+
+/**
+ * Convert a directly-readable text format (EXT_OK) to a markdown body.
+ * @returns {string} markdown body (without frontmatter)
+ */
+function convertOkFormat(ext, filePath, baseName) {
+  const content = fs.readFileSync(filePath, 'utf8');
+  switch (ext) {
+    case '.md':
+      return stripFrontmatter(content);
+    case '.json':
+      return `# ${baseName}\n\n\`\`\`json\n${content}\n\`\`\``;
+    case '.csv':
+      return `# ${baseName}\n\n\`\`\`csv\n${content}\n\`\`\``;
+    case '.txt':
+    default:
+      return content;
+  }
+}
+
+async function convertDocx(filePath) {
+  const mammoth = require('mammoth');
+  const result = await mammoth.convertToMarkdown({ path: filePath });
+  return { body: result.value };
+}
+
+async function convertPdf(filePath, baseName) {
+  try {
+    const pdfParse = require('pdf-parse');
+    const data = await pdfParse(fs.readFileSync(filePath));
+    return { body: `# ${baseName}\n\n${data.text}` };
+  } catch (pdfErr) {
+    // Graceful degradation: emit a placeholder so downstream steps still see
+    // the document, and surface the parse failure in the manifest.
+    return {
+      body: `# ${baseName}\n\n*PDF Content Ingested (Placeholder)*\n\n[PDF: ${path.basename(filePath)} needs manual verification or a PDF parser package to extract text fully.]`,
+      partial: true,
+      note: pdfErr.message,
+    };
+  }
+}
+
+function convertXlsx(filePath, baseName) {
+  const XLSX = require('xlsx');
+  const workbook = XLSX.readFile(filePath);
+  let body = `# ${baseName}\n\n`;
+  for (const sheetName of workbook.SheetNames) {
+    const sheet = workbook.Sheets[sheetName];
+    const json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+    body += `## Sheet: ${sheetName}\n\n`;
+    if (json.length > 0) {
+      const headers = Object.keys(json[0]);
+      body += `| ${headers.join(' | ')} |\n`;
+      body += `| ${headers.map(() => '---').join(' | ')} |\n`;
+      for (const row of json) {
+        body += `| ${headers.map((h) => String(row[h] ?? '')).join(' | ')} |\n`;
+      }
+    } else {
+      const range = XLSX.utils.decode_range(sheet['!ref'] || 'A1:A1');
+      for (let r = range.s.r; r <= range.e.r; r++) {
+        const cells = [];
+        for (let c = range.s.c; c <= range.e.c; c++) {
+          const addr = XLSX.utils.encode_cell({ r, c });
+          cells.push(String(sheet[addr]?.v ?? ''));
+        }
+        body += `| ${cells.join(' | ')} |\n`;
+      }
+    }
+    body += '\n';
+  }
+  return { body };
+}
+
+/** Extension → async converter returning { body, partial?, note? }. */
+const PROMPT_CONVERTERS = {
+  '.docx': convertDocx,
+  '.pdf': convertPdf,
+  '.xlsx': convertXlsx,
+};
+
+/**
+ * Ensure the npm dependency required for a prompt format is installed.
+ * @returns {Promise<{ok: true} | {ok: false, status: string, reason: string}>}
+ */
+async function ensureDependency(ext, options) {
+  const dep = EXT_DEPS[ext];
+  if (!dep || isDepInstalled(dep.pkg)) return { ok: true };
+
+  let install = false;
+  if (options.depPromptCallback) {
+    install = await options.depPromptCallback(ext);
+  } else if (options.autoAcceptPrompt) {
+    install = true;
+  }
+
+  if (!install) {
+    return { ok: false, status: '⚠️ Skipped', reason: `Dependency ${dep.pkg} not installed. Skipped.` };
+  }
+
+  try {
+    const skillDir = path.resolve(__dirname, '..');
+    console.log(`Installing ${dep.pkg}...`);
+    execSync(`npm install ${dep.pkg}`, { cwd: skillDir, stdio: 'inherit' });
+    console.log(`${dep.pkg} installed.`);
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, status: '❌ Error', reason: `Failed to install ${dep.pkg}: ${err.message}` };
+  }
+}
+
+/**
+ * Process one directly-readable file (EXT_OK). Pure of counting side effects;
+ * returns a manifest entry with an `outcome` the caller tallies.
+ */
+function processOkFile(ext, file, filePath, baseName, mdDir, isSelected) {
+  const format = ext === '.txt' ? 'Plain Text' : ext.substring(1).toUpperCase();
+  if (!isSelected) {
+    return { format, status: '⚠️ Skipped', action: `Format ${EXT_LABELS[ext]} excluded by user selection.`, outcome: 'skipped' };
+  }
+  try {
+    const body = convertOkFormat(ext, filePath, baseName);
+    const destPath = path.join(mdDir, `${baseName}.md`);
+    fs.writeFileSync(destPath, generateSourceFrontmatter(filePath, `raw/${file}`) + body, 'utf8');
+    return { format, status: '✅ Processed', action: `Converted to markdown at \`md/${baseName}.md\``, outcome: 'processed' };
+  } catch (err) {
+    return { format, status: '❌ Error', action: `Failed to process: ${err.message}`, outcome: 'skipped' };
+  }
+}
+
+/**
+ * Process one extraction-required file (EXT_PROMPT: docx/pdf/xlsx), handling the
+ * dependency gate and user approval before dispatching to a converter.
+ */
+async function processPromptFile(ext, file, filePath, baseName, mdDir, isSelected, options) {
+  const format = ext.substring(1).toUpperCase();
+  if (!isSelected) {
+    return { format, status: '⚠️ Skipped', action: `Format ${EXT_LABELS[ext]} excluded by user selection.`, outcome: 'skipped' };
+  }
+
+  const dep = await ensureDependency(ext, options);
+  if (!dep.ok) {
+    return { format, status: dep.status, action: dep.reason, outcome: 'skipped' };
+  }
+
+  const destPath = path.join(mdDir, `${baseName}.md`);
+  if (fs.existsSync(destPath)) {
+    return { format, status: '✅ Processed', action: `Already converted to markdown at \`md/${baseName}.md\``, outcome: 'processed' };
+  }
+
+  let approve = options.autoAcceptPrompt;
+  if (!approve && options.promptCallback) {
+    approve = await options.promptCallback(file);
+  }
+  if (!approve) {
+    return { format, status: '⚠️ Skipped', action: 'Extraction declined or skipped.', outcome: 'skipped' };
+  }
+
+  try {
+    const result = await PROMPT_CONVERTERS[ext](filePath, baseName);
+    fs.writeFileSync(destPath, generateSourceFrontmatter(filePath, `raw/${file}`) + result.body, 'utf8');
+    if (result.partial) {
+      return { format, status: '✅ Processed (Partial)', action: `Created placeholder markdown at \`md/${baseName}.md\`. PDF parsing failed: ${result.note}`, outcome: 'processed' };
+    }
+    return { format, status: '✅ Processed', action: `Converted ${format} to markdown at \`md/${baseName}.md\``, outcome: 'processed' };
+  } catch (err) {
+    return { format, status: '❌ Error', action: `Failed to convert: ${err.message}`, outcome: 'skipped' };
+  }
+}
+
+/**
  * Scan raw directory, process files, update index.md, and consolidate to md/_all.md
  * @param {string} projectDir
  * @param {object} options
@@ -186,203 +367,32 @@ async function scanAndProcess(projectDir, options = {}) {
     const stat = fs.statSync(filePath);
     const ext = path.extname(file).toLowerCase();
     const baseName = path.basename(file, ext);
-    let status = 'Pending';
-    let action = 'No action taken';
-    let format = 'Unknown';
-
-    // Determine if this format is selected
     const isSelected = !options.formats || options.formats.includes(ext);
 
+    let entry;
     if (EXT_OK.includes(ext)) {
-      format = ext === '.txt' ? 'Plain Text' : ext.substring(1).toUpperCase();
-      totalDiscovered++;
-
-      if (!isSelected) {
-        status = '⚠️ Skipped';
-        action = `Format ${EXT_LABELS[ext]} excluded by user selection.`;
-        skippedCount++;
-      } else {
-        try {
-          let content = fs.readFileSync(filePath, 'utf8');
-          // Strip existing frontmatter if present (to avoid double frontmatter)
-          let strippedContent = content;
-          if (content.startsWith('---\n') || content.startsWith('---\r\n')) {
-            const endIdx = content.indexOf('\n---', 3);
-            if (endIdx !== -1) {
-              strippedContent = content.slice(endIdx + 5);
-            }
-          }
-          let mdContent = '';
-          if (ext === '.md') {
-            mdContent = strippedContent;
-          } else if (ext === '.txt') {
-            mdContent = content;
-          } else if (ext === '.json') {
-            mdContent = `# ${baseName}\n\n\`\`\`json\n${content}\n\`\`\``;
-          } else if (ext === '.csv') {
-            mdContent = `# ${baseName}\n\n\`\`\`csv\n${content}\n\`\`\``;
-          }
-
-          const destPath = path.join(mdDir, `${baseName}.md`);
-          const frontmatter = generateSourceFrontmatter(filePath, `raw/${file}`);
-          fs.writeFileSync(destPath, frontmatter + mdContent, 'utf8');
-          status = '✅ Processed';
-          action = `Converted to markdown at \`md/${baseName}.md\``;
-          processedCount++;
-        } catch (err) {
-          status = '❌ Error';
-          action = `Failed to process: ${err.message}`;
-          skippedCount++;
-        }
-      }
+      entry = processOkFile(ext, file, filePath, baseName, mdDir, isSelected);
     } else if (EXT_PROMPT.includes(ext)) {
-      format = ext.substring(1).toUpperCase();
-      totalDiscovered++;
-
-      if (!isSelected) {
-        status = '⚠️ Skipped';
-        action = `Format ${EXT_LABELS[ext]} excluded by user selection.`;
-        skippedCount++;
-      } else {
-        // Check dependency
-        const dep = EXT_DEPS[ext];
-        if (dep && !isDepInstalled(dep.pkg)) {
-          let install = false;
-          if (options.depPromptCallback) {
-            install = await options.depPromptCallback(ext);
-          } else if (options.autoAcceptPrompt) {
-            install = true;
-          }
-
-          if (install) {
-            try {
-              const execSync = require('child_process').execSync;
-              const skillDir = path.resolve(__dirname, '..');
-              console.log(`Installing ${dep.pkg}...`);
-              execSync(`npm install ${dep.pkg}`, { cwd: skillDir, stdio: 'inherit' });
-              console.log(`${dep.pkg} installed.`);
-            } catch (err) {
-              status = '❌ Error';
-              action = `Failed to install ${dep.pkg}: ${err.message}`;
-              skippedCount++;
-              registry.push({ name: `raw/${file}`, format, size: stat.size, status, action });
-              continue;
-            }
-          } else {
-            status = '⚠️ Skipped';
-            action = `Dependency ${dep.pkg} not installed. Skipped.`;
-            skippedCount++;
-            registry.push({ name: `raw/${file}`, format, size: stat.size, status, action });
-            continue;
-          }
-        }
-
-        const destPath = path.join(mdDir, `${baseName}.md`);
-        if (fs.existsSync(destPath)) {
-          status = '✅ Processed';
-          action = `Already converted to markdown at \`md/${baseName}.md\``;
-          processedCount++;
-        } else {
-          let approve = options.autoAcceptPrompt;
-          if (!approve && options.promptCallback) {
-            approve = await options.promptCallback(file);
-          }
-
-          if (approve) {
-            try {
-              if (ext === '.docx') {
-                const mammoth = require('mammoth');
-                const result = await mammoth.convertToMarkdown({ path: filePath });
-                const docxFm = generateSourceFrontmatter(filePath, `raw/${file}`);
-                fs.writeFileSync(destPath, docxFm + result.value, 'utf8');
-                status = '✅ Processed';
-                action = `Converted DOCX to markdown at \`md/${baseName}.md\``;
-                processedCount++;
-              } else if (ext === '.pdf') {
-                try {
-                  const pdfParse = require('pdf-parse');
-                  const dataBuffer = fs.readFileSync(filePath);
-                  const data = await pdfParse(dataBuffer);
-                  const mdContent = `# ${baseName}\n\n${data.text}`;
-                  const pdfFm = generateSourceFrontmatter(filePath, `raw/${file}`);
-                  fs.writeFileSync(destPath, pdfFm + mdContent, 'utf8');
-                  status = '✅ Processed';
-                  action = `Converted PDF to markdown at \`md/${baseName}.md\``;
-                  processedCount++;
-                } catch (pdfErr) {
-                  const mockContent = `# ${baseName}\n\n*PDF Content Ingested (Placeholder)*\n\n[PDF: ${file} needs manual verification or a PDF parser package to extract text fully.]`;
-                  const pdfMockFm = generateSourceFrontmatter(filePath, `raw/${file}`);
-                  fs.writeFileSync(destPath, pdfMockFm + mockContent, 'utf8');
-                  status = '✅ Processed (Partial)';
-                  action = `Created placeholder markdown at \`md/${baseName}.md\`. PDF parsing failed: ${pdfErr.message}`;
-                  processedCount++;
-                }
-              } else if (ext === '.xlsx') {
-                const XLSX = require('xlsx');
-                const workbook = XLSX.readFile(filePath);
-                let mdContent = `# ${baseName}\n\n`;
-                workbook.SheetNames.forEach((sheetName, idx) => {
-                  const sheet = workbook.Sheets[sheetName];
-                  const json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
-                  mdContent += `## Sheet: ${sheetName}\n\n`;
-                  if (json.length > 0) {
-                    const headers = Object.keys(json[0]);
-                    mdContent += `| ${headers.join(' | ')} |\n`;
-                    mdContent += `| ${headers.map(() => '---').join(' | ')} |\n`;
-                    json.forEach(row => {
-                      mdContent += `| ${headers.map(h => String(row[h] ?? '')).join(' | ')} |\n`;
-                    });
-                  } else {
-                    // Convert to CSV-ish text
-                    const range = XLSX.utils.decode_range(sheet['!ref'] || 'A1:A1');
-                    for (let r = range.s.r; r <= range.e.r; r++) {
-                      const row = [];
-                      for (let c = range.s.c; c <= range.e.c; c++) {
-                        const addr = XLSX.utils.encode_cell({ r, c });
-                        row.push(String(sheet[addr]?.v ?? ''));
-                      }
-                      mdContent += `| ${row.join(' | ')} |\n`;
-                    }
-                  }
-                  mdContent += '\n';
-                });
-                const xlsxFm = generateSourceFrontmatter(filePath, `raw/${file}`);
-                fs.writeFileSync(destPath, xlsxFm + mdContent, 'utf8');
-                status = '✅ Processed';
-                action = `Converted XLSX to markdown at \`md/${baseName}.md\``;
-                processedCount++;
-              }
-            } catch (err) {
-              status = '❌ Error';
-              action = `Failed to convert: ${err.message}`;
-              skippedCount++;
-            }
-          } else {
-            status = '⚠️ Skipped';
-            action = `Extraction declined or skipped.`;
-            skippedCount++;
-          }
-        }
-      }
+      entry = await processPromptFile(ext, file, filePath, baseName, mdDir, isSelected, options);
     } else if (EXT_NO.includes(ext)) {
-      format = ext.substring(1).toUpperCase();
-      totalDiscovered++;
-      status = '🚫 Blocked';
-      action = 'Unsupported format (needs manual action)';
-      skippedCount++;
+      entry = { format: ext.substring(1).toUpperCase(), status: '🚫 Blocked', action: 'Unsupported format (needs manual action)', outcome: 'skipped' };
     } else {
-      totalDiscovered++;
-      status = '⚠️ Skipped';
-      action = 'Unknown extension';
+      entry = { format: 'Unknown', status: '⚠️ Skipped', action: 'Unknown extension', outcome: 'skipped' };
+    }
+
+    totalDiscovered++;
+    if (entry.outcome === 'processed') {
+      processedCount++;
+    } else {
       skippedCount++;
     }
 
     registry.push({
       name: `raw/${file}`,
-      format,
+      format: entry.format,
       size: stat.size,
-      status,
-      action
+      status: entry.status,
+      action: entry.action,
     });
   }
 
