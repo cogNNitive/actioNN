@@ -325,7 +325,8 @@ async function processPromptFile(ext, file, filePath, baseName, mdDir, isSelecte
 }
 
 /**
- * Scan raw directory, process files, update index.md, and consolidate to md/_all.md
+ * Scan raw directory, process files, write the ingestion manifest to md/index.md,
+ * and consolidate to md/_all.md
  * @param {string} projectDir
  * @param {object} options
  * @param {string[]} [options.formats] – array of extensions to include (e.g. ['.txt', '.docx']).
@@ -338,7 +339,9 @@ async function processPromptFile(ext, file, filePath, baseName, mdDir, isSelecte
 async function scanAndProcess(projectDir, options = {}) {
   const rawDir = path.join(projectDir, 'raw');
   const mdDir = path.join(projectDir, 'md');
-  const indexFile = path.join(projectDir, 'index.md');
+  // Ingestion manifest lives under md/ so the workspace-root index.md stays free
+  // for the semantic iNNfo index (# NN index) written by provenance.js.
+  const indexFile = path.join(mdDir, 'index.md');
 
   if (!fs.existsSync(rawDir)) {
     fs.mkdirSync(rawDir, { recursive: true });

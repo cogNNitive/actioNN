@@ -39,6 +39,11 @@ async function main() {
     const scannerResult = scannerTest.run();
     totalPassed += scannerResult.passed;
     totalFailed += scannerResult.failed;
+
+    const provenanceTest = require('./unit/test-provenance');
+    const provenanceResult = provenanceTest.run();
+    totalPassed += provenanceResult.passed;
+    totalFailed += provenanceResult.failed;
   }
 
   if (mode === 'all' || mode === 'integration') {

@@ -10,12 +10,13 @@ const { execSync } = require('child_process');
 const config = require('./config');
 const scanner = require('./scanner');
 const transformer = require('./transformer');
+const provenance = require('./provenance');
 
 async function main() {
   const argv = minimist(process.argv.slice(2));
 
   // Determine if command-line args are provided
-  const hasArgs = argv.scan || argv.apply || argv.src || argv.dest || argv.name;
+  const hasArgs = argv.scan || argv.apply || argv.provenance || argv.src || argv.dest || argv.name;
 
   if (hasArgs) {
     await handleCliMode(argv);
@@ -69,6 +70,17 @@ async function handleCliMode(argv) {
 
     const result = await scanner.scanAndProcess(projectDir, scanOptions);
     console.log(`Scan completed! Discovered: ${result.totalDiscovered}, Processed: ${result.processedCount}, Skipped: ${result.skippedCount}`);
+
+    const prov = provenance.buildProvenanceModel(projectDir);
+    console.log(`Provenance model ${prov.created ? 'created' : 'refreshed'} with ${prov.sourceCount} source(s): ${prov.modelPath}`);
+  }
+
+  // Refresh the provenance model + semantic index without re-scanning.
+  // Run this after the agent adds Models/Artifacts/Procedures so index.md picks
+  // up any newly created *_NN.md models.
+  if (argv.provenance && !argv.scan) {
+    const prov = provenance.buildProvenanceModel(projectDir);
+    console.log(`Provenance model ${prov.created ? 'created' : 'refreshed'} with ${prov.sourceCount} source(s): ${prov.modelPath}`);
   }
 
   // Apply transformation
@@ -218,16 +230,22 @@ async function runBootstrapperFlow() {
 function bootstrapProject(srcDir, destParentDir, projectName) {
   const projectDir = path.join(destParentDir, projectName);
   const rawDir = path.join(projectDir, 'raw');
-  const mdDir = path.join(projectDir, 'md');
-  const transDir = path.join(projectDir, 'traNNsformations');
-  const outputDir = path.join(projectDir, 'output');
 
-  // Create structure
+  // Canonical iNNfo workspace layout (see SKILL.md §1). `md/` holds normalized
+  // Markdown + the ingestion manifest; `models/`, `procedures/` and `artifacts/`
+  // hold generated entities; `traNNsformations/` holds transformation templates.
+  // `assets/` and the provenance model are created on demand by provenance.js.
+  const dirs = [
+    'raw',
+    'md',
+    'models',
+    'procedures',
+    'artifacts',
+    path.join('artifacts', 'reports'),
+    'traNNsformations',
+  ];
   fs.mkdirSync(projectDir, { recursive: true });
-  fs.mkdirSync(rawDir, { recursive: true });
-  fs.mkdirSync(mdDir, { recursive: true });
-  fs.mkdirSync(transDir, { recursive: true });
-  fs.mkdirSync(outputDir, { recursive: true });
+  for (const d of dirs) fs.mkdirSync(path.join(projectDir, d), { recursive: true });
 
   // Create README.md file if project name is traNNsform
   if (projectName.toLowerCase() === 'trannsform') {
@@ -381,7 +399,10 @@ async function runProjectMenu(projectDir) {
       console.log('\n=== Ingestion Manifest Created ===');
       console.log(`Processed: ${result.processedCount} files successfully.`);
       console.log(`Skipped/Needs Review: ${result.skippedCount} files.`);
-      console.log(`Review the manifest log at: ${path.join(projectDir, 'index.md')}\n`);
+      console.log(`Review the manifest log at: ${path.join(projectDir, 'md', 'index.md')}`);
+
+      const prov = provenance.buildProvenanceModel(projectDir);
+      console.log(`Provenance model ${prov.created ? 'created' : 'refreshed'} with ${prov.sourceCount} source(s): ${prov.modelPath}\n`);
 
       return runProjectMenu(projectDir);
     }
@@ -402,7 +423,10 @@ async function runProjectMenu(projectDir) {
     console.log('\n=== Ingestion Manifest Created ===');
     console.log(`Processed: ${result.processedCount} files successfully.`);
     console.log(`Skipped/Needs Review: ${result.skippedCount} files.`);
-    console.log(`Review the manifest log at: ${path.join(projectDir, 'index.md')}\n`);
+    console.log(`Review the manifest log at: ${path.join(projectDir, 'md', 'index.md')}`);
+
+    const prov = provenance.buildProvenanceModel(projectDir);
+    console.log(`Provenance model ${prov.created ? 'created' : 'refreshed'} with ${prov.sourceCount} source(s): ${prov.modelPath}\n`);
 
     return runProjectMenu(projectDir);
   }

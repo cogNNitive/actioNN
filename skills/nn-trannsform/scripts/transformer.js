@@ -25,7 +25,8 @@ async function applyTransformation(projectDir, templateName, options = {}) {
   const allMdFile = path.join(projectDir, 'md', '_all.md');
 
   const cleanTemplateName = path.basename(templateName, '.md').replace(/\s+/g, '_');
-  const outputDir = path.join(projectDir, 'output', cleanTemplateName);
+  // Generated deliverables are Artifacts → they live in artifacts/ (see SKILL.md §5).
+  const outputDir = path.join(projectDir, 'artifacts');
 
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true });

@@ -1,6 +1,6 @@
 ---
 name: nn-trannsform
-description: "Bootstrap projects, scan raw documents, normalize them to Markdown, apply template-based transformations, and execute multi-step transformation procedures compliant with procedures_V_0-2-0_NN.md. Includes document ingestion, format conversion (txt, md, csv, json, docx, pdf, xlsx), procedure orchestration, and export generation. Triggers: trannsform, transform, workflow, pipeline, procedure, normalize, scan documents, document ingestion, document transformation, document processing, markdown conversion, project bootstrap"
+description: "Bootstrap projects, scan raw documents, normalize them to Markdown, apply template-based transformations, and execute multi-step transformation procedures compliant with procedures_V_0-2-0_NN.md. Includes document ingestion, format conversion (txt, md, csv, json, docx, pdf, xlsx), procedure orchestration, and artifact generation. Triggers: trannsform, transform, workflow, pipeline, procedure, normalize, scan documents, document ingestion, document transformation, document processing, markdown conversion, project bootstrap"
 empty_sections_mode: "ask-per-section"
 license: MIT
 metadata:
@@ -53,13 +53,21 @@ Every project workspace MUST adhere to the following clean structure:
 ```
 [project-name]/
 ├── raw/                 # Original user files (PDFs, Word, CSV, TXT, Excel...)
+├── md/                  # Normalized Markdown + _all.md + md/index.md (ingestion manifest)
+├── assets/              # File-backed field content for the provenance model (per element slug)
 ├── models/              # Structured semantic iNNfo Level 3 models (*_NN.md)
 ├── procedures/          # Reusable transformation procedure specs (*_procedures_V_x-y-z_NN.md)
-├── artifacts/           # Derivative deliverables and generated output products
-│   ├── exports/         # Final deliverables (clean Markdown, HTML, PDF)
+├── artifacts/           # Generated Artifacts (documents, reports, boards, datasets)
 │   └── reports/         # Validation reports and audit trails
-└── index.md             # Semantic workspace index (# _NN index)
+├── traNNsformations/    # Transformation templates (Markdown or iNNfo)
+├── <Project>_V_x-y-z_trannsform_NN.md   # Provenance model (Sources / Models / Artifacts / Procedures)
+└── index.md             # Semantic workspace index (# NN index) linking all *_NN.md models
 ```
+
+> **index.md is the semantic workspace index**, not the ingestion log. The scanner
+> writes its ingestion manifest to `md/index.md`; the workspace-root `index.md` is a
+> `# NN index` block (written by `scripts/provenance.js`) that lists every `*_NN.md`
+> model so the iNNfo Modeler can discover them.
 
 Then run:
 ```bash
@@ -338,7 +346,7 @@ If `empty_sections_mode` contains an unrecognized value, warn the user and fall 
    - If **draft**: include HTML comments + visible citations per SS4 draft rules.
    - If **final with [A] or [B]**: first apply empty sections handling (§3c-ii), THEN apply the chosen citation format (SS3c-i). HTML comments MUST be removed; visible citations formatted per the selected style.
    - If **final with [C]**: apply empty sections handling (§3c-ii), then strip ALL `<!-- cite: ... -->` HTML comments AND `— Source: ...` visible citations from the output.
-3. Write the file in `output/[template-name]/` with the corresponding name.
+3. Write the file in `artifacts/` with the corresponding name (it is an Artifact — see §5/§5b). If the output is an iNNfo model, write it in `models/` instead.
 4. Present the result to the user.
 
 If for any reason you cannot generate the content (context too large, etc.), inform the user and offer the CLI transformer.js as fallback:
@@ -456,10 +464,51 @@ Transformations generate models, artifacts, and procedures in strict accordance 
 | Entity Type | Target Directory | Example File Path | Notes |
 |------|------|---------|-------|
 | **Model** (`*_NN.md`) | `models/` | `models/Business_Plan_V_0-1-0_NN.md` | iNNfo Level 3 semantic models |
-| **Export Deliverable** | `artifacts/exports/` | `artifacts/exports/Executive_Summary_V_0-1-0.md` | Clean Markdown, HTML, or PDF final outputs |
-| **Draft Deliverable** | `artifacts/exports/` | `artifacts/exports/Executive_Summary_V_0-1-0_draft.md` | Annotated draft for review |
+| **Artifact** | `artifacts/` | `artifacts/Executive_Summary_V_0-1-0.md` | Any generated deliverable. Its kind is a field value: `document`, `report`, `board`, or `dataset`. |
+| **Artifact (draft)** | `artifacts/` | `artifacts/Executive_Summary_V_0-1-0_draft.md` | Annotated draft for review |
 | **Validation Report** | `artifacts/reports/` | `artifacts/reports/Validation_Report_2026-07-27.md` | Diagnostic logs and validation output |
 | **Procedure Spec** | `procedures/` | `procedures/Document_Ingest_V_1-0-0_procedures_NN.md` | Transformation procedure compliant with `procedures_V_0-2-0_NN.md` |
+| **Provenance Model** | workspace root | `<Project>_V_0-1-0_trannsform_NN.md` | Lineage registry (see §5b). Sources auto-populated by the scanner; Models/Artifacts/Procedures added after generation. |
+
+> **Terminology (MANDATORY):** the terms **"export"** and **"dashboard"** are retired.
+> Every generated deliverable is an **Artifact**; a dashboard-style Artifact has
+> `artifact_format:: board`.
+
+### 5b. Provenance Model (lineage registry)
+
+Every scan auto-generates or refreshes a **provenance model** at the workspace root —
+`<Project>_V_0-1-0_trannsform_NN.md`, conforming to the `traNNsform` level-2 template
+([`trannsform_NN.md`](https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level2/trannsform/trannsform_NN.md)).
+It records ingestion and generation as an explicit lineage graph (W3C PROV style):
+
+- **Sources** — one element per ingested raw file. **Auto-populated by `scripts/provenance.js`**
+  from the `md/*.md` source frontmatter (hash, filename, format, normalized content). Do NOT
+  edit these by hand; re-run the scan to refresh them.
+- **Procedures** — the transformation run (activity). **The agent adds one** per run:
+  `## NN Procedures: <run name>` with `procedure_ref`, `agent`, `run_at`.
+- **Models** — each domain model produced. **The agent adds one** after generating a model:
+  `## NN Models: <title>` with `model_ref`, `model_template`, `model_version`,
+  `derived_from:: [<sources>]`, `generated_by:: [<procedure>]`.
+- **Artifacts** — each deliverable produced. **The agent adds one** after generating an artifact:
+  `## NN Artifacts: <name>` with `artifact_format`, `location`,
+  `derived_from_inputs:: [<sources and/or models>]`, `produced_by:: [<procedure>]`.
+
+Lineage is expressed with `reference` fields (`derived_from`, `generated_by`,
+`derived_from_inputs`, `produced_by`) pointing to element names **within the provenance
+model** — not with matrices. The derivation graph is a DAG: an Artifact may derive from a
+Model, directly from Sources, or both. Whenever you generate a Model or Artifact, you MUST
+append the corresponding element(s) to the provenance model so the lineage stays complete.
+
+**Refresh after adding entities.** After you create a new model (in `models/` or the
+workspace root) or artifact and record it in the provenance model, run:
+
+```bash
+node scripts/index.js --provenance --src "<target-project-directory>"
+```
+
+This refreshes the provenance `Sources` and rewrites the semantic `index.md` so the iNNfo
+Modeler discovers every `*_NN.md` model (including the ones you just created). It is
+idempotent and preserves the Models/Artifacts/Procedures elements you added by hand.
 
 ### 6. Post-Transformation Conversation Feedback Protocol (MANDATORY)
 

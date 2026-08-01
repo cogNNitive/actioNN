@@ -8,9 +8,9 @@ The skill ships with a Node.js CLI tool (`scripts/index.js`) that handles file o
 
 The workflow is:
 
-1. **Bootstrap** — The agent creates a project directory with standard workspace folders: `raw/` (source files), `models/` (iNNfo Level 3 models), `procedures/` (transformation specs), and `artifacts/` (`exports/` for deliverables, `reports/` for audit logs).
-2. **Scan & normalize** — The CLI tool reads files from `raw/`, converts supported formats to Markdown, and generates an ingestion manifest (`index.md`) plus consolidated content (`md/_all.md`).
-3. **Transform & Orchestrate** — The agent applies template-based transformations or multi-step procedure specs (`procedures_V_0-2-0_NN.md`) to generate models or final deliverable artifacts.
+1. **Bootstrap** — The agent creates a project directory with standard workspace folders: `raw/` (source files), `md/` (normalized Markdown), `models/` (iNNfo Level 3 models), `procedures/` (transformation specs), and `artifacts/` (generated deliverables, with `reports/` for audit logs).
+2. **Scan & normalize** — The CLI tool reads files from `raw/`, converts supported formats to Markdown, writes the ingestion manifest (`md/index.md`) plus consolidated content (`md/_all.md`), and generates/refreshes the **provenance model** (`<Project>_V_0-1-0_trannsform_NN.md`) whose Sources are auto-populated from the ingested files. The workspace-root `index.md` is the semantic `# NN index`.
+3. **Transform & Orchestrate** — The agent applies template-based transformations or multi-step procedure specs (`procedures_V_0-2-0_NN.md`) to generate models or Artifacts, and records each in the provenance model (Models/Artifacts/Procedures) with explicit lineage.
 4. **Post-Transformation Feedback Protocol** — If modifications to the transformation logic occurred during the conversation, the agent prompts the user to save a new `procedures` spec, update the existing one, or leave specs unchanged.
 
 ## Installation
@@ -40,6 +40,7 @@ nn-trannsform/
     index.js                CLI entry point — bootstrap, scan, apply transformations
     scanner.js              Format detection, file conversion (txt, md, csv, json, docx, pdf, xlsx)
     transformer.js          Template listing and fallback heuristic transformation
+    provenance.js           Builds/refreshes the provenance model + semantic index.md
     config.js               Persistent config (last project path, default directories)
   examples/
     raw/                    Sample source files (BeachBoys.txt, Beatles.txt, RollingStones.txt)
