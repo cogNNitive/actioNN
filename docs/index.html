@@ -91,11 +91,18 @@
     }
 
     .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
       font-weight: 800;
       font-size: 22px;
       color: var(--brand);
       text-decoration: none;
       letter-spacing: -0.02em;
+    }
+    .logo img {
+      height: 32px;
+      width: auto;
     }
 
     .nav-links {
@@ -511,7 +518,7 @@
 
 <nav>
   <div class="container">
-    <a href="." class="logo">cogNNitive</a>
+    <a href="." class="logo"><img src="favicon.svg" alt="actioNN Logo" /> actioNN</a>
     <ul class="nav-links">
       <li><a href="#skills">Skills</a></li>
       <li><a href="#try-it">Try it</a></li>
