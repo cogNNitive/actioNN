@@ -60,7 +60,17 @@ Assert-True ($pkg.dependencies.mammoth -ne $null) "dependencies.mammoth declared
 Assert-True ($pkg.dependencies.minimist -ne $null) "dependencies.minimist declared"
 Assert-True ($pkg.dependencies.prompts -ne $null) "dependencies.prompts declared"
 Assert-True ($pkg.bin -eq $null) "package.json has no bin entry"
-Assert-True ($pkg.scripts -eq $null -or @($pkg.scripts.PSObject.Properties).Count -eq 0) "package.json has no scripts entry"
+# Skills must not auto-execute on `npm install` (the agent runs install automatically).
+# Explicit test scripts are fine — they only run on `npm run test*`. Forbid install-time
+# lifecycle hooks instead of banning the whole scripts block (see TESTING.md).
+$lifecycleHooks = @('preinstall','install','postinstall','preprepare','prepare','postprepare','prepublish','prepublishOnly','prepack','postpack')
+$hasLifecycleHook = $false
+if ($pkg.scripts) {
+  foreach ($hook in $lifecycleHooks) {
+    if ($pkg.scripts.PSObject.Properties.Name -contains $hook) { $hasLifecycleHook = $true }
+  }
+}
+Assert-True (-not $hasLifecycleHook) "package.json has no install-time lifecycle scripts"
 Write-Host ""
 
 # â”€â”€â”€ Step 3: SKILL.md frontmatter â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -103,7 +113,9 @@ try {
   Assert-True (Test-Path "$TEST_DIR\test-project\raw") "raw/ directory created"
   Assert-True (Test-Path "$TEST_DIR\test-project\md") "md/ directory created"
   Assert-True (Test-Path "$TEST_DIR\test-project\traNNsformations") "traNNsformations/ directory created"
-  Assert-True (Test-Path "$TEST_DIR\test-project\output") "output/ directory created"
+  Assert-True (Test-Path "$TEST_DIR\test-project\models") "models/ directory created"
+  Assert-True (Test-Path "$TEST_DIR\test-project\procedures") "procedures/ directory created"
+  Assert-True (Test-Path "$TEST_DIR\test-project\artifacts") "artifacts/ directory created"
   Assert-True (Test-Path "$TEST_DIR\test-project\raw\hello.txt") "Source file copied to raw/"
 } finally {
   Pop-Location
@@ -115,9 +127,13 @@ Write-Host "â”€â”€ Step 6: Run scan â”€â”€" -ForegroundColor
 Push-Location $SKILL_DIR
 try {
   node scripts/index.js --scan --src "$TEST_DIR\test-project" 2>&1 | Out-Null
-  Assert-True (Test-Path "$TEST_DIR\test-project\index.md") "index.md created"
+  Assert-True (Test-Path "$TEST_DIR\test-project\md\index.md") "ingestion manifest created at md/index.md"
+  Assert-True (Test-Path "$TEST_DIR\test-project\index.md") "semantic workspace index.md created"
   Assert-True (Test-Path "$TEST_DIR\test-project\md\hello.md") "hello.md created in md/"
   Assert-True (Test-Path "$TEST_DIR\test-project\md\_all.md") "_all.md created"
+
+  $provModel = Get-ChildItem "$TEST_DIR\test-project" -Filter "*_trannsform_NN.md" -ErrorAction SilentlyContinue
+  Assert-True ($null -ne $provModel) "provenance model (*_trannsform_NN.md) created"
 
   $allContent = Get-Content "$TEST_DIR\test-project\md\_all.md" -Raw
   Assert-True ($allContent -match 'Hello world') "_all.md contains 'Hello world'"

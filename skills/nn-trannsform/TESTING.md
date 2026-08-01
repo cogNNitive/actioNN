@@ -2,7 +2,7 @@
 
 ## Automated Tests (Zero-Dependency)
 
-Unit tests cover `config.js` and `scanner.js` using Node's built-in `assert`:
+Unit tests cover `config.js`, `scanner.js` and `provenance.js` using Node's built-in `assert`:
 
 ```bash
 cd skills/nn-trannsform
@@ -17,7 +17,7 @@ npm run test:unit
 npm run test:integration
 ```
 
-33 tests covering: config read/write/merge, format detection, file hashing, frontmatter generation, source registry, dependency checking.
+49 tests covering: config read/write/merge, format detection, file hashing, frontmatter generation, source registry, dependency checking, and provenance model generation (slugify, source auto-population, asset materialization, semantic index, idempotent refresh with section preservation).
 
 ## Manual Test Guide
 
@@ -69,7 +69,7 @@ Luis,28,Technician
 > Using the nn-trannsform skill, bootstrap a project with the files in the current folder as source. Project name: "test-docs".
 
 **Expected result:**
-- ✅ OpenCode creates the structure `test-docs/raw/`, `test-docs/md/`, `test-docs/traNNsformations/`, `test-docs/output/`
+- ✅ OpenCode creates the structure `test-docs/raw/`, `test-docs/md/`, `test-docs/models/`, `test-docs/procedures/`, `test-docs/artifacts/`, `test-docs/traNNsformations/`
 - ✅ Files are copied to `test-docs/raw/`
 - ✅ OpenCode reports no errors
 
@@ -84,7 +84,9 @@ Luis,28,Technician
 **Expected result:**
 - ✅ OpenCode executes `node scripts/index.js --scan --src test-docs`
 - ✅ Summary appears: "Discovered: X, Processed: Y, Skipped: Z"
-- ✅ `test-docs/index.md` is created
+- ✅ `test-docs/md/index.md` (ingestion manifest) is created
+- ✅ `test-docs/index.md` (semantic `# NN index`) is created
+- ✅ `test-docs/<name>_V_0-1-0_trannsform_NN.md` (provenance model) is created with the Sources populated
 - ✅ `test-docs/md/report.md` is created with the txt content
 - ✅ `test-docs/md/data.md` is created with the csv content
 - ✅ `test-docs/md/_all.md` is created with both documents consolidated
@@ -102,7 +104,7 @@ Luis,28,Technician
 - ✅ You choose "Create new" (or "Summary" if offered)
 - ✅ OpenCode asks if you want draft or final version
 - ✅ You choose "Draft"
-- ✅ OpenCode generates a file `output/[name]_draft.md`
+- ✅ OpenCode generates a file `artifacts/[name]_draft.md`
 - ✅ The draft includes the header `# DRAFT FOR REVIEW — NOT FINAL VERSION`
 - ✅ The draft includes source citations (e.g., `— Source: informe.txt`)
 - ✅ If unsure about any data, it includes markers like `[unconfirmed data — review]`
@@ -118,7 +120,7 @@ Luis,28,Technician
 **Expected result:**
 - ✅ OpenCode asks if you want to include source references
 - ✅ You answer yes (or no)
-- ✅ OpenCode generates `output/[name]_v_0-1-0.md`
+- ✅ OpenCode generates `artifacts/[name]_v_0-1-0.md`
 - ✅ The file has NO draft markers or annotations
 - ✅ (Optional) Includes source references if you said yes
 
@@ -142,7 +144,7 @@ If you have a docx or pdf file in the source folder, when running the scan:
 
 **Expected result:**
 - ✅ OpenCode runs the command
-- ✅ `output/Generic_Normalizer_[timestamp].md` is generated
+- ✅ `artifacts/Generic_Normalizer_[timestamp].md` is generated
 
 ---
 
