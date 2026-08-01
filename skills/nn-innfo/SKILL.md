@@ -207,14 +207,17 @@ asset_mode: "centralized"    # optional, default "centralized"
 - **Element Lines** â€” `* _NN <ConceptName>: <Element Name>` with optional indented YAML fields.
 - **Matrices** â€” `# _NN matrices: <matrix-name>` followed by a Markdown table.
 
-### Concept Types
+### Concept Types & Content Formatting (CRÍTICO)
 
-| Type | Syntax | Description |
-|------|--------|-------------|
-| `text` | Free-form Markdown | Single block of content |
-| `weight` / `list` | Bullet list with `_NN` markers | Multi-instance with optional YAML |
-| `category` | No content block | Taxonomy-only |
-| `steps` / `sequence` | Ordered bullet list | Ordered sequence |
+Before writing content into any concept, query the template (`get_template`) to verify its declared `type`:
+
+| Type | Syntax | Description & Formatting Rules |
+|------|--------|--------------------------------|
+| `text` | Free-form Markdown | Single block of plain detail text under `# _NN ConceptName`. **Do NOT write `* _NN` element markers** inside `text` concepts. |
+| `weight` / `list` | Bullet list with `_NN` markers | Element lines: `* _NN ConceptName: Element Name`. **Do NOT write loose prose text** outside of `* _NN` element markers. |
+| `category` | Taxonomy-only | Taxonomy node without content block. |
+| `steps` / `sequence` | Ordered bullet list | Sequential ordered elements: `* _NN ConceptName: Element Name`. |
+
 
 ---
 
@@ -279,6 +282,24 @@ asset_mode: "centralized"    # optional, default "centralized"
 
 ### Inspect
 - `list_models({ root })` to enumerate; `read_model({ id })` to get structured JSON (concepts, elements, matrices, taxonomy).
+
+### MCP Fallback by ID (IMPORTANTE)
+If `validate_model({id})`, `read_model({id})`, or `apply_change({id})` fail with `"Model not found"` (common when operating on custom roots or local workspace paths):
+1. **Confirm detection**: Run `list_models({root})` to verify if the model is listed.
+2. **Inline fallback**: If detected, pass full file content to `validate_model({ content })` and perform edits directly via file system tools (`replace_file_content` / `write_to_file`).
+3. **User notification**: Report the fallback method used to the user; do not falsely claim the model does not exist.
+
+### Windows Encoding & Matrix Safety (CRÍTICO)
+1. **UTF-8 Encoding**: Write files strictly in UTF-8 format (`write_to_file`, `replace_file_content`, or Node `fs.writeFileSync`). **Avoid console redirections (`>`)** in PowerShell, which introduce ANSI/UTF-16 character corruptions.
+2. **ASCII Matrix Markers**: In matrix tables (`# _NN matrices: ...`), use clean ASCII markers: `X` for active/checked cells and `-` for empty/inactive cells. **PROHIBITED**: Unicode symbols like `●`, `✓`, `→` which easily corrupt across Windows shell environments.
+
+### Placeholder Cleanup
+After scaffolding a model from a template, audit concepts for redundant placeholder elements that merely repeat the concept name (e.g., `* _NN ConceptName: ConceptName`). Remove these generic lines to leave concepts clean and ready for content.
+
+### Concept Semantics Disambiguation
+Verify concept semantics in the template before assigning content:
+- **`Components`** (in Business templates): Refers strictly to the solution's **technical stack** (languages, cloud platform, databases), NOT functional business modules.
+- **`Products` vs `Services`**: `Products` = software/digital platform; `Services` = human experience/operational delivery. Consolidate overlapping digital tools into **features** of a single platform product.
 
 ---
 
@@ -528,19 +549,24 @@ Present the validation result faithfully:
 - `valid: true` â†’ proceed
 - `valid: false` â†’ list `errors[]` and `warnings[]`. Do NOT present the model as valid. Offer to fix or revert.
 
-### Step 3 â€” Version Bump Decision
+### Step 3 — Version Bump Decision, Renaming & Index Sync
 
 After successful validation, ask the user:
 > "The model validates successfully. Do you want to:
 > - **[a]** Keep the current version (`V_x-y-z`)
-> - **[b]** Increment **patch** (`V_x-y-z+1`) â€” bug fixes, minor edits
-> - **[c]** Increment **minor** (`V_x-y+1-0`) â€” new fields or concepts added
+> - **[b]** Increment **patch** (`V_x-y-z+1`) — bug fixes, minor edits
+> - **[c]** Increment **minor** (`V_x-y+1-0`) — new fields or concepts added
 > - **[x]** Cancel all changes
 > 
 > (Recommended: [b] for field additions, [c] for new concepts)"
 
-If the user chooses [b] or [c], update `model_version` in the model's frontmatter. If [x], revert the changes.
-### Step 4 - Confirm
+If the user chooses [b] or [c]:
+1. Update `model_version` in the model's frontmatter.
+2. **Rename file**: Rename the physical `.md` file to `<Name>_V_x-y-z_<Template>_NN.md`.
+3. **Update `index.md`**: Update the link reference in the workspace `index.md` file under `# _NN index`.
+4. **Re-validate**: Run `validate_model({ id })` on the renamed file to confirm structural and referential integrity.
+
+### Step 4 — Confirm
 
 Print the final state and a preview link:
 ```

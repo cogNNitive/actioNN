@@ -1,5 +1,9 @@
 # actioNN Skills
 
+<p align="center">
+  <img src="logo.svg" alt="actioNN Logo" width="360">
+</p>
+
 **Modular AI Agent skills ecosystem for [OpenCode Desktop](https://opencode.ai).**
 
 actioNN is a collection of self-contained, domain-specialized skills that teach your AI agent to solve specific types of tasks — from model evaluation and document transformation to web design and skills lifecycle management. Each skill is an autonomous module with its own triggers, instructions, and behavior rules.
@@ -22,85 +26,3 @@ actioNN is a collection of self-contained, domain-specialized skills that teach 
 | **[nn-trannsform](./skills/nn-trannsform/)** | Automatic | Bootstrap projects, scan raw documents, normalize them to Markdown, apply template-based transformations, and execute multi-step transformation procedures compliant with procedures_V_0-2-0_NN.md. Includes document ingestion, format conversion (txt, md, csv, json, docx, pdf, xlsx), procedure orchestration, and export generation. Triggers: trannsform, transform, workflow, pipeline, procedure, normalize, scan documents, document ingestion, document transformation, document processing, markdown conversion, project bootstrap |
 
 <!-- skills:end -->
-
-> This table is auto-generated from each skill's frontmatter by `scripts/build-registry.js`. Do not edit it by hand — run the script after adding or changing a skill.
-
-## Getting Started
-
-No Git or terminal needed. Tell your AI agent:
-
-```
-I want to use https://cognnitive.com/use
-```
-
-OpenCode fetches the bootstrap manifest, downloads all skills from GitHub, registers the MCP server, and presents a workflow menu — all automatic.
-
-### Requirements
-
-- [OpenCode Desktop](https://opencode.ai) — conversational AI agent desktop application and runtime
-- **Windows** (recommended) — NTFS junctions for live-change reflection
-- **Node.js 18+** — required by the traNNsform skill CLI tool
-
-## How It Works
-
-1. **Automatic scan** — At session start, the Skills Manager detects all available skills and reports their installation status.
-2. **On-demand loading** — When a task matches a skill's triggers, the agent loads that skill's instructions and executes the specialized workflow.
-3. **Modular by design** — Each skill is self-contained. Skills can be installed, updated, and removed independently without affecting others.
-
-## Project Structure
-
-```
-actioNN/
-├── skills/                        # Skill modules (one per directory)
-│   ├── nn-innfo/               #   iNNfo semantic modeling
-│   ├── nn-dev-opencode-model-router/  #   Model adequacy evaluator
-│   ├── nn-workflow-orchestrator/  #   Multi-skill workflow orchestration
-│   ├── nn-skills-lifecycle/    #   Skills lifecycle management
-│   ├── nn-preflight/           #   Readiness gate (env checks) for other skills
-│   ├── nn-router/              #   Entry-point index over the skill registry
-│   ├── nn-trannsform/          #   Document ingestion pipeline
-│   └── nn-design-presets/    #   Design system & brand guidelines
-├── docs/                          # Public site (Docsify + static HTML)
-│   ├── index.html                 #   Landing page
-│   ├── documentation/             #   Full skill documentation
-│   └── ...                        #   Favicons, sitemap, analytics
-├── scripts/                       # Repository-level automation scripts
-├── AGENTS.md                      # Agent configuration & conventions
-├── .gitignore
-└── README.md                      # You are here
-```
-
-## Skill Versioning
-
-All skills follow semantic versioning in their frontmatter:
-
-```yaml
----
-name: <skill-name>
-version: "V_x-y-z"
-last_updated: YYYY-MM-DD
-metadata:
-  source_type: "original" | "mirrored" | "integrated"
-  source: "https://github.com/cogNNitive/actioNN"
-license: MIT
----
-```
-
-- **original** — authored here, this repo is the source of truth
-- **mirrored** — copied from another repo via sync script
-- **integrated** — bundled tool lives in the skill directory
-
-## Contributing
-
-1. Skills live in `skills/<skill-name>/` with a `SKILL.md` as the primary agent-facing instruction file.
-2. All user-facing content must be in **English** per repo convention.
-3. Every skill must include valid YAML frontmatter with name, version, last_updated, and metadata fields.
-4. Scripts and tooling go under `scripts/` or within the skill's own directory.
-
-## License
-
-[MIT](./LICENSE) — all skills in this repository are open source under the MIT license.
-
----
-
-Built with [cogNNitive Web Design Guide](https://actionn.cognnitive.com/nn-design-presets).
