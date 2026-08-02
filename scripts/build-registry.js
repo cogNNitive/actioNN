@@ -27,6 +27,7 @@ const extraRoots = [];
 let outputDir = '.cogNNitive';
 let showHelp = false;
 let showVersion = false;
+let checkMode = false;
 
 for (let i = 0; i < args.length; i++) {
   switch (args[i]) {
@@ -35,6 +36,9 @@ for (let i = 0; i < args.length; i++) {
       break;
     case '--version':
       showVersion = true;
+      break;
+    case '--check':
+      checkMode = true;
       break;
     case '--root':
       i++;
@@ -58,6 +62,10 @@ Options:
   --root <dir>    Additional root to scan (repeatable). skills/<name>/SKILL.md
                   is always scanned from repo root.
   --output <dir>  Output directory (default: .cogNNitive/)
+  --check         Freshness gate. Do NOT write. Regenerate the registry in
+                  memory and compare (by content) against the committed
+                  skill-registry.md (and README table if markers exist).
+                  Exit 1 if stale so CI/hooks fail until it is rebuilt.
   --help          Show this message
   --version       Show version
 `);
@@ -244,13 +252,14 @@ function generateReadmeTable(skills) {
 }
 
 /**
- * Inject the generated skills table into README.md between marker comments.
- * No-op (with a warning) if the markers are absent, so the script stays safe
- * to run in repos that don't opt into README generation.
+ * Compute what README.md should look like with the skills table injected
+ * between the marker comments, WITHOUT writing anything.
+ * Returns { readmePath, current, next } when a README with valid markers
+ * exists, or null when there is nothing to inject (no README / no markers).
  */
-function injectReadmeTable(rootDir, skills) {
+function computeReadmeNext(rootDir, skills) {
   const readmePath = path.join(rootDir, 'README.md');
-  if (!fs.existsSync(readmePath)) return;
+  if (!fs.existsSync(readmePath)) return null;
 
   const START = '<!-- skills:start -->';
   const END = '<!-- skills:end -->';
@@ -260,7 +269,7 @@ function injectReadmeTable(rootDir, skills) {
   const endIdx = readme.indexOf(END);
   if (startIdx === -1 || endIdx === -1 || endIdx < startIdx) {
     console.warn(`[WARN] README.md: skills markers not found, skipping README injection`);
-    return;
+    return null;
   }
 
   const before = readme.slice(0, startIdx + START.length);
@@ -268,8 +277,20 @@ function injectReadmeTable(rootDir, skills) {
   const table = generateReadmeTable(skills);
   const next = `${before}\n\n${table}\n\n${after}`;
 
-  if (next !== readme) {
-    fs.writeFileSync(readmePath, next, 'utf-8');
+  return { readmePath, current: readme, next };
+}
+
+/**
+ * Inject the generated skills table into README.md between marker comments.
+ * No-op (with a warning) if the markers are absent, so the script stays safe
+ * to run in repos that don't opt into README generation.
+ */
+function injectReadmeTable(rootDir, skills) {
+  const plan = computeReadmeNext(rootDir, skills);
+  if (!plan) return;
+
+  if (plan.next !== plan.current) {
+    fs.writeFileSync(plan.readmePath, plan.next, 'utf-8');
     console.log('README.md skills table updated');
   }
 }
@@ -293,26 +314,68 @@ function generateCacheJson(skills) {
 // Main
 // ---------------------------------------------------------------------------
 
-function main() {
-  const rootDir = process.cwd();
+/**
+ * Scan every root and return the merged, ordered skill list.
+ */
+function collectSkills(rootDir) {
   const allRoots = [rootDir, ...extraRoots.map(r => path.resolve(rootDir, r))];
-
   let allSkills = [];
-  let errorCount = 0;
-
   for (const root of allRoots) {
-    const skills = scanSkills(root);
-    // Count entries that failed parsing (null not returned, so we track differently)
-    // scanSkills already logs errors per skill. We count total found.
-    allSkills = allSkills.concat(skills);
+    allSkills = allSkills.concat(scanSkills(root));
   }
-
-  // Count errors by checking total vs projects that have SKILL.md
-  // Simple approach: if scan returned none but skills/ exists, something went wrong
-  // We'll trust the per-skill error logging and just report the count.
-
   if (allSkills.length === 0) {
     console.warn('[WARN] No skills found in skills/ or additional roots. Empty registry generated.');
+  }
+  return allSkills;
+}
+
+/** Normalize line endings so CRLF/LF differences never fail the gate. */
+function normalizeEol(s) {
+  return s.replace(/\r\n/g, '\n');
+}
+
+/**
+ * Freshness gate. Regenerate the registry in memory and compare it (by content,
+ * NOT by mtime) against what is committed on disk. Exits 1 when stale.
+ *
+ * The registry .md and README table are pure functions of the SKILL.md
+ * frontmatter, so this comparison is deterministic and stable across checkouts.
+ * The cache JSON is intentionally NOT checked: it carries a timestamp and mtime
+ * fingerprint that legitimately change every run.
+ */
+function runCheck(rootDir, skills) {
+  const problems = [];
+
+  const expectedMd = normalizeEol(generateRegistryMd(skills, rootDir));
+  const mdPath = path.join(path.resolve(rootDir, outputDir), 'skill-registry.md');
+  if (!fs.existsSync(mdPath)) {
+    problems.push(`${path.relative(rootDir, mdPath)} is missing.`);
+  } else if (normalizeEol(fs.readFileSync(mdPath, 'utf-8')) !== expectedMd) {
+    problems.push(`${path.relative(rootDir, mdPath)} is stale (does not match skills/).`);
+  }
+
+  const readmePlan = computeReadmeNext(rootDir, skills);
+  if (readmePlan && normalizeEol(readmePlan.current) !== normalizeEol(readmePlan.next)) {
+    problems.push(`${path.relative(rootDir, readmePlan.readmePath)} skills table is stale.`);
+  }
+
+  if (problems.length > 0) {
+    console.error('\n[FAIL] Skill registry is out of date:');
+    for (const p of problems) console.error(`  - ${p}`);
+    console.error('\n  Fix: run `node scripts/build-registry.js` and commit the result.');
+    process.exit(1);
+  }
+
+  console.log(`[OK] Skill registry is up to date (${skills.length} skills).`);
+}
+
+function main() {
+  const rootDir = process.cwd();
+  const allSkills = collectSkills(rootDir);
+
+  if (checkMode) {
+    runCheck(rootDir, allSkills);
+    return;
   }
 
   // Ensure output directory exists
@@ -340,7 +403,7 @@ function main() {
   // Inject the human-facing table into README.md (no-op if markers absent)
   injectReadmeTable(rootDir, allSkills);
 
-  console.log(`${allSkills.length} skills indexed, ${errorCount} errors`);
+  console.log(`${allSkills.length} skills indexed`);
 }
 
 main();
