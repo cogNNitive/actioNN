@@ -7,7 +7,7 @@ metadata:
   mcp: "innfo-mcp"
 license: MIT
 description: |
-  MANDATORY trigger: MUST activate this skill whenever the user is creating, editing, validating, scaffolding, or discussing any iNNfo model, template, specialization, sample, or specification file. Includes the conversational Model Creation Wizard.
+  MANDATORY trigger: MUST activate this skill whenever the user is creating, editing, validating, scaffolding, or discussing any iNNfo model, template, specialization, sample, or specification file. Includes the conversational Model Creation Wizard and Architecture Coach.
   This includes but is not limited to:
   - Creating a new model step-by-step using templates (Business, Procedures, Organization, Blank)
   - Creating or editing any file matching *_NN.md
@@ -21,26 +21,63 @@ description: |
 
 > **ACTIVATION = GREETING REQUIRED**: When this skill is loaded, the agent MUST greet the user. See Greeting Protocol below.
 
-This skill guides LLMs and agents in authoring, creating from scratch (wizard), editing, and validating **iNNfo-compliant files** (V_0-3-0 Meta-template specification with unified `NN` syntax: `# NN`, `## NN`, and `key:: value`).
+This skill guides LLMs and agents in authoring, creating from scratch (wizard), editing, auditing, and validating **iNNfo-compliant files** (V_0-3-0 Meta-template specification with unified `NN` syntax: `# NN`, `## NN`, and `key:: value`).
 
-**Resolution, validation, and mutation are delegated to the `innfo-mcp` server** — a deterministic engine wrapping `@cognnitive/innfo-core`. The agent does NOT hand-resolve spec chains or hand-validate models when the MCP is available. See §1 (MCP Operating Model) and §7 (Delegation Contract).
+**Resolution, validation, and mutation are delegated to the `innfo-mcp` server** — a deterministic engine wrapping `@cognnitive/innfo-core`. The agent does NOT hand-resolve spec chains, hand-validate models, or guess syntax when the MCP is available. See §1 (MCP Operating Model) and §7 (Delegation Contract).
 
-## 0. Conversational Model Creation Wizard
+---
 
-When the user asks to "create a new model", "start a model from scratch", or selects model creation from a menu:
+## 0. Entry Menu & Conversational Model Creation Wizard
 
-1. **Explain Templates**: Briefly explain that Level 2 templates instantiate root primitives (`# NN Concept Definition`, `# NN Field Definition`, `# NN Matrix Definition`, `# NN Marker Definition`). Available templates: Business 🏢, Procedures 📋, Organization 👥, Blank ⬜.
-2. **Template Selection**: Present the selection menu. Always prefix option `[a]` with `(Recomendado)`:
-   - **[a] (Recomendado)** Business Model
-   - **[b]** Procedures Model
-   - **[c]** Organization Model
-   - **[d]** Blank Model
+### 0a. Entry Menu (initial options)
+
+When the skill is activated or the user is undecided about what to do, present the entry menu:
+
+- **[a] (Recomendado)** Create a new model (Wizard conversacional)
+- **[b]** Edit / extend an existing model
+- **[c]** Validate a model with MCP
+- **[d] Analizar coherencia y solidez (Coach de Arquitectura)** — audit the model across formal, logical, semantic, and solidity layers (§8c)
+- **[x]** Cancel / help
+
+*Nota: Podés seleccionar una opción o una combinación si aplica.*
+
+---
+
+### 0b. Descubrimiento Proactivo (Opción A)
+
+If the user wants to create a model but is unsure which template fits best:
+
+1. Ask 2-3 brief diagnostic questions:
+   - ¿El objetivo es estructurar un modelo de negocio/propuesta de valor, un proceso operativo paso a paso, o una estructura organizacional/equipo?
+   - ¿Contás con documentos fuente en `sources/markdown/` para extraer información o partimos desde cero?
+2. Recommend the optimal template with a 1-sentence technical justification and mark option `[a]` with `(Recomendado)`.
+
+---
+
+### 0c. Model Creation Wizard & Co-creación Incremental (Opción B)
+
+When the user asks to "create a new model", "start a model from scratch", or selects option [a]:
+
+1. **Template Selection**: Present available Level 2 templates:
+   - **[a] (Recomendado)** Business Model 🏢
+   - **[b]** Procedures Model 📋
+   - **[c]** Organization Model 👥
+   - **[d]** Blank Model ⬜
    - **[x]** Cancel
    *(Nota: Podés seleccionar una opción o una combinación si aplica)*.
-3. **Model Naming**: Prompt for `{ModelName}` and generate `{ModelName}_V_1-0-0_{Template}_NN.md`.
-4. **Scaffolding**: Create the workspace directory structure (`models/`, `raw/`, `procedures/`, `artifacts/`, `index.md`).
-5. **Validation**: Validate the generated model via `innfo-mcp_validate_model` (or fallback).
-6. **Visual Checklist**: Output the mandatory Visual Expectation Checklist (§12).
+
+2. **Modalidad de Co-creación (Incremental vs Batch)**:
+   Ofrecer la modalidad de generación antes de redactar el código:
+   - **[a] (Recomendado) Co-creación Paso a Paso:** Definimos primero los conceptos clave e interactuamos concepto por concepto.
+   - **[b] Generación Completa:** El agente DEBE solicitar al usuario que describa textualmente el procedimiento, proceso o entidad que desea modelar. Una vez recibida la descripción, se genera el borrador completo en un solo archivo para posterior auditoría.
+
+3. **Model Naming & Scaffolding**:
+   Prompt for `{ModelName}` and create `{ModelName}_V_1-0-0_{Template}_NN.md` with workspace structure (`models/`, `sources/markdown/`, `procedures/`, `artifacts/`, `index.md`).
+
+4. **Validation & Visual Checklist**:
+   Validate via `innfo-mcp_validate_model` and output the Visual Expectation Checklist (§12).
+
+---
 
 ## Greeting Protocol (MANDATORY)
 
@@ -54,316 +91,195 @@ as its very first output — before any questions, analysis, or tool calls. Sess
 
 ---
 
-## Core Concepts
+## Core Concepts & Single Source of Truth
 
-### Specification Stack (defiNNe / iNNfo V_0-3-0)
+> [!NOTE]
+> **El servidor MCP (`innfo-mcp`) y las especificaciones canónicas son la ÚNICA fuente de verdad (SSOT) para la sintaxis y tipos de datos.** El agente NO duplica reglas gramaticales de memoria; las consulta dinámicamente vía MCP (`innfo-mcp_get_spec` / `innfo-mcp_get_template`).
 
-| Level | Role | File Pattern | Frontmatter / Structure | Example |
-|-------|------|-------------|-------------------------|---------|
-| 0 | Meta-specification | `*_NN.md` | `level: 0`, `specification_version: "V_0-2-0"` | `defiNNe_V_0-2-0_NN.md` |
-| 1 | Concrete specification (Meta-template) | `*_NN.md` | `level: 1`, `spec_version: "V_0-3-0"`, defines 4 root primitives | `iNNfo_V_0-3-0_NN.md` |
-| 2 | Template | `*_NN.md` | `level: 2`, `spec_version: "V_0-3-0"`, lightweight frontmatter, body instantiates root primitives | `business_V_0-3-0_NN.md` |
-| 3 | Model | `*_NN.md` | `level: 3`, `spec_version: "V_0-3-0"`, lightweight frontmatter, elements carry data + `source_ref` | `Ghostbusters_V_1-0-0_business_NN.md` |
+### Resumen de Niveles iNNfo (V_0-3-0)
 
-### Templates vs Specializations (V_0-3-0 Meta-template)
-
-- **Template** (level 2): Declares concepts, fields, markers, and matrices as body elements instantiating the 4 root primitives. Light frontmatter ONLY (`spec_version: "V_0-3-0"`, `level: 2`, `parent_spec`). **PROHIBITED in Level 2 frontmatter**: `concepts: [...]`, `fields: [...]`, `markers: [...]`, `matrices: [...]`.
-- **Specialization** (level 2): Self-contained template derived from an official template by instantiating additional root primitives in its Markdown body.
-
-### Naming Convention (defiNNe §6)
-
-| Type | Pattern | Example |
-|------|---------|---------|
-| Official template | `<Template>_V_x-y-z_NN.md` | `business_V_0-3-0_NN.md` |
-| Level 3 model | `<Model>_V_x-y-z_<Template>_NN.md` | `Ghostbusters_V_1-0-0_business_NN.md` |
-| Procedure spec | `<Name>_V_x-y-z_procedures_NN.md` | `DocumentIngestion_V_1-0-0_procedures_NN.md` |
-| Source | `<Name>_source_NN.md` | `transcript_source_NN.md` |
-
-### Unified NN Syntax (V_0-3-0 Specification)
-
-iNNfo V_0-3-0 uses the **unified NN syntax**. All legacy markers (`# _NN`, `* _NN`, ```yaml blocks) are removed and replaced by:
-
-| Construct | Syntax | Example |
+| Nivel | Rol | Sintaxis y Estructura |
 |---|---|---|
-| Concept Section (H1) | `# NN <Concept>` | `# NN Stakeholders` |
-| Element Heading (H2) | `## NN <Concept>: <Element>` | `## NN Stakeholders: Customer` |
-| Property Line | `key:: value` (immediately after element heading) | `importance:: high` |
-| Provenance Pointer | `source_ref:: src-NNN (path#lines)` | `source_ref:: src-001 (raw/interview.pdf#L12-L45)` |
+| **0** | Meta-especificación (`defiNNe`) | Define las meta-reglas de especificación. |
+| **1** | Especificación Concreta (`iNNfo`) | Metaplantilla Nivel 1. Define las 4 primitivas raíz (`Concept Definition`, `Field Definition`, `Matrix Definition`, `Marker Definition`). |
+| **2** | Plantilla (Template / Especialización) | Documento iNNfo con frontmatter ligero (`level: 2`). El cuerpo instancia las 4 primitivas raíz como elementos Markdown. **PROHIBIDO poner `concepts: []` o `fields: []` en el YAML frontmatter.** |
+| **3** | Modelo de Datos | Instancia los conceptos y campos definidos por su plantilla madre (`parent_spec`). |
 
 ---
 
 ## 1. MCP Operating Model
 
-The `innfo-mcp` server exposes six tools wrapping `@cognnitive/innfo-core`. It is **publisher-agnostic**: it resolves specs and templates from URLs supplied by the user or from a model's `parent_spec.url`.
+El servidor `innfo-mcp` expone 6 herramientas deterministas basadas en `@cognnitive/innfo-core`.
 
-| Tool | Purpose | Key arguments |
-|------|---------|---------------|
-| `list_models` | Scan a directory for iNNfo models | `root?` |
-| `read_model` | Parse a model into structured JSON | `id` |
-| `get_spec` | Resolve the level-1 iNNfo spec | `url?` **or** `model_id?` |
-| `get_template` | Resolve a level-2 template | `url?` **or** `model_id?` (optional `name`) |
-| `validate_model` | Validate against the resolved template | `id?` / `content?` (+ optional `template_url`) |
-| `apply_change` | Mutate a model and re-validate | `id`, `op`, `args` |
+| Herramienta | Propósito |
+|---|---|
+| `list_models` | Escanea el directorio buscando modelos iNNfo válidos. |
+| `read_model` | Parsea un modelo a AST / JSON estructurado. |
+| `get_spec` | Resuelve dinámicamente la especificación Nivel 1. |
+| `get_template` | Resuelve dinámicamente la plantilla Nivel 2 y sus primitivas. |
+| `validate_model` | Ejecuta la validación sintáctica y de esquema determinista. |
+| `apply_change` | Ejecuta mutaciones deterministas (agregar campo, renombrar, etc.). |
 
-**Golden rule:** The URL always comes from the user or from the model. Never invent or hardcode a spec/template URL when calling the MCP.
-
----
-
-## 2. Canonical Specification Index (stable URLs)
-
-Use these **stable `latest` URLs** for human reference and authoring guidance:
-
-- **defiNNe** (level 0): `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level0/defiNNe_NN.md`
-- **iNNfo** (level 1): `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level1/iNNfo_NN.md`
-- **Business** (level 2): `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level2/business/business_NN.md`
-- **Procedures** (level 2): `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level2/procedures/procedures_NN.md`
-- **Organization** (level 2): `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level2/organization/organization_NN.md`
+**Regla de Oro:** La URL de la especificación/plantilla siempre proviene de `parent_spec.url` o del usuario. Nunca hardcodear ni inventar URLs.
 
 ---
 
-## 3. Frontmatter and Primitives by Level (Strict V_0-3-0 Meta-template)
+## 2. Indicación Canónica de Especificaciones
 
-### Level 1 Specification (iNNfo_V_0-3-0_NN.md)
-```yaml
----
-specification_version: "V_0-3-0"
-specification_url: "https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level1/iNNfo_NN.md"
-level: 1
-parent_spec:
-  name: "defiNNe_V_0-2-0"
-  url: "https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/v0.2.0/level0/defiNNe_V_0-2-0_NN.md"
-title: "iNNfo Meta-template Specification"
----
-```
-
-Defines the 4 root primitives:
-1. `# NN Concept Definition`
-2. `# NN Field Definition`
-3. `# NN Matrix Definition`
-4. `# NN Marker Definition`
-
-### Level 2 Template (Metaplantilla V_0-3-0)
-
-**STRICT RULE:** Level 2 templates MUST have lightweight frontmatter. Do **NOT** write `concepts: [...]`, `fields: [...]`, `markers: [...]`, or `matrices: [...]` in the YAML frontmatter.
-
-```yaml
----
-specification_version: "V_0-3-0"
-specification_url: "https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level2/business/business_NN.md"
-level: 2
-parent_spec:
-  name: "iNNfo_V_0-3-0"
-  url: "https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level1/iNNfo_NN.md"
-title: "Business Model Template"
----
-```
-
-**Body instantiates root primitives:**
-
-```markdown
-> [!NOTE]
-> This is an **iNNfo document** — a plain-text Markdown file. Open it with any text editor or view and edit it with [cogNNitive](https://innfo.cognnitive.com/app/innfo-doc).
-
-# NN index
-* [[Concept Definition]]
-* [[Field Definition]]
-* [[Matrix Definition]]
-
-# NN Concept Definition
-
-## NN Concept Definition: Stakeholders
-type:: weight
-icon:: users
-color:: blue
-weight:: 80
-
-# NN Field Definition
-
-## NN Field Definition: relationship_model
-concept:: Stakeholders
-type:: string
-description:: Nature of the relationship with stakeholders
-
-# NN Matrix Definition
-
-## NN Matrix Definition: stakeholders-offerings matrix
-source:: Stakeholders
-target:: Offerings
-widget:: set
-values:: [High, Medium, Low]
-```
-
-### Level 3 Model (Lightweight)
-
-```yaml
----
-specification_version: "V_0-3-0"
-specification_url: "https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/v0.3.0/level3/sample.md"
-level: 3
-parent_spec:
-  name: "business_V_0-3-0"
-  url: "https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level2/business/business_NN.md"
-model_version: "V_1-0-0"
-title: "Acme Corp Business Model"
----
-```
-
-**Body instantiates elements and properties:**
-
-```markdown
-> [!NOTE]
-> This is an **iNNfo document** — a plain-text Markdown file. Open it with any text editor or view and edit it with [cogNNitive](https://innfo.cognnitive.com/app/innfo-doc).
-
-# NN index
-* [[Stakeholders]]
-
-# NN Stakeholders
-
-## NN Stakeholders: Enterprise Clients
-relationship_model:: B2B Long-term
-source_ref:: src-001 (raw/market_analysis.pdf#L45-L60)
-Enterprise clients interested in scalable cloud solutions.
-```
+URLs estables `latest` de referencia:
+- **iNNfo (Nivel 1):** `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level1/iNNfo_NN.md`
+- **Business (Nivel 2):** `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level2/business/business_NN.md`
+- **Procedures (Nivel 2):** `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level2/procedures/procedures_NN.md`
+- **Organization (Nivel 2):** `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level2/organization/organization_NN.md`
 
 ---
 
-## 4. Mandatory Provenance Protocol (Bloque 2)
+## 4. Protocolo de Proveniencia (`source_ref`)
 
-**No Level 3 model is valid unless its elements include explicit provenance pointers to source documents.**
-
-1. **In Ingestion / Scanning**: Raw documents ingested in `raw/` generate normalized Markdown files with scanner frontmatter (`source_file`, `sha256`, `size_bytes`, `normalized_at`, `source_id: src-NNN`).
-2. **In Level 3 Elements**: Every element heading `## NN <Concept>: <Element>` MUST include a `source_ref::` property:
+1. **Carácter Opcional:** `source_ref::` es una propiedad de trazabilidad **OPCIONAL**. No invalida sintácticamente un modelo de Nivel 3 si no está presente.
+2. **Fuentes de Origen:** Las fuentes ingeridas se almacenan en la carpeta `sources/markdown/` (o subcarpetas de fuentes).
+3. **Formato de Referencia:** Si un elemento proviene de un documento fuente, se indica apuntando directamente al archivo en `sources/markdown/`:
    ```markdown
-   ## NN Concept: Element Name
-   source_ref:: src-001 (raw/interview_transcript.pdf#L15-L30)
-   field_name:: field_value
+   ## NN Stakeholders: Cliente Enterprise
+   source_ref:: sources/markdown/entrevista_cliente.md#L15-L30
+   relationship_model:: B2B Long-term
    ```
-3. **Audit**: During model validation, verify that `source_ref` pointers are present. Models without provenance pointers MUST NOT be declared fully compliant.
+4. **Instrucción Conversacional:** Si el proyecto cuenta con archivos en `sources/markdown/`, el agente debe sugerir incluir `source_ref::`. Si es un modelo greenfield/creativo desde cero, el agente NO solicita ni exige proveniencia.
 
 ---
 
-## 5. Operational Instructions & MCP Workflow
+## 5. Instrucciones de Operación y Flujo MCP
 
-### Generate a model
-
-1. Obtain template: `get_template({ url })`.
-2. Present concepts with option `[a] (Recomendado)`:
-   ```markdown
-   Template `{name}` defines these concepts:
-     - {ConceptName} ({type}) — {description}
-
-   Do you want to include all of them?
-   - **[a] (Recomendado)** Include all
-   - **[b]** Select specific concepts
-   - **[x]** Cancel
-   *(Nota: Podés seleccionar una opción o una combinación)*
-   ```
-3. Author body using unified syntax `# NN <Concept>`, `## NN <Concept>: <Element>`, `key:: value` and `source_ref:: src-NNN (...)`.
-4. Validate with `validate_model({ content })`.
-5. Upon completion, output the **Visual Expectation Checklist (§12)**.
+1. Obtener la plantilla con `innfo-mcp_get_template({ url })`.
+2. Presentar los conceptos al usuario usando el formato con `[a] (Recomendado)`.
+3. Redactar el cuerpo usando la sintaxis unificada `# NN <Concept>`, `## NN <Concept>: <Element>`, `key:: value`.
+4. Validar el modelo con `innfo-mcp_validate_model({ content })`.
+5. Al finalizar, mostrar el **Checklist de Expectativa Visual (§12)** y la sección de **Atajos de Navegación Contextual (§13)**.
 
 ---
 
-## 6. Rename Safety & Referential Integrity
+## 6. Seguridad en Renombrados e Integridad Referencial
 
-Every concept and element name in an iNNfo document is a globally unique identifier.
-
-**If renaming a CONCEPT**: Update Concept Definition in template, concept H1 `# NN <Concept>`, element H2 headings `## NN <Concept>: <Element>`, matrix source/target definitions, matrix section headers `# NN matrices: ...`, index block WikiLinks `[[<Concept>]]`.
-
-**If renaming an ELEMENT**: Update `## NN <Concept>: <Element>` heading, matrix row/column headers, reference fields, and WikiLinks `[[<Element>]]`.
+Cuando se requiere renombrar un Concepto o Elemento:
+* **Delegación al MCP:** El agente NO realiza reemplazos manuales por búsqueda y sustitución a ciegas. Utiliza la herramienta `innfo-mcp_apply_change` con la operación de renombrado correspondiente (`rename_concept` o `rename_element`) para garantizar la actualización determinista de WikiLinks `[[Concepto]]`, matrices y referencias cruzadas.
 
 ---
 
-## 7. Delegation Contract & Fallback
+## 7. Contrato de Delegación y Fallback
 
-When MCP is available:
-1. Never hand-roll spec resolution; use `get_spec` / `get_template`.
-2. Never hand-validate; call `validate_model` and report verbatim.
-3. Use `apply_change` for deterministic mutations.
-
-Fallback mode (MCP unavailable):
-1. Resolve local relative template paths directly from disk.
-2. Validate V_0-3-0 compliance manually (verify `# NN`, `## NN`, `key:: value`, lightweight frontmatter, and `source_ref`).
-3. Ensure workspace `index.md` has `# NN index` block.
+* **Con MCP disponible:** NUNCA resolver especificaciones a mano ni validar manualmente. Delegar en `innfo-mcp_get_spec`, `innfo-mcp_validate_model` y `innfo-mcp_apply_change`.
+* **Modo Fallback (Sin MCP):** Inspeccionar archivos locales en disco y validar que se cumpla la sintaxis `# NN`, `## NN`, `key:: value` y el frontmatter YAML ligero de Nivel 3.
 
 ---
 
-## 8. Field Creation Protocol
+## 8. Protocolo de Creación de Campos y Preview de Cambios (Opción D)
 
-When adding fields to a concept:
-1. **Analyze**: Determine data type (`string`, `select`, `reference`, `markdown_inline`, `number`, `date`, `file`).
-2. **Propose**: Present table with Field Name, Proposed Type, Rationale, and Config. Always mark option `[a]` with `(Recomendado)`.
-3. **Confirm**: Wait for user confirmation before executing.
-4. **Execute**: Use `apply_change({ id, op: "add_field", args })` or write `## NN Field Definition` primitive.
-5. **Validate**: Run `validate_model()`.
+Todo campo debe declarar un `type` explícito (`string`, `select`, `reference`, `markdown_inline`, `number`, `date`, `file`, `image`, `video`, `audio`).
 
----
-
-## 9. Specialization Strategy
-
-When a model needs custom concepts or fields beyond base template:
-1. **NEVER modify** published specs in `specs/`.
-2. Create a specialization template file `<Model>_<Template>_V_x-y-z_spec_NN.md`.
-3. Set `level: 2`, `parent_spec` to base template.
-4. Instantiate custom concept/field definitions in the body.
-5. Point model's `parent_spec.url` to the specialization file.
-
----
-
-## 10. Post-Edit Validation & Versioning
-
-After any model/spec edit:
-1. Run `validate_model()`.
-2. Present validation result (`valid: true/false`).
-3. Prompt for version bump:
-   - **[a] (Recomendado)** Increment patch (`V_x-y-z+1`)
-   - **[b]** Keep current version (`V_x-y-z`)
-   - **[c]** Increment minor (`V_x-y+1-0`)
-   - **[x]** Cancel
-4. Update `index.md` links and physical filename if version bumped.
-5. Print Visual Expectation Checklist (§12).
-
----
-
-## 11. Architecture Scaling Decision Protocol (1 to N Models) (Bloque 4)
-
-When a project grows from 1 single model to multiple models (1 to N elements/subsystems), **the agent MUST NOT decide the file/workspace structure unilaterally**.
-
-The agent MUST present the **4 Structural Alternatives** indicating exact disk paths and iNNfo code:
+### Preview de Cambios con Diff (Opción D)
+Antes de ejecutar cualquier cambio o mutación en el modelo, el agente DEBE presentar un breve resumen en lenguaje natural del cambio propuesto:
 
 ```markdown
-💡 Architecture Scaling Decision (1 to N Models):
+📋 Preview del Cambio Propuesto:
+- Concepto objetivo: Stakeholders
+- Campo nuevo: presupuesto (tipo: number)
+- Rationale: Almacenar el presupuesto asignado anualmente
 
-How should we organize the multi-model architecture for this project?
+¿Procedemos a aplicar esta modificación?
+- [a] (Recomendado) Confirmar y aplicar cambio
+- [b] Modificar tipo de dato o configuración
+- [x] Cancelar
+```
+
+Al confirmar el usuario, ejecutar la mutación vía `innfo-mcp_apply_change` y re-validar con `innfo-mcp_validate_model`.
+
+---
+
+## 8b. Protocolo de Campos de Activos e Imágenes
+
+* **Tipo Explícito:** Usar siempre `type:: image` para rutas o URLs de imágenes (nunca `string`).
+* **Reglas de Especificación:** La regla de resolución de imagen principal (Rule 1) y la gramática del campo companion libre `<campo>_metadata` con citaciones CSL-JSON en una sola línea están normadas oficialmente en la Especificación Nivel 1 (`iNNfo_NN.md`).
+* **Interacción del Agente:** Si el usuario incluye imágenes o activos con información de atribución, el agente sugiere incluir el campo `<campo>_metadata` con la cita CSL-JSON correspondiente.
+
+---
+
+## 8c. Análisis de Coherencia y Solidez — Modo "Coach de Arquitectura" (Opción C)
+
+Cuando el usuario elige la opción `[d]` (Analizar coherencia), el agente asume el rol de **Coach de Arquitectura**:
+
+1. Carga el modelo (`read_model`) y su plantilla (`get_template`).
+2. Evalúa las 4 capas: **Corrección Formal**, **Coherencia Lógica**, **Coherencia Semántica** y **Solidez/Robustez**.
+3. **Presentación con Impacto Funcional (Coach Mode):**
+   No solo lista errores técnicos; explica el **riesgo de negocio/funcional** y ofrece la **solución en 1 clic**:
+
+```markdown
+🧠 Diagnóstico del Coach de Arquitectura:
+
+1. ⚠️ [Coherencia Lógica] Referencia Rota
+   - Hallazgo: El elemento `Cliente Enterprise` referencia a `DirectorComercial` que no existe.
+   - Impacto Funcional: Romperá los enlaces del árbol de navegación en iNNfo Modeler.
+   - Solución sugerida: Crear el elemento `DirectorComercial` o corregir el nombre.
+
+¿Deseás que aplique la corrección recomendada automáticamente?
+- [a] (Recomendado) Aplicar corrección sugerida
+- [b] Ver detalle de otros hallazgos
+- [x] Ignorar por ahora
+```
+
+---
+
+## 9. Estrategia de Especializaciones
+
+Cuando un modelo requiere conceptos o campos personalizados fuera de la plantilla base:
+1. **NUNCA modificar** especificaciones publicadas en `specs/`.
+2. Crear un archivo de plantilla de especialización `<Modelo>_<Plantilla>_V_x-y-z_spec_NN.md` con `level: 2`.
+3. Apuntar la propiedad `parent_spec.url` del modelo Nivel 3 hacia el archivo de especialización.
+
+---
+
+## 10. Validación y Versionado Post-Edición
+
+Tras editar un modelo:
+1. Ejecutar `innfo-mcp_validate_model()`.
+2. Presentar resultado y menú de versión:
+   - **[a] (Recomendado)** Incrementar Patch (`V_x-y-z+1`)
+   - **[b]** Mantener versión actual (`V_x-y-z`)
+   - **[c]** Incrementar Minor (`V_x-y+1-0`)
+   - **[x]** Cancelar
+3. Actualizar enlaces en `index.md` si cambia el nombre físico del archivo.
+
+---
+
+## 11. Decisión de Escalado de Arquitectura (1 a N Modelos)
+
+Cuando el proyecto escala a múltiples sub-modelos, presentar las **4 Alternativas Estructurales**:
+
+```markdown
+💡 Selección de Arquitectura de Escalado (1 a N Modelos):
 
   [a] (Recomendado) Opción 4: Híbrido Maestro Agregador con referencias `file_ref::`
-      - Disk path: `models/Master_V_1-0-0_NN.md` and `models/subsystems/`
-      - iNNfo code: Main model references submodels via `file_ref:: ./subsystems/auth_V_1-0-0_NN.md`
+      - Archivos: `models/Master_V_1-0-0_NN.md` y `models/subsystems/`
+      - Código iNNfo: El modelo principal referencia subsistemas mediante `file_ref:: ./subsystems/auth_V_1-0-0_NN.md`
 
   [b] Opción 1: Modelo Monolítico Único
-      - Disk path: `models/System_V_1-0-0_NN.md`
-      - iNNfo code: Single single-file document containing all concepts and elements.
+      - Archivo: `models/System_V_1-0-0_NN.md`
 
   [c] Opción 2: Modelos Independientes en la misma carpeta
-      - Disk path: `models/DomainA_V_1-0-0_NN.md`, `models/DomainB_V_1-0-0_NN.md`
-      - iNNfo code: Independent Level 3 models, each listed under `index.md`.
+      - Archivos: `models/DomainA_V_1-0-0_NN.md`, `models/DomainB_V_1-0-0_NN.md`
 
   [d] Opción 3: Híbrido Multi-Carpeta por Proyecto
-      - Disk path: `projects/domainA/models/index.md`, `projects/domainB/models/index.md`
-      - iNNfo code: Sub-workspaces each with their own `index.md` root.
+      - Archivos: `projects/domainA/models/index.md`, `projects/domainB/models/index.md`
 
-  [x] Cancel
+  [x] Cancelar
 
 *(Nota: Podés seleccionar una opción o una combinación si aplica)*
 ```
 
 ---
 
-## 12. Visual Expectation Checklist Protocol (App Verification) (Bloque 5)
+## 12. Checklist de Expectativa Visual (App Verification)
 
-At the conclusion of creating or modifying any iNNfo model or artifact, **the agent MUST print the Visual Expectation Checklist** before closing the interaction.
-
-This checklist provides the user with an exact verification guide for the iNNfo Modeler web application (`https://innfo.cognnitive.com/app/`):
+Al finalizar la creación o modificación de un modelo, el agente DEBE imprimir el Checklist Visual:
 
 ```markdown
 📋 Checklist de Expectativa Visual en iNNfo Modeler (https://innfo.cognnitive.com/app/):
@@ -373,7 +289,7 @@ Al abrir la carpeta del proyecto en el Modeler, vas a visualizar:
 - [ ] 🌳 **Árbol Lateral de Navegación**:
       Estructura jerárquica basada en `# NN index` con navegación fluida por conceptos y elementos.
 - [ ] 📋 **Paneles de Campos por Concepto**:
-      Vista detallada renderizada para cada `key:: value` (propiedades, tipos y `source_ref`).
+      Vista detallada renderizada para cada `key:: value` (propiedades, tipos y referencias).
 - [ ] 🎴 **Tarjetas de Elementos**:
       Tarjetas interactivas por cada bloque `## NN <Concept>: <Element>` mostrando metadatos y descripciones.
 - [ ] 📊 **Tablas de Matrices Comparativas**:
@@ -382,13 +298,28 @@ Al abrir la carpeta del proyecto en el Modeler, vas a visualizar:
 
 ---
 
+## 13. Atajos de Navegación Contextual / Quick Actions (Opción E)
+
+Al concluir la generación o edición de un modelo, el agente DEBE incluir atajos lógicos según el contexto actual. Al finalizar la creación de un nuevo modelo, la primera opción DEBE ser la revisión guiada:
+
+```markdown
+📌 Siguientes pasos sugeridos:
+- [a] (Recomendado) Revisión guiada de conceptos y elementos generados
+- [b] Ejecutar auditoría del Coach de Arquitectura ([d])
+- [c] Editar o agregar un nuevo concepto/elemento
+```
+
+---
+
 ## Core Rules
 
-1. **Strict V_0-3-0 Meta-template**: Level 2 templates define concepts/fields/matrices in body primitives (`# NN Concept Definition`). NEVER put `concepts: [...]` or `fields: [...]` in Level 2 YAML frontmatter.
-2. **Unified NN Syntax Only**: Use `# NN <Concept>`, `## NN <Concept>: <Element>`, `key:: value`. No legacy `_NN` bullets or fenced ```yaml blocks.
-3. **Mandatory Provenance**: Every Level 3 element MUST include `source_ref:: src-NNN (path#lines)`.
-4. **Zero Unilateral Mutation**: Never move or rename user files without explicit confirmation.
-5. **Recommended Option First**: Prefix option `[a]` with `(Recomendado)`.
-6. **Multi-Selection Notice**: Add *"Podés seleccionar una opción o una combinación"* when applicable.
-7. **Scaling Architecture Choice**: Present the 4 structural options when scaling from 1 to N models (§11).
-8. **Visual Expectation Checklist**: Always print the visual checklist before closing (§12).
+1. **Meta-plantilla Estricta V_0-3-0:** Las plantillas Nivel 2 definen primitivas en el cuerpo (`# NN Concept Definition`). NUNCA colocar `concepts: [...]` o `fields: [...]` en el YAML frontmatter de Nivel 2.
+2. **Sintaxis Unificada NN:** Usar `# NN <Concept>`, `## NN <Concept>: <Element>`, `key:: value`. No usar viñetas obsoletas `_NN` ni bloques de código ````yaml`.
+3. **Proveniencia Opcional y Actualizada:** `source_ref::` es opcional y apunta a archivos en `sources/markdown/` (sin IDs `src-xxx` ni carpeta `raw/`).
+4. **Cero Mutación Unilateral:** Nunca renombrar ni mover archivos sin confirmación explícita.
+5. **Opción Recomendada Primero:** Prefijar la opción `[a]` con `(Recomendado)`.
+6. **Notación de Selección Múltiple:** Incluir *"Podés seleccionar una opción o una combinación"* cuando aplique.
+7. **Preview de Cambios con Diff:** Mostrar resumen en lenguaje natural antes de aplicar cualquier mutación con el MCP.
+8. **Modo Coach de Arquitectura:** En la auditoría `[d]`, explicar riesgos de negocio/funcionales y ofrecer soluciones en 1 clic.
+9. **Atajos Contextuales:** Finalizar cada respuesta ofreciendo 2-3 acciones siguientes sugeridas (Quick Actions).
+10. **Delegación Total al MCP:** Consultar tipos, esquemas y validación al servidor `innfo-mcp`; no adivinar ni duplicar la gramática.
