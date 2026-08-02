@@ -1,12 +1,12 @@
 /**
- * provenance.js — traNNsform provenance model generator.
+ * provenance.js — cogNNitive provenance model generator.
  *
  * Builds and refreshes an iNNfo level-3 provenance model that registers the
  * Sources ingested (and, once the agent adds them, the Models, Artifacts and
  * Procedures produced) as first-class iNNfo elements with explicit lineage.
  *
- * The model conforms to the `traNNsform` level-2 template:
- *   https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level2/trannsform/trannsform_NN.md
+ * The model conforms to the `cogNNitive` level-2 template:
+ *   https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level2/cogNNitive/cogNNitive_NN.md
  *
  * Zero runtime dependencies (Node builtins only), mirroring scanner.js.
  */
@@ -15,21 +15,16 @@ const fs = require('fs');
 const path = require('path');
 
 const TEMPLATE_URL =
-  'https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level2/trannsform/trannsform_NN.md';
+  'https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level2/cogNNitive/cogNNitive_NN.md';
 const INNFO_URL =
   'https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level1/iNNfo_NN.md';
-const TEMPLATE_NAME = 'trannsform_V_0-1-0';
+const TEMPLATE_NAME = 'cogNNitive_V_0-1-0';
 
 const DOC_NOTICE =
   '> [!NOTE]\n> This is an **iNNfo document** — a plain-text Markdown file. ' +
   'Open it with any text editor or view and edit it with ' +
   '[cogNNitive](https://innfo.cognnitive.com/app/innfo-doc).';
 
-/**
- * Replicates innfo-core `slugify` (packages/innfo-core/src/parser/slug.ts) so
- * file-backed assets land where the iNNfo engine expects them:
- * `{modelDir}/assets/{element-slug}/{filename}`.
- */
 function slugify(name) {
   return String(name)
     .normalize('NFD')
@@ -42,10 +37,6 @@ function slugify(name) {
     .replace(/^-+|-+$/g, '');
 }
 
-/**
- * Parse the source-traceability frontmatter that scanner.js emits into each
- * `md/*.md` file. Returns null when no `source:` block is present.
- */
 function parseSourceFrontmatter(content) {
   const fm = content.match(/^---\n([\s\S]*?)\n---/);
   if (!fm) return null;
@@ -65,16 +56,13 @@ function parseSourceFrontmatter(content) {
   };
 }
 
-/**
- * Collect one Source descriptor per normalized `md/*.md` file.
- */
 function collectSources(mdDir) {
   const sources = [];
   if (!fs.existsSync(mdDir)) return sources;
 
   const files = fs
     .readdirSync(mdDir)
-    .filter((f) => f.endsWith('.md') && f !== '_all.md' && f !== 'index.md')
+    .filter((f) => f.endsWith('.md') && f !== 'index.md')
     .sort();
 
   for (const mdFile of files) {
@@ -82,7 +70,7 @@ function collectSources(mdDir) {
     const fmData = parseSourceFrontmatter(content);
     if (!fmData) continue;
 
-    const rawBase = path.basename(fmData.file); // e.g. market-report.docx
+    const rawBase = path.basename(fmData.file);
     const ext = path.extname(rawBase).replace(/^\./, '').toLowerCase();
 
     sources.push({
@@ -100,13 +88,8 @@ function collectSources(mdDir) {
   return sources;
 }
 
-/**
- * Copy each normalized Markdown into `assets/{element-slug}/{filename}` so the
- * `normalized_content` (markdown_file) field resolves per the iNNfo storage
- * convention. Idempotent.
- */
 function materializeAssets(projectDir, sources) {
-  const mdDir = path.join(projectDir, 'md');
+  const mdDir = path.join(projectDir, 'sources', 'md');
   for (const src of sources) {
     const slug = slugify(src.name);
     const destDir = path.join(projectDir, 'assets', slug);
@@ -117,11 +100,10 @@ function materializeAssets(projectDir, sources) {
   }
 }
 
-/** Render the `# NN Sources` section from collected sources. */
 function renderSourcesSection(sources) {
   let out = '# NN Sources\n';
   if (sources.length === 0) {
-    out += '\n<!-- No sources ingested yet. Run a scan to populate this section. -->\n';
+    out += '\n<!-- No sources ingested yet. Place files in sources/original and run a scan. -->\n';
     return out;
   }
   for (const s of sources) {
@@ -137,16 +119,10 @@ function renderSourcesSection(sources) {
   return out;
 }
 
-/** Placeholder body for a concept section the agent fills in after generation. */
 function emptySection(concept, guidance) {
   return `# NN ${concept}\n\n<!-- ${guidance} -->\n`;
 }
 
-/**
- * Split a model body into top-level `# ` blocks. Returns { preamble, blocks }
- * where each block is { headingLine, body } and preamble is everything before
- * the first `# ` heading (notice + index typically live here if not `#`).
- */
 function splitTopLevelSections(body) {
   const lines = body.split('\n');
   const blocks = [];
@@ -166,7 +142,6 @@ function splitTopLevelSections(body) {
   return { preamble: preamble.join('\n'), blocks };
 }
 
-/** Build the full model from scratch (no existing file). */
 function buildFreshModel(title, sources) {
   const frontmatter =
     '---\n' +
@@ -211,10 +186,6 @@ function buildFreshModel(title, sources) {
   ].join('\n') + '\n';
 }
 
-/**
- * Refresh only the `# NN Sources` section of an existing model, preserving the
- * frontmatter, notice, index and any Procedures/Models/Artifacts the agent added.
- */
 function refreshExistingModel(existing, sources) {
   const fmMatch = existing.match(/^(---\n[\s\S]*?\n---\n)/);
   const frontmatter = fmMatch ? fmMatch[1] : '';
@@ -232,7 +203,6 @@ function refreshExistingModel(existing, sources) {
     return (b.heading + '\n' + b.lines.join('\n')).replace(/\n+$/, '') + '\n';
   });
 
-  // If there was no Sources section, insert it right after the index block.
   if (!replaced) {
     const idx = rebuilt.findIndex((s) => /^# NN index\b/.test(s));
     if (idx >= 0) rebuilt.splice(idx + 1, 0, newSources);
@@ -243,7 +213,6 @@ function refreshExistingModel(existing, sources) {
   return frontmatter + '\n' + notice + '\n\n' + rebuilt.join('\n') + '\n';
 }
 
-/** Locate every `*_NN.md` model in the workspace root and models/ subdir. */
 function listWorkspaceModels(projectDir) {
   const found = [];
   const scan = (dir, prefix) => {
@@ -257,7 +226,6 @@ function listWorkspaceModels(projectDir) {
   return found.sort();
 }
 
-/** Write the semantic workspace `index.md` (OKF-compatible `# NN index`). */
 function writeWorkspaceIndex(projectDir) {
   const models = listWorkspaceModels(projectDir);
   let out = '# NN index\n\n';
@@ -280,20 +248,16 @@ function writeWorkspaceIndex(projectDir) {
 }
 
 /**
- * Build or refresh the provenance model for a project.
- * @param {string} projectDir
- * @param {object} [options]
- * @param {string} [options.projectName] – defaults to basename(projectDir)
- * @returns {{ modelPath: string, sourceCount: number, created: boolean }}
+ * Build or refresh the cogNNitive provenance model for a project.
  */
 function buildProvenanceModel(projectDir, options = {}) {
   const projectName = options.projectName || path.basename(projectDir);
-  const mdDir = path.join(projectDir, 'md');
+  const mdDir = path.join(projectDir, 'sources', 'md');
   const sources = collectSources(mdDir);
 
   materializeAssets(projectDir, sources);
 
-  const modelPath = path.join(projectDir, `${projectName}_V_0-1-0_trannsform_NN.md`);
+  const modelPath = path.join(projectDir, `${projectName}_V_0-1-0_cogNNitive_NN.md`);
   const created = !fs.existsSync(modelPath);
 
   const content = created
@@ -314,7 +278,6 @@ module.exports = {
   listWorkspaceModels,
 };
 
-// CLI: node scripts/provenance.js --src "<project-dir>"
 if (require.main === module) {
   const minimist = (() => {
     try {
@@ -329,7 +292,7 @@ if (require.main === module) {
   const projectDir = args.src || process.cwd();
   const result = buildProvenanceModel(projectDir, { projectName: args.name });
   console.log(
-    `Provenance model ${result.created ? 'created' : 'refreshed'}: ${result.modelPath}`
+    `cogNNitive Provenance model ${result.created ? 'created' : 'refreshed'}: ${result.modelPath}`
   );
   console.log(`Sources registered: ${result.sourceCount}`);
 }

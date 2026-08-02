@@ -15,7 +15,6 @@ const provenance = require('./provenance');
 async function main() {
   const argv = minimist(process.argv.slice(2));
 
-  // Determine if command-line args are provided
   const hasArgs = argv.scan || argv.apply || argv.provenance || argv.src || argv.dest || argv.name;
 
   if (hasArgs) {
@@ -25,23 +24,17 @@ async function main() {
   }
 }
 
-/**
- * Handle CLI mode (e.g. for agents or scripted flows)
- */
 async function handleCliMode(argv) {
   let projectDir = '';
 
   if (argv.dest && argv.name) {
     projectDir = path.join(argv.dest, argv.name);
   } else if (argv.src && !argv.dest) {
-    // If src is specified and looks like a project dir, or we use default
     projectDir = argv.src;
   } else {
-    // Determine active project directory
     projectDir = getActiveProjectDir();
   }
 
-  // Bootstrap if src is provided and project doesn't exist or we want to import raw files
   if (argv.src && argv.dest && argv.name) {
     console.log(`Bootstrapping project "${argv.name}" at "${projectDir}"...`);
     bootstrapProject(argv.src, argv.dest, argv.name);
@@ -53,15 +46,13 @@ async function handleCliMode(argv) {
     process.exit(1);
   }
 
-  // Run scan
   if (argv.scan) {
     console.log(`Scanning and converting documents in "${projectDir}"...`);
 
     const scanOptions = { autoAcceptPrompt: true };
 
-    // Support --formats "txt,docx,pdf" to filter by extension
     if (argv.formats) {
-      const rawDir = path.join(projectDir, 'raw');
+      const rawDir = path.join(projectDir, 'sources', 'raw');
       if (fs.existsSync(rawDir)) {
         const selected = argv.formats.split(',').map(f => '.' + f.trim().replace(/^\./, ''));
         scanOptions.formats = selected;
@@ -72,18 +63,14 @@ async function handleCliMode(argv) {
     console.log(`Scan completed! Discovered: ${result.totalDiscovered}, Processed: ${result.processedCount}, Skipped: ${result.skippedCount}`);
 
     const prov = provenance.buildProvenanceModel(projectDir);
-    console.log(`Provenance model ${prov.created ? 'created' : 'refreshed'} with ${prov.sourceCount} source(s): ${prov.modelPath}`);
+    console.log(`cogNNitive Provenance model ${prov.created ? 'created' : 'refreshed'} with ${prov.sourceCount} source(s): ${prov.modelPath}`);
   }
 
-  // Refresh the provenance model + semantic index without re-scanning.
-  // Run this after the agent adds Models/Artifacts/Procedures so index.md picks
-  // up any newly created *_NN.md models.
   if (argv.provenance && !argv.scan) {
     const prov = provenance.buildProvenanceModel(projectDir);
-    console.log(`Provenance model ${prov.created ? 'created' : 'refreshed'} with ${prov.sourceCount} source(s): ${prov.modelPath}`);
+    console.log(`cogNNitive Provenance model ${prov.created ? 'created' : 'refreshed'} with ${prov.sourceCount} source(s): ${prov.modelPath}`);
   }
 
-  // Apply transformation
   if (argv.apply) {
     const templateName = argv.apply;
     console.log(`Applying transformation "${templateName}" in "${projectDir}"...`);
@@ -98,15 +85,14 @@ async function handleCliMode(argv) {
   }
 }
 
-/**
- * Handle Interactive terminal mode (for human users)
- */
 async function handleInteractiveMode() {
   console.log('=== Welcome to traNNsform CLI ===\n');
 
-  // Check if current directory has a project structure, or if we should load the last one
   let projectDir = getActiveProjectDir();
-  let projectExists = fs.existsSync(projectDir) && fs.existsSync(path.join(projectDir, 'raw'));
+  let projectExists = fs.existsSync(projectDir) && (
+    fs.existsSync(path.join(projectDir, 'sources', 'original')) ||
+    fs.existsSync(path.join(projectDir, 'sources', 'raw'))
+  );
 
   const choices = [];
   if (projectExists) {
@@ -139,13 +125,9 @@ async function handleInteractiveMode() {
     projectExists = true;
   }
 
-  // Once we have a project directory, show the project menu
   await runProjectMenu(projectDir);
 }
 
-/**
- * Configure default paths
- */
 async function configureDefaults() {
   const currentDefault = config.getDefaultPath();
   const response = await prompts({
@@ -162,9 +144,6 @@ async function configureDefaults() {
   }
 }
 
-/**
- * Interactive project bootstrap flow
- */
 async function runBootstrapperFlow() {
   const defaultDest = config.getDefaultPath();
 
@@ -172,7 +151,7 @@ async function runBootstrapperFlow() {
     {
       type: 'text',
       name: 'src',
-      message: 'Enter the source directory containing raw files to import:',
+      message: 'Enter the source directory containing raw files to import (will be copied to sources/original):',
       validate: value => {
         const clean = value.replace(/^["']|["']$/g, '').trim();
         return fs.existsSync(clean) ? true : 'Source directory does not exist';
@@ -210,34 +189,26 @@ async function runBootstrapperFlow() {
     return null;
   }
 
-  // Clean quotes from paths
   answers.src = answers.src.replace(/^["']|["']$/g, '').trim();
   const targetDest = answers.useSrcAsDest ? answers.src : answers.dest.replace(/^["']|["']$/g, '').trim();
 
   const projectDir = path.join(targetDest, answers.name);
   bootstrapProject(answers.src, targetDest, answers.name);
-  
-  // Persist project dir as last used
+
   config.saveConfig({ lastProjectPath: projectDir });
 
   console.log(`Project successfully bootstrapped at: ${projectDir}\n`);
   return projectDir;
 }
 
-/**
- * Perform actual bootstrapping directory creation & file copying
- */
 function bootstrapProject(srcDir, destParentDir, projectName) {
   const projectDir = path.join(destParentDir, projectName);
-  const rawDir = path.join(projectDir, 'raw');
+  const originalDir = path.join(projectDir, 'sources', 'original');
 
-  // Canonical iNNfo workspace layout (see SKILL.md §1). `md/` holds normalized
-  // Markdown + the ingestion manifest; `models/`, `procedures/` and `artifacts/`
-  // hold generated entities; `traNNsformations/` holds transformation templates.
-  // `assets/` and the provenance model are created on demand by provenance.js.
   const dirs = [
-    'raw',
-    'md',
+    path.join('sources', 'original'),
+    path.join('sources', 'raw'),
+    path.join('sources', 'md'),
     'models',
     'procedures',
     'artifacts',
@@ -247,55 +218,40 @@ function bootstrapProject(srcDir, destParentDir, projectName) {
   fs.mkdirSync(projectDir, { recursive: true });
   for (const d of dirs) fs.mkdirSync(path.join(projectDir, d), { recursive: true });
 
-  // Create README.md file if project name is traNNsform
   if (projectName.toLowerCase() === 'trannsform') {
     const readmePath = path.join(projectDir, 'README.md');
     const readmeContent = `# Transform
 
 Transform (traNNsform) is a tool to structure and process unstructured documents:
-1. Scan and ingest files of various formats (.txt, .docx, .pdf, etc.).
-2. Normalize them to structured Markdown.
-3. Apply template-based transformations.
-
-Agent skill: https://github.com/cogNNitive/actioNN/tree/main/skills/nn-trannsform
+1. Place files in \`sources/original/\`.
+2. Scan and normalize to \`sources/md/\`.
+3. Track provenance with \`<Project>_V_0-1-0_cogNNitive_NN.md\`.
 `;
     fs.writeFileSync(readmePath, readmeContent, 'utf8');
+  }
 
-    // Clean up Rhythmic file if it was created in a previous bootstrap
-    const rhythmicPath = path.join(projectDir, 'Rhythmic');
-    if (fs.existsSync(rhythmicPath)) {
+  if (srcDir && fs.existsSync(srcDir) && srcDir !== originalDir) {
+    const files = fs.readdirSync(srcDir);
+    let copiedCount = 0;
+    for (const file of files) {
+      const srcFilePath = path.join(srcDir, file);
+      const destFilePath = path.join(originalDir, file);
       try {
-        fs.unlinkSync(rhythmicPath);
-      } catch (err) {
-        console.warn(`Warning: could not remove stale "Rhythmic" file: ${err.message}`);
-      }
+        if (fs.statSync(srcFilePath).isFile()) {
+          fs.copyFileSync(srcFilePath, destFilePath);
+          copiedCount++;
+        }
+      } catch (err) {}
     }
+    console.log(`Copied ${copiedCount} files to sources/original directory.`);
   }
 
-  // Copy raw files from src to raw folder
-  const files = fs.readdirSync(srcDir);
-  let copiedCount = 0;
-  for (const file of files) {
-    const srcFilePath = path.join(srcDir, file);
-    const destFilePath = path.join(rawDir, file);
-    try {
-      if (fs.statSync(srcFilePath).isFile()) {
-        fs.copyFileSync(srcFilePath, destFilePath);
-        copiedCount++;
-      }
-    } catch (err) {
-      console.warn(`Warning: Could not copy file "${file}". It might be a virtual Google Drive file, shortcut, or unreadable. Error: ${err.message}`);
-    }
-  }
-
-  console.log(`Copied ${copiedCount} files to raw directory.`);
-
-
+  // Automatically initialize cogNNitive provenance model on bootstrap
+  const prov = provenance.buildProvenanceModel(projectDir, { projectName });
+  console.log(`Initialized cogNNitive provenance model at: ${prov.modelPath}`);
+  console.log(`\n📌 Place your files to import into: ${originalDir}\n`);
 }
 
-/**
- * Interactive loop inside a specific project
- */
 async function runProjectMenu(projectDir) {
   console.log(`\nActive Project: ${path.basename(projectDir)}`);
   console.log(`Path: ${projectDir}\n`);
@@ -305,7 +261,7 @@ async function runProjectMenu(projectDir) {
     name: 'action',
     message: 'Select an action:',
     choices: [
-      { title: 'Scan and process raw files', value: 'scan' },
+      { title: 'Scan and process original files in sources/original', value: 'scan' },
       { title: 'Apply template transformation', value: 'transform' },
       { title: 'Create new transformation template', value: 'create_template' },
       { title: 'Back to main menu', value: 'back' }
@@ -322,111 +278,19 @@ async function runProjectMenu(projectDir) {
   }
 
   if (response.action === 'scan') {
-    const rawDir = path.join(projectDir, 'raw');
-    if (!fs.existsSync(rawDir) || fs.readdirSync(rawDir).length === 0) {
-      console.log('No raw files found to scan.');
-      return runProjectMenu(projectDir);
-    }
+    const originalDir = path.join(projectDir, 'sources', 'original');
+    const rawDir = path.join(projectDir, 'sources', 'raw');
 
-    // Detect formats and ask user to select
-    const detected = scanner.detectFormats(rawDir);
-    const extList = Object.keys(detected);
-
-    console.log('\nFormats detected in the source folder:');
-    for (const ext of extList) {
-      const label = scanner.EXT_LABELS[ext] || ext;
-      console.log(`  - ${label}: ${detected[ext]} files`);
-    }
-
-    // Offer supported format choices using prompts multiselect
-    const formatChoices = extList.map(ext => ({
-      title: `${scanner.EXT_LABELS[ext] || ext} (${detected[ext]} files)`,
-      value: ext,
-      selected: true
-    }));
-
-    if (formatChoices.length > 1) {
-      const fmtResponse = await prompts({
-        type: 'multiselect',
-        name: 'formats',
-        message: 'Which formats do you want to process?',
-        instructions: '(Space to select/deselect, Enter to confirm)',
-        choices: formatChoices
-      });
-
-      if (!fmtResponse.formats || fmtResponse.formats.length === 0) {
-        console.log('No formats selected. Skipping scan.');
-        return runProjectMenu(projectDir);
-      }
-
-      // Check dependencies for selected formats
-      const depPromptCallback = async (ext) => {
-        const dep = scanner.EXT_DEPS[ext];
-        if (!dep) return true;
-        const confirm = await prompts({
-          type: 'confirm',
-          name: 'value',
-          message: `The ${scanner.EXT_LABELS[ext]} format requires installing \`${dep.pkg}\`. Install it now?`,
-          initial: true
-        });
-        if (confirm.value) {
-          console.log(`Instalando ${dep.pkg}...`);
-          const skillDir = path.resolve(__dirname, '..');
-          execSync(`npm install ${dep.pkg}`, { cwd: skillDir, stdio: 'inherit' });
-          console.log(`${dep.pkg} instalado.`);
-          return true;
-        }
-        return false;
-      };
-
-      // Custom promptCallback for interactive mode to approve .docx/.pdf/.xlsx processing
-      const promptCallback = async (filename) => {
-        const confirm = await prompts({
-          type: 'confirm',
-          name: 'value',
-          message: `Do you want to extract text from prompt-review file: "${filename}"?`,
-          initial: true
-        });
-        return !!confirm.value;
-      };
-
-      console.log('\nScanning raw directory...');
-      const result = await scanner.scanAndProcess(projectDir, {
-        formats: fmtResponse.formats,
-        promptCallback,
-        depPromptCallback
-      });
-      console.log('\n=== Ingestion Manifest Created ===');
-      console.log(`Processed: ${result.processedCount} files successfully.`);
-      console.log(`Skipped/Needs Review: ${result.skippedCount} files.`);
-      console.log(`Review the manifest log at: ${path.join(projectDir, 'md', 'index.md')}`);
-
-      const prov = provenance.buildProvenanceModel(projectDir);
-      console.log(`Provenance model ${prov.created ? 'created' : 'refreshed'} with ${prov.sourceCount} source(s): ${prov.modelPath}\n`);
-
-      return runProjectMenu(projectDir);
-    }
-
-    // Fallback to original single-format flow if only one format detected
-    const promptCallback = async (filename) => {
-      const confirm = await prompts({
-        type: 'confirm',
-        name: 'value',
-        message: `Do you want to extract text from prompt-review file: "${filename}"?`,
-        initial: true
-      });
-      return !!confirm.value;
-    };
-
-    console.log('\nScanning raw directory...');
-    const result = await scanner.scanAndProcess(projectDir, { promptCallback });
+    // Run scanner which flattens original to raw
+    console.log('\nScanning sources/original directory...');
+    const result = await scanner.scanAndProcess(projectDir, { autoAcceptPrompt: true });
     console.log('\n=== Ingestion Manifest Created ===');
     console.log(`Processed: ${result.processedCount} files successfully.`);
     console.log(`Skipped/Needs Review: ${result.skippedCount} files.`);
-    console.log(`Review the manifest log at: ${path.join(projectDir, 'md', 'index.md')}`);
+    console.log(`Review the manifest log at: ${path.join(projectDir, 'sources', 'md', 'index.md')}`);
 
     const prov = provenance.buildProvenanceModel(projectDir);
-    console.log(`Provenance model ${prov.created ? 'created' : 'refreshed'} with ${prov.sourceCount} source(s): ${prov.modelPath}\n`);
+    console.log(`cogNNitive Provenance model ${prov.created ? 'created' : 'refreshed'} with ${prov.sourceCount} source(s): ${prov.modelPath}\n`);
 
     return runProjectMenu(projectDir);
   }
@@ -462,9 +326,6 @@ async function runProjectMenu(projectDir) {
   }
 }
 
-/**
- * Interactive flow to create a new transformation template
- */
 async function runCreateTemplateFlow(projectDir) {
   console.log('\n=== Create New Transformation Template ===\n');
 
@@ -472,7 +333,7 @@ async function runCreateTemplateFlow(projectDir) {
     {
       type: 'text',
       name: 'name',
-      message: 'Enter template name (e.g., Bands Summary):',
+      message: 'Enter template name (e.g., Summary Report):',
       validate: value => value.trim().length > 0 ? true : 'Template name cannot be empty'
     },
     {
@@ -527,15 +388,9 @@ ${answers.structure || ''}
   console.log(`\nTemplate successfully created at: ${templatePath}`);
 }
 
-/**
- * Determine active project directory by checking:
- * 1. Current directory contains raw/
- * 2. Last used project path saved in config
- * 3. Fallback to Sample project path if exists
- */
 function getActiveProjectDir() {
   const cwd = process.cwd();
-  if (fs.existsSync(path.join(cwd, 'raw'))) {
+  if (fs.existsSync(path.join(cwd, 'sources', 'original')) || fs.existsSync(path.join(cwd, 'sources', 'raw'))) {
     return cwd;
   }
 
@@ -544,22 +399,9 @@ function getActiveProjectDir() {
     return cfg.lastProjectPath;
   }
 
-  // Check if Sample exists in workspace root
   const workspaceSamplePath = path.join(cwd, 'Sample');
   if (fs.existsSync(workspaceSamplePath)) {
     return workspaceSamplePath;
-  }
-
-  // Fallback to relative path from script location (legacy)
-  const relativeSamplePath = path.join(__dirname, '..', 'Sample');
-  if (fs.existsSync(relativeSamplePath)) {
-    return relativeSamplePath;
-  }
-
-  // Fallback to relative path from skill parent directory
-  const skillSamplePath = path.join(__dirname, '..', '..', '..', 'Sample');
-  if (fs.existsSync(skillSamplePath)) {
-    return skillSamplePath;
   }
 
   return cwd;

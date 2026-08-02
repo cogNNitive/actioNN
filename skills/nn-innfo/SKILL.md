@@ -1,7 +1,7 @@
 ---
 name: nn-innfo
-version: "V_2-1-1"
-last_updated: 2026-07-12
+version: "V_0-3-0"
+last_updated: 2026-08-02
 metadata:
   source_type: "original"
   mcp: "innfo-mcp"
@@ -10,10 +10,10 @@ description: |
   MANDATORY trigger: MUST activate this skill whenever the user is creating, editing, validating, scaffolding, or discussing any iNNfo model, template, specialization, sample, or specification file. Includes the conversational Model Creation Wizard.
   This includes but is not limited to:
   - Creating a new model step-by-step using templates (Business, Procedures, Organization, Blank)
-  - Creating or editing any file matching *_NN.md or *_FORMAT.md
+  - Creating or editing any file matching *_NN.md
   - Authoring or modifying business models, procedure models, or any model following an iNNfo template
   - Creating, editing, or modifying templates or specializations under docs/templates/
-  - Discussing the iNNfo specification, concepts, markers, matrices, or naming conventions
+  - Discussing the iNNfo V_0-3-0 specification, meta-templates, primitives, matrices, or naming conventions
   - Any conversation about how iNNfo works, how to use it, or how to structure iNNfo files
 ---
 
@@ -21,7 +21,7 @@ description: |
 
 > **ACTIVATION = GREETING REQUIRED**: When this skill is loaded, the agent MUST greet the user. See Greeting Protocol below.
 
-This skill guides LLMs and agents in authoring, creating from scratch (wizard), editing, and validating **iNNfo-compliant files** (V_0-2-0+ with `_NN` structural markers).
+This skill guides LLMs and agents in authoring, creating from scratch (wizard), editing, and validating **iNNfo-compliant files** (V_0-3-0 Meta-template specification with unified `NN` syntax: `# NN`, `## NN`, and `key:: value`).
 
 **Resolution, validation, and mutation are delegated to the `innfo-mcp` server** — a deterministic engine wrapping `@cognnitive/innfo-core`. The agent does NOT hand-resolve spec chains or hand-validate models when the MCP is available. See §1 (MCP Operating Model) and §7 (Delegation Contract).
 
@@ -29,67 +29,72 @@ This skill guides LLMs and agents in authoring, creating from scratch (wizard), 
 
 When the user asks to "create a new model", "start a model from scratch", or selects model creation from a menu:
 
-1. **Explain Templates**: Briefly explain that templates define concepts, fields, and matrices (Business 🏢, Procedures 📋, Organization 👥, Blank ⬜).
-2. **Template Selection**: Present the selection menu (Business, Procedures, Organization, Blank, Cancel).
+1. **Explain Templates**: Briefly explain that Level 2 templates instantiate root primitives (`# NN Concept Definition`, `# NN Field Definition`, `# NN Matrix Definition`, `# NN Marker Definition`). Available templates: Business 🏢, Procedures 📋, Organization 👥, Blank ⬜.
+2. **Template Selection**: Present the selection menu. Always prefix option `[a]` with `(Recomendado)`:
+   - **[a] (Recomendado)** Business Model
+   - **[b]** Procedures Model
+   - **[c]** Organization Model
+   - **[d]** Blank Model
+   - **[x]** Cancel
+   *(Nota: Podés seleccionar una opción o una combinación si aplica)*.
 3. **Model Naming**: Prompt for `{ModelName}` and generate `{ModelName}_V_1-0-0_{Template}_NN.md`.
 4. **Scaffolding**: Create the workspace directory structure (`models/`, `raw/`, `procedures/`, `artifacts/`, `index.md`).
 5. **Validation**: Validate the generated model via `innfo-mcp_validate_model` (or fallback).
+6. **Visual Checklist**: Output the mandatory Visual Expectation Checklist (§12).
 
 ## Greeting Protocol (MANDATORY)
 
 When this skill is activated, the agent MUST print exactly:
 
 ```
-ðŸ”§ You're using skill: nn-innfo (ðŸ§ )
+🔧 You're using skill: nn-innfo (🧠)
 ```
 
-as its very first output â€” before any questions, analysis, or tool calls. Session-scoped: only once per conversation. After the greeting, proceed with the capabilities relevant to the current request.
+as its very first output — before any questions, analysis, or tool calls. Session-scoped: only once per conversation. After the greeting, proceed with the capabilities relevant to the current request.
 
 ---
 
 ## Core Concepts
 
-### Specification Stack (defiNNe)
+### Specification Stack (defiNNe / iNNfo V_0-3-0)
 
-| Level | Role | File Pattern | Example |
-|-------|------|-------------|---------|
-| 0 | Meta-specification | `*_NN.md` | `defiNNe_V_0-1-1_NN.md` |
-| 1 | Concrete specification | `*_NN.md` | `iNNfo_V_0-2-0_NN.md` |
-| 2 | Template | `*_NN.md` | `business_V_0-1-1_NN.md` |
-| 3 | Model | `*_NN.md` | `Ghostbusters_V_0-1-2_business_NN.md` |
+| Level | Role | File Pattern | Frontmatter / Structure | Example |
+|-------|------|-------------|-------------------------|---------|
+| 0 | Meta-specification | `*_NN.md` | `level: 0`, `specification_version: "V_0-2-0"` | `defiNNe_V_0-2-0_NN.md` |
+| 1 | Concrete specification (Meta-template) | `*_NN.md` | `level: 1`, `spec_version: "V_0-3-0"`, defines 4 root primitives | `iNNfo_V_0-3-0_NN.md` |
+| 2 | Template | `*_NN.md` | `level: 2`, `spec_version: "V_0-3-0"`, lightweight frontmatter, body instantiates root primitives | `business_V_0-3-0_NN.md` |
+| 3 | Model | `*_NN.md` | `level: 3`, `spec_version: "V_0-3-0"`, lightweight frontmatter, elements carry data + `source_ref` | `Ghostbusters_V_1-0-0_business_NN.md` |
 
-### Templates vs Specializations
+### Templates vs Specializations (V_0-3-0 Meta-template)
 
-- **Template** (level 2): Declares concepts, markers, matrices. Published under the spec repo at `specs/.../level2/<name>/`.
-- **Specialization** (level 2): Self-contained template derived from an official one. Fully autonomous.
+- **Template** (level 2): Declares concepts, fields, markers, and matrices as body elements instantiating the 4 root primitives. Light frontmatter ONLY (`spec_version: "V_0-3-0"`, `level: 2`, `parent_spec`). **PROHIBITED in Level 2 frontmatter**: `concepts: [...]`, `fields: [...]`, `markers: [...]`, `matrices: [...]`.
+- **Specialization** (level 2): Self-contained template derived from an official template by instantiating additional root primitives in its Markdown body.
 
-### Naming Convention (defiNNe Â§6)
+### Naming Convention (defiNNe §6)
 
 | Type | Pattern | Example |
 |------|---------|---------|
-| Official template | `<Template>_V_x-y-z_NN.md` | `business_V_0-1-1_NN.md` |
-| Level 3 model | `<Model>_V_x-y-z_<Template>_NN.md` | `Ghostbusters_V_0-1-2_business_NN.md` |
-| Workflow | `<Name>_V_x-y-z_workflow_NN.md` | `example_V_1-0-0_workflow_NN.md` |
+| Official template | `<Template>_V_x-y-z_NN.md` | `business_V_0-3-0_NN.md` |
+| Level 3 model | `<Model>_V_x-y-z_<Template>_NN.md` | `Ghostbusters_V_1-0-0_business_NN.md` |
+| Procedure spec | `<Name>_V_x-y-z_procedures_NN.md` | `DocumentIngestion_V_1-0-0_procedures_NN.md` |
 | Source | `<Name>_source_NN.md` | `transcript_source_NN.md` |
 
-> **Note:** Historical documents use `_FORMAT.md` (V_0-1-0) or `_F.md` (V_0-1-5 transitional). Current iNNfo V_0-2-0+ uses `_NN.md`.
+### Unified NN Syntax (V_0-3-0 Specification)
 
-### Structural Markers
+iNNfo V_0-3-0 uses the **unified NN syntax**. All legacy markers (`# _NN`, `* _NN`, ```yaml blocks) are removed and replaced by:
 
-iNNfo V_0-2-0 uses `_NN` as the structural marker prefix. Two forms are valid:
-
-| Form | On `#` heading | On `*` list item |
-|------|----------------|-----------------|
-| **Visible** | `# _NN ConceptName` | `* _NN ConceptName: Element Name` |
-| **Hidden** | `# <!-- _NN --> ConceptName` | `* <!-- _NN ConceptName: --> Element Name` |
-
-The hidden form wraps the marker in an HTML comment so it is invisible when rendered.
+| Construct | Syntax | Example |
+|---|---|---|
+| Concept Section (H1) | `# NN <Concept>` | `# NN Stakeholders` |
+| Element Heading (H2) | `## NN <Concept>: <Element>` | `## NN Stakeholders: Customer` |
+| Property Line | `key:: value` (immediately after element heading) | `importance:: high` |
+| Provenance Pointer | `source_ref:: src-NNN (path#lines)` | `source_ref:: src-001 (raw/interview.pdf#L12-L45)` |
 
 ---
 
 ## 1. MCP Operating Model
 
-The `innfo-mcp` server exposes six tools. It is **publisher-agnostic**: it never stores spec/template URLs or template names internally. A spec/template is resolved ONLY from a URL you supply, or from a loaded model's `parent_spec.url` (the model is the source of truth).
+The `innfo-mcp` server exposes six tools wrapping `@cognnitive/innfo-core`. It is **publisher-agnostic**: it resolves specs and templates from URLs supplied by the user or from a model's `parent_spec.url`.
 
 | Tool | Purpose | Key arguments |
 |------|---------|---------------|
@@ -100,491 +105,290 @@ The `innfo-mcp` server exposes six tools. It is **publisher-agnostic**: it never
 | `validate_model` | Validate against the resolved template | `id?` / `content?` (+ optional `template_url`) |
 | `apply_change` | Mutate a model and re-validate | `id`, `op`, `args` |
 
-**Golden rule:** the URL always comes from the user or from the model. Never invent or hardcode a spec/template URL when calling the MCP.
-
-### `apply_change` operations
-
-`op` âˆˆ `add_concept | add_field | set_marker | add_element | remove_element`. Semantics: parse â†’ mutate â†’ serialize â†’ **validate â†’ reject-without-writing on failure**. Renaming is NOT an `apply_change` operation â€” use the Rename Safety procedure (Â§5) then `validate_model`.
+**Golden rule:** The URL always comes from the user or from the model. Never invent or hardcode a spec/template URL when calling the MCP.
 
 ---
 
 ## 2. Canonical Specification Index (stable URLs)
 
-Use these **stable `latest` URLs** for human reference and authoring guidance. They always point to the current published version:
+Use these **stable `latest` URLs** for human reference and authoring guidance:
 
 - **defiNNe** (level 0): `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level0/defiNNe_NN.md`
 - **iNNfo** (level 1): `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level1/iNNfo_NN.md`
 - **Business** (level 2): `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level2/business/business_NN.md`
 - **Procedures** (level 2): `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level2/procedures/procedures_NN.md`
-- **Catalog** (level 2): `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level2/catalog/catalog_NN.md`
-
-> **Stable vs immutable:** `latest/` URLs are convenience aliases that move with each release â€” use them for authoring guidance. A level-3 model's own `parent_spec.url` MUST pin an **immutable** versioned URL (e.g. `.../specs/v0.1.0/level2/business/business_V_0-1-1_NN.md`) so validation is reproducible. The MCP resolves whatever URL the model declares.
-
-### 2a. Local / unpublished templates (MANDATORY reading for non-MCP workflows)
-
-When creating templates that are NOT published to the official iNNfo GitHub repo, follow these rules to ensure the iNNfo Modeler (https://innfo.cognnitive.com/app/) can discover and resolve them:
-
-| Rule | Detail |
-|------|--------|
-| **Co-locate** | Place the template `.md` file in the same directory as the model, or at a path within the same folder tree the user will open in the Modeler. |
-| **`parent_spec.url`** in the model | Use a simple relative path: `"./templateName_V_x-y-z_NN.md"`. Avoid `../` cross-directory paths — the Modeler may not resolve them. |
-| **Template `specification_url`** | Set this to the template's own local path (`"./templateName_V_x-y-z_NN.md"`), NOT a non-existent GitHub URL. |
-| **Workspace `index.md`** | The workspace root MUST contain an `index.md` with a `# _NN index` block listing all model files as Markdown links. Without this, the Modeler shows an empty tree. |
-| **File extension** | All files use `_NN.md` suffix. NO `_FORMAT.md` or `_F.md`. |
-
-**`index.md` example:**
-```markdown
-# _NN index
-
-* [Singin' in the Rain](./output/Singin_in_the_Rain_V_0-1-1_film_sheet_NN.md)
-```
-
-**Why this matters:** The iNNfo Modeler scans for `index.md` at the opened folder root and parses the `# _NN index` block to discover models. It then reads each model's `parent_spec.url` to resolve the template. If the template path is unreachable (wrong directory, non-existent file, dead GitHub URL), the model loads but concepts won't render in the tree.
+- **Organization** (level 2): `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level2/organization/organization_NN.md`
 
 ---
 
-## 3. Frontmatter by Level
+## 3. Frontmatter and Primitives by Level (Strict V_0-3-0 Meta-template)
 
-**Level 0 (defiNNe):**
+### Level 1 Specification (iNNfo_V_0-3-0_NN.md)
 ```yaml
 ---
-specification_version: "V_0-1-1"
-specification_url: "<immutable-url>"
-level: 0
-title: "..."
-status: "Draft | Stable | Deprecated"
----
-```
-
-**Level 1 (iNNfo):**
-```yaml
----
-spec_version: "V_0-2-0"
-spec_url: "<immutable-url>"
+specification_version: "V_0-3-0"
+specification_url: "https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level1/iNNfo_NN.md"
 level: 1
-parent_spec: { name: "defiNNe_V_0-1-1", url: "<immutable-url>" }
-title: "..."
+parent_spec:
+  name: "defiNNe_V_0-2-0"
+  url: "https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/v0.2.0/level0/defiNNe_V_0-2-0_NN.md"
+title: "iNNfo Meta-template Specification"
 ---
 ```
 
-**Level 2 (Template):**
+Defines the 4 root primitives:
+1. `# NN Concept Definition`
+2. `# NN Field Definition`
+3. `# NN Matrix Definition`
+4. `# NN Marker Definition`
+
+### Level 2 Template (Metaplantilla V_0-3-0)
+
+**STRICT RULE:** Level 2 templates MUST have lightweight frontmatter. Do **NOT** write `concepts: [...]`, `fields: [...]`, `markers: [...]`, or `matrices: [...]` in the YAML frontmatter.
+
 ```yaml
 ---
-spec_version: "V_0-2-0"
-spec_url: "<immutable-url>"
+specification_version: "V_0-3-0"
+specification_url: "https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level2/business/business_NN.md"
 level: 2
-parent_spec: { name: "iNNfo_V_0-2-0", url: "<immutable-url>" }
-title: "..."
-concepts: [...]
-markers: [...]
-matrices: [...]
-relationship_declarations: {...}
+parent_spec:
+  name: "iNNfo_V_0-3-0"
+  url: "https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level1/iNNfo_NN.md"
+title: "Business Model Template"
 ---
 ```
 
-**Level 3 (Model â€” lightweight, NO template inline):**
+**Body instantiates root primitives:**
+
+```markdown
+> [!NOTE]
+> This is an **iNNfo document** — a plain-text Markdown file. Open it with any text editor or view and edit it with [cogNNitive](https://innfo.cognnitive.com/app/innfo-doc).
+
+# NN index
+* [[Concept Definition]]
+* [[Field Definition]]
+* [[Matrix Definition]]
+
+# NN Concept Definition
+
+## NN Concept Definition: Stakeholders
+type:: weight
+icon:: users
+color:: blue
+weight:: 80
+
+# NN Field Definition
+
+## NN Field Definition: relationship_model
+concept:: Stakeholders
+type:: string
+description:: Nature of the relationship with stakeholders
+
+# NN Matrix Definition
+
+## NN Matrix Definition: stakeholders-offerings matrix
+source:: Stakeholders
+target:: Offerings
+widget:: set
+values:: [High, Medium, Low]
+```
+
+### Level 3 Model (Lightweight)
+
 ```yaml
 ---
-spec_version: "V_0-2-0"
-spec_url: "<immutable-url>"
+specification_version: "V_0-3-0"
+specification_url: "https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/v0.3.0/level3/sample.md"
 level: 3
-parent_spec: { name: "<template>_V_x-y-z", url: "<immutable-url>" }
-model_version: "V_x-y-z"
-title: "..."
-asset_mode: "centralized"    # optional, default "centralized"
+parent_spec:
+  name: "business_V_0-3-0"
+  url: "https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level2/business/business_NN.md"
+model_version: "V_1-0-0"
+title: "Acme Corp Business Model"
 ---
 ```
 
-### Body rules
+**Body instantiates elements and properties:**
 
-- **Document Notice (Required)** â€” the first body content MUST be:
-  ```markdown
-  > [!NOTE]
-  > This is an **iNNfo document** â€” a plain-text Markdown file. Open it with any text editor or view and edit it with [cogNNitive](https://innfo.cognnitive.com/app/innfo-doc).
-  ```
-- **Index Block** â€” `# _NN index` followed by nested Markdown lists (WikiLinks `[[...]]`, Markdown links, or `_NN index:` syntax).
-- **Concept Blocks** â€” `# _NN <ConceptName>` (visible) or `# <!-- _NN --> <ConceptName>` (hidden).
-- **Element Lines** â€” `* _NN <ConceptName>: <Element Name>` with optional indented YAML fields.
-- **Matrices** â€” `# _NN matrices: <matrix-name>` followed by a Markdown table.
+```markdown
+> [!NOTE]
+> This is an **iNNfo document** — a plain-text Markdown file. Open it with any text editor or view and edit it with [cogNNitive](https://innfo.cognnitive.com/app/innfo-doc).
 
-### Concept Types & Content Formatting (CRÍTICO)
+# NN index
+* [[Stakeholders]]
 
-Before writing content into any concept, query the template (`get_template`) to verify its declared `type`:
+# NN Stakeholders
 
-| Type | Syntax | Description & Formatting Rules |
-|------|--------|--------------------------------|
-| `text` | Free-form Markdown | Single block of plain detail text under `# _NN ConceptName`. **Do NOT write `* _NN` element markers** inside `text` concepts. |
-| `weight` / `list` | Bullet list with `_NN` markers | Element lines: `* _NN ConceptName: Element Name`. **Do NOT write loose prose text** outside of `* _NN` element markers. |
-| `category` | Taxonomy-only | Taxonomy node without content block. |
-| `steps` / `sequence` | Ordered bullet list | Sequential ordered elements: `* _NN ConceptName: Element Name`. |
-
+## NN Stakeholders: Enterprise Clients
+relationship_model:: B2B Long-term
+source_ref:: src-001 (raw/market_analysis.pdf#L45-L60)
+Enterprise clients interested in scalable cloud solutions.
+```
 
 ---
 
-## 4. Operational Instructions (MCP-first)
+## 4. Mandatory Provenance Protocol (Bloque 2)
+
+**No Level 3 model is valid unless its elements include explicit provenance pointers to source documents.**
+
+1. **In Ingestion / Scanning**: Raw documents ingested in `raw/` generate normalized Markdown files with scanner frontmatter (`source_file`, `sha256`, `size_bytes`, `normalized_at`, `source_id: src-NNN`).
+2. **In Level 3 Elements**: Every element heading `## NN <Concept>: <Element>` MUST include a `source_ref::` property:
+   ```markdown
+   ## NN Concept: Element Name
+   source_ref:: src-001 (raw/interview_transcript.pdf#L15-L30)
+   field_name:: field_value
+   ```
+3. **Audit**: During model validation, verify that `source_ref` pointers are present. Models without provenance pointers MUST NOT be declared fully compliant.
+
+---
+
+## 5. Operational Instructions & MCP Workflow
 
 ### Generate a model
-1. Obtain the template: `get_template({ url })` with the user-provided template URL (or `{ model_id }` if extending an existing model). If none is given, offer the templates from Â§2.
 
-2. **Show and confirm concepts** — use the `question` tool to present the template's concepts:
-
+1. Obtain template: `get_template({ url })`.
+2. Present concepts with option `[a] (Recomendado)`:
    ```markdown
    Template `{name}` defines these concepts:
      - {ConceptName} ({type}) — {description}
-     ...
 
    Do you want to include all of them?
-   - **[a]** Include all (Recommended)
+   - **[a] (Recomendado)** Include all
    - **[b]** Select specific concepts
    - **[x]** Cancel
+   *(Nota: Podés seleccionar una opción o una combinación)*
    ```
-
-   If [b], ask which concepts to include and only use those.
-   If [x], stop and report "Model creation cancelled by user."
-
-3. **For each confirmed concept, present its fields and ask for approval** — use the `question` tool:
-
-   ```markdown
-   Concept `{name}` ({type})
-   Fields:
-     {field_name} ({type}) — {rationale}
-     ...
-
-   Do you approve these fields?
-   - **[a]** Approve and continue (Recommended)
-   - **[b]** Modify field configuration
-   ```
-
-   Do NOT proceed until the user confirms. If [b], follow Â§8 (Field Creation Protocol) to let the user customize.
-
-4. Author the model body with `_NN` markers using only the confirmed concepts and fields.
-
-5. Set the model's `parent_spec.url`:
-   - **Published template** — use the **immutable** GitHub raw URL (e.g. `https://raw.githubusercontent.com/.../business_V_0-2-0_NN.md`).
-   - **Local / unpublished template** — use a **relative path** from the model's location (e.g. `"./film_sheet_V_0-1-0_NN.md"`). See §2a for rules.
-   - NEVER use `../` cross-directory paths.
-
-6. Validate before finishing: `validate_model({ content })` (inline) or `validate_model({ id })` (on disk).
-
-7. **Preview link** — provide a link to view the model:
-
-   > ð Preview in iNNfo Modeler: https://innfo.cognnitive.com/app/
-   > To preview, open the iNNfo Modeler in your browser and load the model's folder.
-
-### Validate a model
-- Call `validate_model({ id })` or `validate_model({ content })`. The template is resolved from the model's `parent_spec.url`.
-- If the model has no resolvable `parent_spec.url`, either pass `template_url` explicitly or accept the structural-only result â€” which carries a `warning`: *"No template resolved; structural validation only."* Surface that warning to the user; do not present structural-only validation as full compliance.
-- Report `valid`, `errors[]`, and `warnings[]` faithfully. Do NOT declare a model valid if `valid` is false.
-
-### Edit a model
-- For supported mutations use `apply_change({ id, op, args })`. It re-validates and refuses to write an invalid result.
-- For renaming, follow Â§5 (Rename Safety), then `validate_model`.
-
-### Inspect
-- `list_models({ root })` to enumerate; `read_model({ id })` to get structured JSON (concepts, elements, matrices, taxonomy).
-
-### MCP Fallback by ID (IMPORTANTE)
-If `validate_model({id})`, `read_model({id})`, or `apply_change({id})` fail with `"Model not found"` (common when operating on custom roots or local workspace paths):
-1. **Confirm detection**: Run `list_models({root})` to verify if the model is listed.
-2. **Inline fallback**: If detected, pass full file content to `validate_model({ content })` and perform edits directly via file system tools (`replace_file_content` / `write_to_file`).
-3. **User notification**: Report the fallback method used to the user; do not falsely claim the model does not exist.
-
-### Windows Encoding & Matrix Safety (CRÍTICO)
-1. **UTF-8 Encoding**: Write files strictly in UTF-8 format (`write_to_file`, `replace_file_content`, or Node `fs.writeFileSync`). **Avoid console redirections (`>`)** in PowerShell, which introduce ANSI/UTF-16 character corruptions.
-2. **ASCII Matrix Markers**: In matrix tables (`# _NN matrices: ...`), use clean ASCII markers: `X` for active/checked cells and `-` for empty/inactive cells. **PROHIBITED**: Unicode symbols like `●`, `✓`, `→` which easily corrupt across Windows shell environments.
-
-### Placeholder Cleanup
-After scaffolding a model from a template, audit concepts for redundant placeholder elements that merely repeat the concept name (e.g., `* _NN ConceptName: ConceptName`). Remove these generic lines to leave concepts clean and ready for content.
-
-### Concept Semantics Disambiguation
-Verify concept semantics in the template before assigning content:
-- **`Components`** (in Business templates): Refers strictly to the solution's **technical stack** (languages, cloud platform, databases), NOT functional business modules.
-- **`Products` vs `Services`**: `Products` = software/digital platform; `Services` = human experience/operational delivery. Consolidate overlapping digital tools into **features** of a single platform product.
+3. Author body using unified syntax `# NN <Concept>`, `## NN <Concept>: <Element>`, `key:: value` and `source_ref:: src-NNN (...)`.
+4. Validate with `validate_model({ content })`.
+5. Upon completion, output the **Visual Expectation Checklist (§12)**.
 
 ---
 
-## 5. Rename Safety & Referential Integrity (MANDATORY)
+## 6. Rename Safety & Referential Integrity
 
-Every concept and element name in an iNNfo document is a globally unique identifier. `apply_change` does not rename â€” do this manually, then validate.
+Every concept and element name in an iNNfo document is a globally unique identifier.
 
-**If renaming a CONCEPT** update: template `concepts[].name`; template `matrices[].source/target`; concept H1 `# _NN <Name>`; element lines `* _NN <Name>:`; matrix table headers/rows; index block `[[<Name>]]`; all narrative WikiLinks; matrix section names `# _NN matrices: <name>-...`.
+**If renaming a CONCEPT**: Update Concept Definition in template, concept H1 `# NN <Concept>`, element H2 headings `## NN <Concept>: <Element>`, matrix source/target definitions, matrix section headers `# NN matrices: ...`, index block WikiLinks `[[<Concept>]]`.
 
-**If renaming an ELEMENT** update: the element line label; matrix row/column headers; item-markers matrix first column; all WikiLinks `[[<Old Name>]]`.
-
-**Procedure:** (1) search the ENTIRE document for the old name; (2) classify each occurrence (skip YAML keys, data values, generic prose); (3) update all references preserving `_NN` marker syntax; (4) run `validate_model` and confirm no `[[Old Name]]` remains and every `_NN` marker maps to an existing concept.
-
----
-
-## 6. Dashboard Renderer (Template Companion Artifact)
-
-A dashboard renderer is an HTML fragment companion to a template, versioned with it at `docs/templates/<templateName>/V_x-y-z/dashboard.html`.
-
-### Syntax â€” Mustache
-Logic-less [Mustache](https://github.com/janl/mustache.js): `{{model.title}}` (escaped interpolation), `{{#concepts}}...{{/concepts}}` (sections), `{{^matrices}}...{{/matrices}}` (inverted). **Prohibited**: triple-mustache `{{{`, partials `{{>`, delimiter change `{{=`.
-
-### Data Exposed
-```
-model: { title, version, specificationVersion }
-template: { name, version, title }
-concepts: [{ name, instances: [{ label, fields }] }]
-hierarchyConcepts: [{ name, parent? }]
-taxonomyEdges: [{ source, target, label? }]
-matrices: [{ name, headers[], rows[][] }]
-```
-
-### Security Constraints
-HTML fragment only. No `<!DOCTYPE>`, `<html>`, `<head>`, `<body>`, `<script>`, `<iframe>`, `<object>`, `<embed>`, `<link>`, `<meta>`, no `on*` attributes, no `javascript:` URIs. All CSS inlined. Images via `data:` URIs only. Max 256 KB.
-
-### Generation Prompt (INVARIANT)
-> Genera un archivo HTML sin encabezados ni nada, solo cÃ³digo HTML que represente de la mejor forma posible a nivel visual el modelo cargado, usando los placeholders Mustache definidos en el skill de iNNfo.
+**If renaming an ELEMENT**: Update `## NN <Concept>: <Element>` heading, matrix row/column headers, reference fields, and WikiLinks `[[<Element>]]`.
 
 ---
 
 ## 7. Delegation Contract & Fallback
 
-### When the MCP is available (default)
-1. **Never hand-roll resolution.** Use `get_spec` / `get_template`.
-2. **Never hand-validate.** Use `validate_model` and report its result verbatim.
-3. **Prefer `apply_change`** for supported mutations (deterministic, reject-on-invalid).
-4. Pass URLs from the user or the model â€” never a constant.
+When MCP is available:
+1. Never hand-roll spec resolution; use `get_spec` / `get_template`.
+2. Never hand-validate; call `validate_model` and report verbatim.
+3. Use `apply_change` for deterministic mutations.
 
-## MCP Activation Protocol (run BEFORE any operation)
-
-### Step 1 â€” Check availability (AUTHORITATIVE)
-
-Check your OWN available tool list for tools matching the `innfo-mcp_*` prefix:
-- `innfo-mcp_list_models`, `innfo-mcp_read_model`, `innfo-mcp_get_spec`
-- `innfo-mcp_get_template`, `innfo-mcp_validate_model`, `innfo-mcp_apply_change`
-
-Do NOT check config files first â€” check the actual session tools. **This is the only authoritative check.**
-
-If the tools are listed â†’ proceed. The MCP Operating Model (Â§1) applies. Stop here.
-
-### Step 2 â€” If NOT available, diagnose
-
-Tools not found â†’ they may be registered but not yet loaded. Check:
-
-1. **Global OpenCode config**: `~/.config/opencode/opencode.json` â€” look for `innfo-mcp` under `mcp`
-2. **Local repo config**: `.opencode/opencode.json` â€” look for `innfo-mcp` under `mcp`
-3. **Other configs**: `.agents/mcp_config.json`, `.claude/settings.json`
-4. **Server binary**: Does `packages/innfo-mcp/dist/server.js` exist? If not, build (`npm run build` from that package)
-
-If found in any config â†’ ask the user to reload/restart OpenCode so the session picks up the MCP registration.
-
-### Step 3 â€” Not configured anywhere
-
-Check `docs/mcp-setup.md` in the workspace. If absent, research how OpenCode registers external MCP servers (docs at https://opencode.ai/docs/mcp). Guide the user to create the config entry, then reload.
-
-### Step 4 â€” If MCP is still unavailable after activation
-
-Degrade gracefully (fallback):
-1. Check if `parent_spec.url` is a **local relative path** (e.g. `"./template.md"`). If so, resolve it relative to the model's directory. Read the template content directly from the filesystem.
-2. If `parent_spec.url` is an HTTP URL (GitHub raw, etc.), fetch it on demand via `webfetch`. If that fails, try the stable URLs in Â§2.
-3. Resolve the parent chain manually up to level 0, caching under a local `specs/` directory.
-4. Validate by hand against the resolved template: frontmatter by level, `_NN` markers, concept headers, element syntax, matrix headers, and the parent chain.
-5. Ensure the workspace root has an `index.md` with `# _NN index` — the Modeler requires it. If missing, create or update it.
-6. Tell the user you are in fallback mode and that validation is not engine-backed.
+Fallback mode (MCP unavailable):
+1. Resolve local relative template paths directly from disk.
+2. Validate V_0-3-0 compliance manually (verify `# NN`, `## NN`, `key:: value`, lightweight frontmatter, and `source_ref`).
+3. Ensure workspace `index.md` has `# NN index` block.
 
 ---
 
-## Validation Contract (for Pipeline Gates)
+## 8. Field Creation Protocol
 
-The `innfo-mcp` exposes the following validation contract that pipeline gates consume:
-
-| Tool | Input | Output | Used By |
-|------|-------|--------|---------|
-| `validate_model` | `id` (disk) or `content` (inline) + optional `template_url` | `{ valid, errors[], warnings[] }` | Validate gate (content mode) |
-| `validate_model_url` | `model_url` + optional `template_url` | `{ valid, errors[], warnings[] }` | Validate gate (URL mode) |
-
-**Naming convention** (defiNNe Â§6): Model files MUST follow `<Name>_V_x-y-z_<Template>_NN.md`. Draft status goes in frontmatter (`status: "Draft"`), never in filename (`_NN_draft.md` is INVALID).
-
-**Frontmatter requirements** (level 3): MUST include `spec_version`, `spec_url`, `level: 3`, `parent_spec { name, url }`, `model_version`, `title`. Body MUST start with `> [!NOTE] This is an **iNNfo document**...`.
-
-These rules are enforced by `packages/pipeline-gates/src/validate.ts` and the corresponding CLI `scripts/pipeline-gate.mjs validate`.
+When adding fields to a concept:
+1. **Analyze**: Determine data type (`string`, `select`, `reference`, `markdown_inline`, `number`, `date`, `file`).
+2. **Propose**: Present table with Field Name, Proposed Type, Rationale, and Config. Always mark option `[a]` with `(Recomendado)`.
+3. **Confirm**: Wait for user confirmation before executing.
+4. **Execute**: Use `apply_change({ id, op: "add_field", args })` or write `## NN Field Definition` primitive.
+5. **Validate**: Run `validate_model()`.
 
 ---
 
-## 8. Field Creation Protocol (MANDATORY)
+## 9. Specialization Strategy
 
-When a user requests adding new fields to a concept, OR when you determine that fields are needed based on source data, you MUST follow this protocol step by step. Do NOT skip to execution.
-
-### Step 1 â€” Analyze
-
-Examine the source data to determine:
-- What values will each field hold? (free text, enumerated list, markdown bullets, numeric score, date, cross-reference)
-- Is the value single or multi-instance?
-- How will cogNNitive render it? (table column, detail panel, card)
-
-### Step 2 â€” Propose
-
-Present a proposal table to the user with EXACTLY this structure:
-
-```
-Field Name | Proposed Type | Rationale | Config / Values
-```
-
-Use this type-selection guide:
-
-| iNNfo Type | When to Use | Renders in cogNNitive Table As |
-|---|---|---|
-| `string` | Short text, names, identifiers, single-line values | Raw text, truncated if long |
-| `markdown_inline` | Bullet lists, multi-line formatted text, rich descriptions | Rendered Markdown (bullet lists, emphasis) |
-| `number` | Prices, scores, percentages, quantities | Right-aligned, numeric formatting |
-| `enum` | Fixed set of 3â€“10 predefined values | Colored badge / dropdown filter |
-| `reference` | Cross-link to another concept element | Clickable chip / link |
-| `date` | Dates, timestamps, deadlines | Locale-formatted date |
-
-**Mandatory for every proposal:** State WHY you chose each type. For example:
-> "`markdown_inline` for `strengths` because source values contain multi-line bullet lists â€” `string` would render raw `["item1", "item2"]` JSON in the table."
-
-### Step 3 â€” Wait for Confirmation
-
-Do NOT execute any change until the user explicitly confirms the proposal. If the user modifies the proposal, update the proposal and re-present.
-
-### Step 4 â€” Execute with `apply_change`
-
-Once confirmed, use `apply_change({ id, op: "add_field", args })` for each field. Do NOT hand-edit the YAML â€” the MCP validates and rejects invalid changes.
-
-### Step 5 â€” Validate
-
-Run `validate_model({ id })` and report the result. If validation fails, revert the changes and explain the errors to the user.
-
-### Step 6 â€” Versioning
-
-After successful validation, ask the user:
-> "The model validates successfully. Do you want to:
-> - **[a]** Save under the current version (`V_x-y-z`)
-> - **[b]** Increment the **patch** version (`V_x-y-z+1`)
-> - **[c]** Increment the **minor** version (`V_x-y+1-0`)
-> - **[x]** Cancel all changes"
-
-Update `model_version` in the model's frontmatter accordingly.
+When a model needs custom concepts or fields beyond base template:
+1. **NEVER modify** published specs in `specs/`.
+2. Create a specialization template file `<Model>_<Template>_V_x-y-z_spec_NN.md`.
+3. Set `level: 2`, `parent_spec` to base template.
+4. Instantiate custom concept/field definitions in the body.
+5. Point model's `parent_spec.url` to the specialization file.
 
 ---
 
-## 9. Specialization Strategy (MANDATORY)
+## 10. Post-Edit Validation & Versioning
 
-When a model needs custom fields, concepts, or markers that are not in the base template, you MUST NOT modify the base template. Follow the specialization strategy instead.
-
-### Hard Rules
-
-1. **NEVER modify** a published template spec in `specs/` â€” they are immutable.
-2. **NEVER modify** a `.specs/` local copy that cogNNitive downloaded from a URL â€” it is a cache, not a workspace file.
-3. **NEVER modify** the original template's `concepts[]`, `markers[]`, or `matrices[]` in place.
-
-### Specialization Procedure
-
-**Step 1 â€” Identify the template to extend**
-
-The model's `parent_spec.name` tells you which template it uses.
-
-**Step 2 â€” Fetch the template content**
-
-Use `get_template({ model_id })` to resolve the template structure.
-
-**Step 3 â€” Create the specialization file**
-
-Naming: `<ModelName>_<Template>_V_x-y-z_spec_NN.md`
-
-Examples:
-- `GG_business_V_1-0-0_spec_NN.md` â€” specialization of business template for the GG model
-- `Ghostbusters_business_V_0-1-2_spec_NN.md` â€” specialization for Ghostbusters
-
-Place it at the project root or in a `specs/` directory alongside the model.
-
-**Step 4 â€” Specialization frontmatter**
-
-```yaml
----
-spec_version: "V_0-2-0"
-spec_url: "<immutable-url>"
-level: 2
-parent_spec:
-  name: "<original template name>"
-  url: "<original template URL>"
-title: "<ModelName> â€” <Template> Specialization"
-extends: "<Template>_V_x-y-z"
-custom_fields:
-  - concept: "<ConceptName>"
-    fields:
-      - name: "<field1>"
-        type: "<type>"
-      - name: "<field2>"
-        type: "<type>"
----
-```
-
-The body MUST contain the full `concepts[]`, `markers[]`, `matrices[]` from the base template, merged with any additions. This makes the specialization self-contained and resolvable.
-
-**Step 5 â€” Update the model**
-
-Change the model's `parent_spec` to point to the specialization:
-```yaml
-parent_spec:
-  name: "<ModelName>_<Template>_V_x-y-z_spec"
-  url: "<local or repo path to the specialization file>"
-```
-
-**Step 6 â€” Validate**
-
-Run `validate_model({ id })` â€” the MCP resolves the specialization as a level-2 template.
-
-**Step 7 â€” Version control**
-
-Commit the specialization file alongside the model. It is a first-class artifact.
+After any model/spec edit:
+1. Run `validate_model()`.
+2. Present validation result (`valid: true/false`).
+3. Prompt for version bump:
+   - **[a] (Recomendado)** Increment patch (`V_x-y-z+1`)
+   - **[b]** Keep current version (`V_x-y-z`)
+   - **[c]** Increment minor (`V_x-y+1-0`)
+   - **[x]** Cancel
+4. Update `index.md` links and physical filename if version bumped.
+5. Print Visual Expectation Checklist (§12).
 
 ---
 
-## 10. Post-Edit Validation & Versioning (MANDATORY)
+## 11. Architecture Scaling Decision Protocol (1 to N Models) (Bloque 4)
 
-This protocol applies AFTER every model or spec edit â€” whether from Â§8, Â§9, Â§5 (Rename), or any other modification.
+When a project grows from 1 single model to multiple models (1 to N elements/subsystems), **the agent MUST NOT decide the file/workspace structure unilaterally**.
 
-### Step 1 â€” Validate
+The agent MUST present the **4 Structural Alternatives** indicating exact disk paths and iNNfo code:
 
-Run `validate_model({ id })` immediately after the edit. The MCP MUST be available. If it is not, tell the user and refuse to declare the edit complete.
+```markdown
+💡 Architecture Scaling Decision (1 to N Models):
 
-### Step 2 â€” Report
+How should we organize the multi-model architecture for this project?
 
-Present the validation result faithfully:
-- `valid: true` â†’ proceed
-- `valid: false` â†’ list `errors[]` and `warnings[]`. Do NOT present the model as valid. Offer to fix or revert.
+  [a] (Recomendado) Opción 4: Híbrido Maestro Agregador con referencias `file_ref::`
+      - Disk path: `models/Master_V_1-0-0_NN.md` and `models/subsystems/`
+      - iNNfo code: Main model references submodels via `file_ref:: ./subsystems/auth_V_1-0-0_NN.md`
 
-### Step 3 — Version Bump Decision, Renaming & Index Sync
+  [b] Opción 1: Modelo Monolítico Único
+      - Disk path: `models/System_V_1-0-0_NN.md`
+      - iNNfo code: Single single-file document containing all concepts and elements.
 
-After successful validation, ask the user:
-> "The model validates successfully. Do you want to:
-> - **[a]** Keep the current version (`V_x-y-z`)
-> - **[b]** Increment **patch** (`V_x-y-z+1`) — bug fixes, minor edits
-> - **[c]** Increment **minor** (`V_x-y+1-0`) — new fields or concepts added
-> - **[x]** Cancel all changes
-> 
-> (Recommended: [b] for field additions, [c] for new concepts)"
+  [c] Opción 2: Modelos Independientes en la misma carpeta
+      - Disk path: `models/DomainA_V_1-0-0_NN.md`, `models/DomainB_V_1-0-0_NN.md`
+      - iNNfo code: Independent Level 3 models, each listed under `index.md`.
 
-If the user chooses [b] or [c]:
-1. Update `model_version` in the model's frontmatter.
-2. **Rename file**: Rename the physical `.md` file to `<Name>_V_x-y-z_<Template>_NN.md`.
-3. **Update `index.md`**: Update the link reference in the workspace `index.md` file under `# _NN index`.
-4. **Re-validate**: Run `validate_model({ id })` on the renamed file to confirm structural and referential integrity.
+  [d] Opción 3: Híbrido Multi-Carpeta por Proyecto
+      - Disk path: `projects/domainA/models/index.md`, `projects/domainB/models/index.md`
+      - iNNfo code: Sub-workspaces each with their own `index.md` root.
 
-### Step 4 — Confirm
+  [x] Cancel
 
-Print the final state and a preview link:
+*(Nota: Podés seleccionar una opción o una combinación si aplica)*
 ```
-{Model} v{new_version} - valid, saved to {path}
-Preview in iNNfo Modeler: https://innfo.cognnitive.com/app/
-    Open the iNNfo Modeler and load the model's folder to view it.
+
+---
+
+## 12. Visual Expectation Checklist Protocol (App Verification) (Bloque 5)
+
+At the conclusion of creating or modifying any iNNfo model or artifact, **the agent MUST print the Visual Expectation Checklist** before closing the interaction.
+
+This checklist provides the user with an exact verification guide for the iNNfo Modeler web application (`https://innfo.cognnitive.com/app/`):
+
+```markdown
+📋 Checklist de Expectativa Visual en iNNfo Modeler (https://innfo.cognnitive.com/app/):
+
+Al abrir la carpeta del proyecto en el Modeler, vas a visualizar:
+
+- [ ] 🌳 **Árbol Lateral de Navegación**:
+      Estructura jerárquica basada en `# NN index` con navegación fluida por conceptos y elementos.
+- [ ] 📋 **Paneles de Campos por Concepto**:
+      Vista detallada renderizada para cada `key:: value` (propiedades, tipos y `source_ref`).
+- [ ] 🎴 **Tarjetas de Elementos**:
+      Tarjetas interactivas por cada bloque `## NN <Concept>: <Element>` mostrando metadatos y descripciones.
+- [ ] 📊 **Tablas de Matrices Comparativas**:
+      Tablas N-a-M de relaciones e `item-markers matrix` renderizadas con celdas interactivas (`X` / `-`).
 ```
+
+---
 
 ## Core Rules
 
-1. **Spec Immutability**: Published specs are frozen. Never edit historical spec files. Change only via new versions.
-2. **Spec over Tolerant Code**: Reject invalid models â€” never silently tolerate non-compliance.
-3. **No Backward Compatibility**: Target the CURRENT spec version only.
-4. **Template Inline Restriction**: Level 3 models MUST NOT inline `concepts`, `markers`, or `matrices`. They rely on `parent_spec.url` + the resolver.
-5. **Language Domain Contract**: Generated artifacts default to English. Conversation follows the user's language.
-6. **Referential Integrity on Rename**: Every concept/element name is a globally unique identifier. Update ALL references before renaming (Â§5).
-7. **Engine over Prose**: When the MCP is available, delegate resolution/validation/mutation to it (Â§7).
-8. **Pipeline Validation**: When this skill is loaded in the context of a model-generation workflow, the calling orchestrator SHOULD run the validate gate before the model is delivered to the user. The integration gate MUST increment the patch version on successful validate.
-9. **Field Creation Protocol**: When creating fields, follow Â§8 â€” propose before executing, get user confirmation, validate after.
-10. **Specialization over Mutation**: When a model needs custom fields beyond the base template, follow Â§9 â€” create a specialization rather than modifying the original template.
-11. **Post-Edit Validation**: After any model/spec edit, run `validate_model()` and ask about version bump (Â§10). Never declare completion without validation.
+1. **Strict V_0-3-0 Meta-template**: Level 2 templates define concepts/fields/matrices in body primitives (`# NN Concept Definition`). NEVER put `concepts: [...]` or `fields: [...]` in Level 2 YAML frontmatter.
+2. **Unified NN Syntax Only**: Use `# NN <Concept>`, `## NN <Concept>: <Element>`, `key:: value`. No legacy `_NN` bullets or fenced ```yaml blocks.
+3. **Mandatory Provenance**: Every Level 3 element MUST include `source_ref:: src-NNN (path#lines)`.
+4. **Zero Unilateral Mutation**: Never move or rename user files without explicit confirmation.
+5. **Recommended Option First**: Prefix option `[a]` with `(Recomendado)`.
+6. **Multi-Selection Notice**: Add *"Podés seleccionar una opción o una combinación"* when applicable.
+7. **Scaling Architecture Choice**: Present the 4 structural options when scaling from 1 to N models (§11).
+8. **Visual Expectation Checklist**: Always print the visual checklist before closing (§12).

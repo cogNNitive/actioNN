@@ -1,13 +1,13 @@
 ---
 name: nn-trannsform
-description: "Bootstrap projects, scan raw documents, normalize them to Markdown, apply template-based transformations, and execute multi-step transformation procedures compliant with procedures_V_0-2-0_NN.md. Includes document ingestion, format conversion (txt, md, csv, json, docx, pdf, xlsx), procedure orchestration, and artifact generation. Triggers: trannsform, transform, workflow, pipeline, procedure, normalize, scan documents, document ingestion, document transformation, document processing, markdown conversion, project bootstrap"
+description: "Bootstrap projects, scan raw documents, normalize them to Markdown with mandatory provenance frontmatter, apply V_0-3-0 template-based transformations, and execute multi-step transformation procedures compliant with procedures_V_0-3-0_NN.md. Includes document ingestion, format conversion (txt, md, csv, json, docx, pdf, xlsx), procedure orchestration, and export generation. Triggers: trannsform, transform, workflow, pipeline, procedure, normalize, scan documents, document ingestion, document transformation, document processing, markdown conversion, project bootstrap"
 empty_sections_mode: "ask-per-section"
 license: MIT
 metadata:
-  version: "1.5"
+  version: "2.0"
   source_type: "integrated"
   source: "https://github.com/cogNNitive/actioNN/tree/main/skills/nn-trannsform"
-  installed_at: "2026-07-11"
+  installed_at: "2026-08-02"
   depends_on:
     skills: ["nn-innfo"]
     mcp_servers: ["innfo-mcp"]
@@ -26,6 +26,15 @@ When this skill is activated, the agent MUST print exactly:
 
 as its very first output — before any questions, analysis, or tool calls. Session-scoped: only once per conversation.
 
+## System & UX Governance (MANDATORY)
+
+1. **Zero Unilateral Mutation (Consent First)**:
+   - NEVER move, rename, or delete user files (e.g. moving PDFs into `sources/original/` or changing folder structure) without prior explicit confirmation from the user.
+2. **Recommended Option First**:
+   - In all decision menus, option `[a]` or `[1]` MUST carry the `(Recomendado)` or `(Recomendada)` prefix.
+3. **Multi-Selection Clarification**:
+   - When choices are non-exclusive, include the notice: *"Podés seleccionar una opción o una combinación (ej. A y B)"*.
+
 ## Preflight Gate (MANDATORY — run before any transformation)
 
 Before any other action:
@@ -36,105 +45,66 @@ Before any other action:
 
 This skill enables the agent to interactively guide the user through document ingestion, normalization, and transformation.
 
-All file paths in this skill are relative to the skill's base directory (e.g., `~/.agents/skills/nn-trannsform/`). The CLI tool lives at `scripts/index.js`. If dependencies are missing at first use, the agent detects the error and runs `npm install` in the skill directory automatically.
+---
 
 ## Interaction Flow for Agent Execution
 
 ### 1. Project Initialization & Bootstrap
 
-Ask the user:
+Ask the user for confirmation before creating directories:
 1. **Source Folder**: Where are the raw files?
 2. **Project Name & Destination**: Name for the project and where to save it (recommend `%USERPROFILE%\Documents\_NN\[project-name]`).
 
 #### Standard Workspace Directory Layout
 
-Every project workspace MUST adhere to the following clean structure:
+Every project workspace MUST adhere to the following structure:
 
 ```
 [project-name]/
 ├── raw/                 # Original user files (PDFs, Word, CSV, TXT, Excel...)
-├── md/                  # Normalized Markdown + _all.md + md/index.md (ingestion manifest)
-├── assets/              # File-backed field content for the provenance model (per element slug)
+├── sources/
+│   └── markdown/        # Normalized Markdown files with mandatory provenance frontmatter
 ├── models/              # Structured semantic iNNfo Level 3 models (*_NN.md)
-├── procedures/          # Reusable transformation procedure specs (*_procedures_V_x-y-z_NN.md)
-├── artifacts/           # Generated Artifacts (documents, reports, boards, datasets)
+├── procedures/          # Reusable transformation procedure specs (*_procedures_V_0-3-0_NN.md)
+├── artifacts/           # Derivative deliverables and generated output products
+│   ├── exports/         # Final deliverables (clean Markdown, HTML, PDF)
 │   └── reports/         # Validation reports and audit trails
-├── traNNsformations/    # Transformation templates (Markdown or iNNfo)
-├── <Project>_V_x-y-z_trannsform_NN.md   # Provenance model (Sources / Models / Artifacts / Procedures)
-└── index.md             # Semantic workspace index (# NN index) linking all *_NN.md models
+└── index.md             # Semantic workspace index (# NN index)
 ```
-
-> **index.md is the semantic workspace index**, not the ingestion log. The scanner
-> writes its ingestion manifest to `md/index.md`; the workspace-root `index.md` is a
-> `# NN index` block (written by `scripts/provenance.js`) that lists every `*_NN.md`
-> model so the iNNfo Modeler can discover them.
 
 Then run:
 ```bash
 node scripts/index.js --src "<source-folder>" --dest "<destination-parent-folder>" --name "<project-name>"
 ```
 
-#### 1a. Generate `.opencode/opencode.json` (MCP config)
+---
 
-After creating the project directory, generate `.opencode/opencode.json` in the project root so the innfo-mcp server is available when the agent opens this folder.
+### 2. Capability Scan & Provenance Ingestion Protocol (MANDATORY)
 
-1. **Resolve the MCP bundle path**: Find `innfo-mcp.bundle.js` by checking (in order):
-   - `~/.agents/mcp/innfo-mcp.bundle.js` (standard global location downloaded by agent-web-bootstrap)
-   - `~/.agents/skills/actioNN/scripts/bin/innfo-mcp.bundle.js`
-   - `packages/innfo-mcp/bin/innfo-mcp.bundle.js` in the iNNfo repository (fallback)
-2. Resolve to an absolute path
-3. Generate `.opencode/opencode.json`:
-   ```json
-   {
-     "$schema": "https://opencode.ai/config.json",
-     "mcp": {
-       "innfo-mcp": {
-         "type": "local",
-         "command": ["node", "<resolved-absolute-bundle-path>"],
-         "enabled": true
-       }
-     }
-   }
-   ```
-4. Inform the user: "`.opencode/opencode.json` created. Restart your agent in this folder to enable the iNNfo MCP server."
+#### 2a-0. Prepare `raw/` and Ingest to `sources/markdown/`
 
-### 2. Capability Scan & Ingestion
+**All files MUST pass through `raw/` before scanner normalization.**
 
-> **Philosophy**: Each agent/model has different native capabilities. Some read PDFs directly, others don't. Instead of assuming, the skill presents a **diagnostic panel** with the available routes and their tradeoffs, and the user decides.
+1. **Check if `raw/` exists** inside the project directory. If not, ask the user and create it: `mkdir raw/`
+2. **Copy files into `raw/`** (preserve originals in-place; DO NOT move or delete user files without consent).
+3. **Scanner Normalization with Provenance Frontmatter**:
+   Every normalized file generated under `sources/markdown/` (or `md/`) MUST include the mandatory scanner traceability frontmatter:
 
-#### 2a-0. Prepare `raw/` directory — MANDATORY, DO NOT SKIP
-
-**All files MUST go through `raw/` before the scanner. Never convert files directly.**
-
-1. **Check if `raw/` exists** inside the project directory. If not, create it: `mkdir raw/`
-2. **Locate source files** — they may be in `input/`, `Downloads/`, or a user-specified folder
-3. **Copy files into `raw/`** (preserve originals, do not move):
-   - If the user specified a source folder, copy everything from there
-   - If files are scattered, copy each one into `raw/`
-   - If the user ran the bootstrap CLI (`node scripts/index.js --src ...`), `raw/` is already populated
-4. **Only once `raw/` is populated**, proceed to scan. The entire pipeline is:
-
-   ```
-   source files → raw/ → scanner → md/ (normalized + _all.md + frontmatter) + index.md (manifest)
-   ```
-
-> **⚠️ Why this matters**: The scanner generates YAML frontmatter with source traceability (sha256 hash, size, normalized_at timestamp) and consolidates everything into `md/_all.md`. Bypassing it means losing traceability and breaking downstream transformations that depend on `_all.md`.
-
-#### 2a. Detect formats in `raw/`
-
-Supported formats: `txt`, `md`, `csv`, `json`, `docx`, `pdf`, `xlsx`
-
-Read the `raw/` folder (now populated), group files by extension, and show the user:
-```
-Formats detected in source folder:
-  - txt:  3 files
-  - docx: 2 files
-  - pdf:  1 file
+```yaml
+---
+source_file: "raw/interview_transcript.pdf"
+sha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+size_bytes: 1048576
+normalized_at: "2026-08-02T13:30:00Z"
+source_id: "src-001"
+---
 ```
 
-#### 2b. Capability Assessment — Present the decision matrix
+> **⚠️ Traceability Requirement**: Downstream Level 3 models MUST reference `source_id` via `source_ref:: src-NNN (path#lines)`. Skipping scanner frontmatter invalidates traceability.
 
-**IMPORTANT**: Before asking what to do, present this diagnostic table for each detected format. The goal is for the user to SEE the complete picture.
+#### 2b. Capability Assessment — Decision Matrix
+
+Present the diagnostic panel:
 
 ```
 ╔════════════╦══════════════════════╦══════════════════════════╗
@@ -149,390 +119,99 @@ Formats detected in source folder:
 ╚════════════╩══════════════════════╩══════════════════════════╝
 ```
 
-Then, for each detected format **that is NOT plain text**, present the user ONE unified question per format:
+Option selection format:
 
 ```
 Format: PDF (1 file)
-  [a] Agent-native — may or may not work depending on the model, variable token cost
-  [b] Node.js (pdf-parse) — one-time install (~2MB), local processing, no extra token consumption
+  [a] (Recomendado) Node.js (pdf-parse) — local processing, reproducible, no extra token cost
+  [b] Agent-native — depends on model, variable token cost
   [c] Skip this format
 
-Which route do you prefer for PDF? (a/b/c)
+Which route do you prefer for PDF?
+(Nota: Podés seleccionar una opción o una combinación)
 ```
 
-**Rules for the agent when presenting this:**
+---
 
-1. **Clear visual indicator**: If the agent knows (from its own configuration or because it asked earlier) that it CAN read PDF natively, show `[a]` as `✅ RECOMMENDED` if it incurs no extra cost, or `⚠️ Native (token cost)` if the cost is significant.
-2. **If the agent DOES NOT KNOW** if it can read the format natively, say so explicitly: _"I cannot guarantee that my model reads PDFs natively. The most reliable option is [b]."_
-3. **Option `[a]` MUST ALWAYS clarify the token tradeoff** (or processing time) when applicable.
+### 3. Transformation & Level 3 Modeling (V_0-3-0 Unified Syntax)
 
-#### 2c. Verify Node.js availability
+#### 3a. Template Type: Markdown vs iNNfo V_0-3-0
 
-For option `[b]`, check availability before asking. If Node.js is not available, show the option as `❌ Not available`:
-
-```bash
-node --version
-```
-
-If the command fails or no shell is available, report: _"I cannot verify if Node.js is installed in this environment. If you know you have it, let me know and I'll try."_
-
-#### 2d. Execute the chosen strategy
-
-Depending on the user's decision for each format:
-
-- **Option `[a]`**: Read the file directly using the agent's read capabilities (Read tool, native PDF, etc.). The agent transforms the content to Markdown manually.
-- **Option `[b]`**: If the library is not installed, ask for confirmation and run `npm install <package>` in the skill folder (base directory). Then run the conversion script.
-- **Option `[c]`**: Skip the format.
-
-**Installation note**: If the user chooses to install a library and it fails (permissions, network, environment), report the exact error and offer to return to the options menu to choose another route.
-
-#### 2e. Run the scan
-
-```bash
-node scripts/index.js --scan --src "<target-project-directory>"
-```
-
-Read the generated `index.md`. If there are files marked as `?` (docx, pdf) or `NO` (audio, images), inform the user.
-
-### 3. Transformation — Using the Agent's LLM
-
-The skill **does not depend on external APIs** (Gemini, OpenAI). The transformation is performed by the agent itself using its built-in language model. The CLI script `scripts/transformer.js` remains as an optional fallback.
-
-**IMPORTANT**: Before transforming, read the content of `md/_all.md` and ask:
-
-#### 3a. Check for local templates
-
-Check if there are `*traNNsform.md` files in the project root. If there are, ask if they want to use a local one or explore other options.
-
-#### 3b. Select or create a template
-
-If there is no local template or the user prefers another option, ask: **"Do you want to apply an existing transformation or create a new one?"**
-
-- **Apply existing**: Read templates in `traNNsformations/`, list them, let them choose.
-- **Create new**: Guide step by step.
-
-##### 3b-i. Template type: Markdown vs iNNfo
-
-When the user chooses "Create new", FIRST ask:
+When creating a new transformation, ask the user:
 
 **"What kind of template do you want to create?"**
 
-- **[a]** Generic Markdown template — free-form document with sections (e.g. summary, report, article)
-- **[b]** iNNfo template — structured model with typed concepts, fields, and markers (loads `nn-innfo` skill)
+- **[a] (Recomendado)** iNNfo V_0-3-0 template — structured model with typed concepts, fields, markers, and matrices
+- **[b]** Generic Markdown template — free-form document with narrative sections
 - **[x]** Cancel
 
-If **[a]**: Follow the existing flow (name, purpose, instructions, structure, location).
+*(Nota: Podés seleccionar una opción o una combinación si aplica)*
 
-If **[b]** (iNNfo):
-1. Load `nn-innfo` via `skill("nn-innfo")`
-2. Let `nn-innfo` guide the user through template creation (concepts, fields, markers, matrices per §4 of the iNNfo skill)
-3. After the template is created, load `nn-innfo`'s "Generate a model" flow (§4) to populate it with source data from `md/_all.md`
-4. During model generation, set `parent_spec.url` to a **relative path** resolved from the model's location (see §3b-ii below)
-5. Ensure the workspace `index.md` includes a `# _NN index` block pointing to the generated model
+#### 3b. Mandatory Provenance in Level 3 Models (Bloque 2)
 
-##### 3b-ii. iNNfo local template rules (MANDATORY when MCP is unavailable)
-
-When creating iNNfo templates and models without an MCP server, follow these rules to ensure the iNNfo Modeler can discover and resolve them:
-
-1. **Co-locate template and model**: Copy the template `.md` file to the same directory as the model, OR place it at a path the Modeler can traverse from the workspace root.
-2. **`parent_spec.url`**: Use a relative path from the model's location, e.g. `"./film_sheet_V_0-1-0_NN.md"`. Do NOT use `../` traversal paths — the Modeler may not resolve them.
-3. **Template `specification_url`**: For unpublished local templates, set this to a self-referential relative path (`"./templateName_V_x-y-z_NN.md"`), not a non-existent GitHub URL.
-4. **Workspace `index.md`**: Append a `# _NN index` block with standard Markdown links to all `*_NN.md` models. Without this block the Modeler shows an empty tree.
-5. **Naming**: Model files MUST follow `<Name>_V_x-y-z_<Template>_NN.md`. Template files MUST follow `<Name>_V_x-y-z_NN.md`.
-
-#### 3c. Ask version type — BEFORE transforming
-
-Before generating the document, ask:
-
-**"Do you want to generate a draft with comments and source citations for review, or a clean final version?"**
-
-- If they choose **draft**: Generated with all annotations, citations, and review markers (see point 4). File name: `[template-name]_V_x-y-z_draft.md` (e.g. `Lean_Business_Plan_V_0-1-0_draft.md`).
-
-- If they choose **final version**: Generated clean, without annotations. Then ask:
-
-  **"How do you want to handle citations in the final version?"**
-
-  - **[A]** Include sources inline (Recommended) &mdash; prompts citation format selection (SS3c-i)
-  - **[B]** Review draft first &mdash; shows the draft for editing, then prompts format selection after edits
-  - **[C]** No sources &mdash; strips all HTML comments and visible citations from the output
-  - **[X]** Cancel
-
-  File name: `[template-name]_V_x-y-z.md` (e.g. `Lean_Business_Plan_V_0-1-0.md`, starting at 0.1.0).
-
-- Once citations are settled (or skipped), proceed to handle incomplete template sections (§3c-ii).
-
-#### 3c-i. Citation format selection
-
-After the user selects option [A] (Include sources inline) or completes editing in option [B] (Review draft first), present the following format choices:
-
-| Code | Format | Notes |
-|------|--------|-------|
-| [a] | Sencillo (Recommended) | Keeps `— Source: <filename>, section <section>` verbatim |
-| [b] | APA | 7th edition in-text citations |
-| [c] | MLA | 9th edition parenthetical |
-| [d] | Chicago | Notes-bibliography or author-date |
-| [e] | IEEE | Numbered references |
-| [f] | Vancouver | Numeric citation style |
-| [g] | BibTeX | Exports a `.bib` file |
-| [x] | Back | Return to previous question |
-
-Apply the format according to the rules in [`citations.md`](citations.md). HTML comments MUST be removed from the final output. Only visible citations remain, formatted per the chosen style.
-
-For option [C] (No sources), skip this sub-section entirely — no format selection is needed.
-
-#### 3c-ii. Handle incomplete template sections
-
-**This step runs only for final versions.** Draft versions skip directly to §3d.
-
-**Step 1: Scan sections against source material.** Compare the selected template's sections against the available source content in `md/_all.md`. For each section, determine whether sufficient source paragraphs exist to populate it. Flag sections as **incomplete** when no source paragraph maps to them. Use your own LLM judgement for the mapping — there is no static tool for this.
-
-**Step 2: Present summary table.** If one or more sections are flagged, display a table with section name and reason for each:
-
-```
-The following template sections lack sufficient source material:
-
-  # │ Section          │ Reason
-  ───┼─────────────────┼──────────────────────────────────
-  1  │ IOE.1           │ No source paragraphs match this section
-  2  │ Recommendations │ Only indirect mentions; no dedicated content
-  3  │ Annex C         │ Source document missing for this appendix
-```
-
-If **no sections are flagged**, skip the rest of §3c-ii and proceed directly to §3d.
-
-**Step 3: Ask the user which mode to use.** Present the six modes as labeled options. Pre-select the option matching `empty_sections_mode` in the frontmatter (default: `ask-per-section`). The user MAY override at runtime; the runtime choice takes precedence.
-
-```
-[empty_sections_mode is set to "{frontmatter_value}"]
-
-How do you want to handle the flagged sections?
-
-  [a] Insert comment    — Place HTML comment: "<!-- No hay información suficiente para completar esta sección -->"
-  [b] Omit section      — Remove heading + body from output
-  [c] Generate content  — Synthesize from project context (no marker)
-  [d] Generate (tagged) — Synthesize, prepend "[Generated — verify]"
-  [e] Ask per section   — Prompt me for each flagged section individually (Recommended)
-  [f] Keep placeholder  — Keep template's original text (e.g. "[Pending]")
-  [x] Cancel transformation
-```
-
-| Mode | Behavior | Application |
-|------|----------|-------------|
-| `[a]` comment | Insert `<!-- No hay información suficiente para completar esta sección -->` in place of the section body. Heading remains. | Global (same for all flagged sections) |
-| `[b]` omit | Remove heading + body from output. Surrounding sections close without blank gaps. | Global |
-| `[c]` generate | Synthesize plausible content from project context (source files, prior sections, document purpose). No marker. | Global |
-| `[d]` generate-tagged | Same as `[c]` but prepend `[Generated — verify]` at the start of the section body. | Global |
-| `[e]` ask-per-section | Iterate flagged sections one by one. For each, show name + reason and prompt: `comment`, `omit`, `generate`, `generate-tagged`, or `template-default`. | Per-section (different modes per section) |
-| `[f]` template-default | Keep the template's original placeholder text verbatim (e.g. `[Pending]`). For an empty body, keep heading + empty body. | Global |
-
-**Step 4: Apply the mode.** For modes `[a]–[d]` and `[f]`: apply the chosen behavior to every flagged section. For mode `[e]`: iterate flagged sections, prompt individually, and apply per-section.
-
-**Step 5: Proceed to generation.** Once modes are resolved, proceed to §3d.
-
-**Frontmatter reference:**
-
-```yaml
-# Default: "ask-per-section"
-# Valid values: comment, omit, generate, generate-tagged, ask-per-section, template-default
-empty_sections_mode: "ask-per-section"
-```
-
-If `empty_sections_mode` contains an unrecognized value, warn the user and fall back to `ask-per-section`.
-
-#### 3d. Perform the transformation (agent does it, not external API)
-
-1. Read the template and `md/_all.md`.
-2. Using your own LLM as agent, generate the transformed document following the template instructions and version rules (draft or final), with the empty sections mode applied (§3c-ii).
-   - If **draft**: include HTML comments + visible citations per SS4 draft rules.
-   - If **final with [A] or [B]**: first apply empty sections handling (§3c-ii), THEN apply the chosen citation format (SS3c-i). HTML comments MUST be removed; visible citations formatted per the selected style.
-   - If **final with [C]**: apply empty sections handling (§3c-ii), then strip ALL `<!-- cite: ... -->` HTML comments AND `— Source: ...` visible citations from the output.
-3. Write the file in `artifacts/` with the corresponding name (it is an Artifact — see §5/§5b). If the output is an iNNfo model, write it in `models/` instead.
-4. Present the result to the user.
-
-If for any reason you cannot generate the content (context too large, etc.), inform the user and offer the CLI transformer.js as fallback:
-```bash
-node scripts/index.js --apply "<template-name>" --src "<target-project-directory>"
-```
-
-### 4. Draft content with source traceability
-
-When the user chooses **draft**, the `_V_x-y-z_draft.md` file must include:
-
-Every citation in a draft MUST include two components: a machine-readable HTML comment immediately before the visible attribution text, and the visible text itself. The HTML comment serves as a structured pointer for final document processing.
-
-#### Mandatory header
-
-The document must begin with:
+When transforming normalized Markdown into an iNNfo Level 3 Model:
+- Frontmatter MUST use lightweight V_0-3-0 format (`level: 3`, `spec_version: "V_0-3-0"`, `parent_spec: { name, url }`).
+- Body MUST use unified NN syntax: `# NN <Concept>`, `## NN <Concept>: <Element>`, `key:: value`.
+- Every element MUST include explicit provenance pointers `source_ref:: src-NNN (path#lines)`:
 
 ```markdown
-# DRAFT FOR REVIEW — NOT FINAL VERSION
+# NN Stakeholders
+
+## NN Stakeholders: Enterprise Clients
+source_ref:: sources/markdown/interview_transcript.md#L45-L60
+relationship_model:: B2B Long-term
 ```
 
-#### Source citations per claim
+#### 3c. Version & Citation Selection
 
-Each fact, figure, or conclusion must include a reference to the source document from which it was extracted. Use sequential `src-NNN` pointers (e.g. `src-001`, `src-002`) to identify each unique source. Reuse the same `src-NNN` when citing the same source in multiple sections.
+Before generating the document, prompt the user:
 
-Every citation MUST include TWO elements:
+```
+Do you want to generate a draft with comments and citations, or a final version?
 
-1. **HTML comment** (machine-readable): `<!-- cite: src-NNN, section <section-name> -->`
-2. **Visible text** (human-readable): `— Source: <filename>, section <section-name>`
-
-The HTML comment MUST appear immediately before the visible text.
-
-Source IDs (`src-NNN`) map to relative file paths from the workspace root. Before drafting, scan `md/` files for `source.file` in their YAML frontmatter and build a mapping — e.g., `src-001` &rarr; `raw/if-narrative-gv22bo-1.md`.
-
-```markdown
-<!-- cite: src-001, section IOE.1 -->
-— Source: IF Narrative GV22BO-1, section IOE.1
+  [a] (Recomendado) Final version — clean deliverable with formatted inline citations
+  [b] Draft for review — annotated with source pointers and review blocks
+  [x] Cancel
 ```
 
-```markdown
-<!-- cite: src-002, interview Etelvina -->
-— Source: Transcripts T11, interview Etelvina
-```
+---
 
-#### Review annotations in Markdown format
+### 4. Draft & Traceability Content Protocol
 
-Use GitHub Flavored Markdown note blocks:
+Draft deliverables (`_draft.md`) MUST include:
+1. Header: `# DRAFT FOR REVIEW — NOT FINAL VERSION`
+2. Dual-mode citation pointers per claim:
+   - HTML comment (machine-readable): `<!-- cite: src-NNN, section <section-name> -->`
+   - Visible text (human-readable): `— Source: <filename>, section <section-name>`
 
-```markdown
-> [!NOTE] Revisar: este dato proviene de una fuente parcial. Contrastar con otras fuentes.
-```
+---
 
-```markdown
-> [!WARNING] No confirmado en otras fuentes. Verificar con la MML original.
-```
-
-```markdown
-> [!TIP] Esta conclusión surge del cruce de tres fuentes independientes.
-```
-
-#### Uncertainty markers
-
-When a fact is unclear or the source is ambiguous:
-
-```markdown
-[unconfirmed data — review]
-```
-
-```markdown
-[own estimate — cross-check with official sources]
-```
-
-```markdown
-[approximate date — verify]
-```
-
-### Citation Formats
-
-When the user selects a citation format (from SS3c-i), load [`citations.md`](citations.md) and follow the rules for the selected format. HTML comments MUST always be removed from final output unless stated otherwise.
-
-### 4b. Post-Generation Validation (iNNfo models only)
-
-When the transformation target is an iNNfo template (business, procedures, catalog, etc.), the generated model SHOULD be validated before delivery.
-
-**If `scripts/pipeline-gate.mjs` exists** in the skill directory, run:
-
-```bash
-node scripts/pipeline-gate.mjs validate "<output-path>"
-```
-
-If validation fails, report the errors to the user and DO NOT proceed. After validation passes, run the integration gate:
-
-```bash
-node scripts/pipeline-gate.mjs integrate "<output-path>" [--target-dir <workspace-root>]
-```
-
-This increments the patch version, moves the file to the workspace root, and updates index.md.
-
-**If `scripts/pipeline-gate.mjs` does NOT exist** (common for standalone skill installations), fall back to manual validation:
-
-1. Verify the model's frontmatter: `level: 3`, `parent_spec { name, url }`, `model_version`, `title`.
-2. Verify the template at `parent_spec.url` is accessible (file exists).
-3. Verify the body starts with `> [!NOTE] This is an **iNNfo document**...`.
-4. Verify `# _NN index` contains WikiLinks that resolve to actual concept blocks.
-5. Verify each `# _NN <Concept>` heading matches a concept declared in the template.
-6. Verify element syntax: `* _NN <Concept>: <Element Name>` with optional indented YAML.
-7. Inform the user this is fallback validation (not engine-backed).
-
-After manual validation, proceed with versioning per nn-innfo §10.
-
-### 5. Output Directory & Entity Conventions
-
-Transformations generate models, artifacts, and procedures in strict accordance with the workspace directory layout:
+### 5. Output Directory Conventions
 
 | Entity Type | Target Directory | Example File Path | Notes |
 |------|------|---------|-------|
-| **Model** (`*_NN.md`) | `models/` | `models/Business_Plan_V_0-1-0_NN.md` | iNNfo Level 3 semantic models |
-| **Artifact** | `artifacts/` | `artifacts/Executive_Summary_V_0-1-0.md` | Any generated deliverable. Its kind is a field value: `document`, `report`, `board`, or `dataset`. |
-| **Artifact (draft)** | `artifacts/` | `artifacts/Executive_Summary_V_0-1-0_draft.md` | Annotated draft for review |
-| **Validation Report** | `artifacts/reports/` | `artifacts/reports/Validation_Report_2026-07-27.md` | Diagnostic logs and validation output |
-| **Procedure Spec** | `procedures/` | `procedures/Document_Ingest_V_1-0-0_procedures_NN.md` | Transformation procedure compliant with `procedures_V_0-2-0_NN.md` |
-| **Provenance Model** | workspace root | `<Project>_V_0-1-0_trannsform_NN.md` | Lineage registry (see §5b). Sources auto-populated by the scanner; Models/Artifacts/Procedures added after generation. |
+| **Normalized Markdown** | `sources/markdown/` | `sources/markdown/doc1_src-001.md` | Ingested source with scanner frontmatter |
+| **Model** (`*_NN.md`) | `models/` | `models/Business_Plan_V_1-0-0_NN.md` | iNNfo Level 3 V_0-3-0 semantic models with `source_ref` |
+| **Export Deliverable** | `artifacts/exports/` | `artifacts/exports/Executive_Summary_V_1-0-0.md` | Clean final deliverable |
+| **Draft Deliverable** | `artifacts/exports/` | `artifacts/exports/Executive_Summary_V_1-0-0_draft.md` | Annotated draft |
+| **Procedure Spec** | `procedures/` | `procedures/Document_Ingest_V_1-0-0_procedures_NN.md` | Procedure spec compliant with `procedures_V_0-3-0_NN.md` |
 
-> **Terminology (MANDATORY):** the terms **"export"** and **"dashboard"** are retired.
-> Every generated deliverable is an **Artifact**; a dashboard-style Artifact has
-> `artifact_format:: board`.
+---
 
-### 5b. Provenance Model (lineage registry)
+### 6. Post-Transformation Closing Protocol
 
-Every scan auto-generates or refreshes a **provenance model** at the workspace root —
-`<Project>_V_0-1-0_trannsform_NN.md`, conforming to the `traNNsform` level-2 template
-([`trannsform_NN.md`](https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level2/trannsform/trannsform_NN.md)).
-It records ingestion and generation as an explicit lineage graph (W3C PROV style):
+At the end of transformation:
+1. Summarize adjustments made.
+2. Present options menu with `[a] (Recomendado)` prefix.
+3. Print **Visual Expectation Checklist** (§12 of `nn-innfo`) when iNNfo models were created/edited.
 
-- **Sources** — one element per ingested raw file. **Auto-populated by `scripts/provenance.js`**
-  from the `md/*.md` source frontmatter (hash, filename, format, normalized content). Do NOT
-  edit these by hand; re-run the scan to refresh them.
-- **Procedures** — the transformation run (activity). **The agent adds one** per run:
-  `## NN Procedures: <run name>` with `procedure_ref`, `agent`, `run_at`.
-- **Models** — each domain model produced. **The agent adds one** after generating a model:
-  `## NN Models: <title>` with `model_ref`, `model_template`, `model_version`,
-  `derived_from:: [<sources>]`, `generated_by:: [<procedure>]`.
-- **Artifacts** — each deliverable produced. **The agent adds one** after generating an artifact:
-  `## NN Artifacts: <name>` with `artifact_format`, `location`,
-  `derived_from_inputs:: [<sources and/or models>]`, `produced_by:: [<procedure>]`.
+---
 
-Lineage is expressed with `reference` fields (`derived_from`, `generated_by`,
-`derived_from_inputs`, `produced_by`) pointing to element names **within the provenance
-model** — not with matrices. The derivation graph is a DAG: an Artifact may derive from a
-Model, directly from Sources, or both. Whenever you generate a Model or Artifact, you MUST
-append the corresponding element(s) to the provenance model so the lineage stays complete.
+## Core Rules
 
-**Refresh after adding entities.** After you create a new model (in `models/` or the
-workspace root) or artifact and record it in the provenance model, run:
-
-```bash
-node scripts/index.js --provenance --src "<target-project-directory>"
-```
-
-This refreshes the provenance `Sources` and rewrites the semantic `index.md` so the iNNfo
-Modeler discovers every `*_NN.md` model (including the ones you just created). It is
-idempotent and preserves the Models/Artifacts/Procedures elements you added by hand.
-
-### 6. Post-Transformation Conversation Feedback Protocol (MANDATORY)
-
-At the conclusion of any transformation workflow, if the user or agent modified any aspect of the transformation logic, prompt rules, mapping strategy, or template structure during the conversation, the agent **MUST** run this closing protocol before ending the interaction:
-
-1. **Summarize modifications**: State clearly what parameters or behaviors were adjusted during the session.
-2. **Present the decision menu**:
-
-```
-💡 Post-Transformation Options:
-
-During this conversation, we modified the following aspects of the transformation:
-  - [Summarize change 1]
-  - [Summarize change 2]
-
-How would you like to handle this transformation spec for future runs?
-
-  [a] Save as a new transformation spec   — Create a new, reproducible procedures file in procedures/ (e.g. procedures/[Name]_V_1-0-0_procedures_NN.md)
-  [b] Update original transformation spec — Overwrite the existing procedures spec with these modifications
-  [c] Do nothing                           — Keep generated models and artifacts, but do not save or modify any transformation spec
-```
-
-3. **Execute choice**:
-   - If **[a]**: Write out a new `procedures_V_0-2-0_NN.md` spec file into `procedures/` documenting the steps (`Work`), tools (`Tools`), deliverables (`Artifact`), and roles (`Roles`).
-   - If **[b]**: Update the target file in `procedures/`.
-   - If **[c]**: Acknowledge and finalize without altering procedure specs.
-
+1. **Zero Unilateral Mutation**: NEVER move or rename user files without prior explicit confirmation.
+2. **Recommended Option First**: Always prefix option `[a]` with `(Recomendado)` or `(Recomendada)`.
+3. **Multi-Selection Notice**: Add *"Podés seleccionar una opción o una combinación"* when applicable.
+4. **Mandatory Scanner Provenance**: Normalized Markdown in `sources/markdown/` MUST include scanner frontmatter (`source_file`, `sha256`, `size_bytes`, `normalized_at`, `source_id: src-NNN`).
+5. **Mandatory Model Provenance**: Level 3 elements MUST include `source_ref:: src-NNN (path#lines)`.
+6. **V_0-3-0 Compliance**: Target iNNfo V_0-3-0 meta-template specification and unified NN syntax (`# NN`, `## NN`, `key:: value`).

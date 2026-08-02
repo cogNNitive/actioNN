@@ -56,10 +56,8 @@ source:
 }
 
 /**
- * Scan md/ directory and generate a source registry mapping src-NNN IDs to file paths.
- * Reads YAML frontmatter from each .md file, extracts source.file, and assigns
- * sequential IDs per unique source path.
- * @param {string} mdDir - Path to the md/ directory
+ * Scan sources/md/ directory and generate a source registry mapping src-NNN IDs to file paths.
+ * @param {string} mdDir - Path to the sources/md/ directory
  * @returns {Array<{id: string, path: string}>} - Registry entries sorted by path
  */
 function generateSourceRegistry(mdDir) {
@@ -67,17 +65,16 @@ function generateSourceRegistry(mdDir) {
   if (!fs.existsSync(mdDir)) return registry;
 
   const mdFiles = fs.readdirSync(mdDir)
-    .filter(f => f.endsWith('.md') && f !== '_all.md')
+    .filter(f => f.endsWith('.md') && f !== 'index.md')
     .sort();
 
   let srcCounter = 0;
-  const seen = new Map(); // path -> id
+  const seen = new Map();
 
   for (const mdFile of mdFiles) {
     const mdPath = path.join(mdDir, mdFile);
     const content = fs.readFileSync(mdPath, 'utf8');
 
-    // Extract YAML frontmatter
     const fmMatch = content.match(/^---\n([\s\S]*?)\n---/);
     if (!fmMatch) continue;
 
@@ -93,11 +90,7 @@ function generateSourceRegistry(mdDir) {
     }
 
     if (!sourceFile) continue;
-
-    if (seen.has(sourceFile)) {
-      // Already assigned an ID — skip duplicate
-      continue;
-    }
+    if (seen.has(sourceFile)) continue;
 
     srcCounter++;
     const id = 'src-' + String(srcCounter).padStart(3, '0');
@@ -109,7 +102,39 @@ function generateSourceRegistry(mdDir) {
 }
 
 /**
- * Detect available formats in a raw directory
+ * Flatten files recursively from sources/original into sources/raw with unique filenames
+ */
+function flattenOriginalToRaw(originalDir, rawDir) {
+  if (!fs.existsSync(originalDir)) return [];
+
+  const copyFileRecursive = (dir, currentRelPath = '') => {
+    let copied = [];
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+
+    for (const entry of entries) {
+      if (entry.name.startsWith('.') || entry.name.startsWith('~$') || entry.name.toLowerCase() === 'desktop.ini') {
+        continue;
+      }
+      const fullPath = path.join(dir, entry.name);
+      const relPath = currentRelPath ? path.join(currentRelPath, entry.name) : entry.name;
+
+      if (entry.isDirectory()) {
+        copied = copied.concat(copyFileRecursive(fullPath, relPath));
+      } else if (entry.isFile()) {
+        const uniqueName = relPath.replace(/[/\\]+/g, '__');
+        const destPath = path.join(rawDir, uniqueName);
+        fs.copyFileSync(fullPath, destPath);
+        copied.push({ originalRelPath: relPath, rawFileName: uniqueName, destPath });
+      }
+    }
+    return copied;
+  };
+
+  return copyFileRecursive(originalDir);
+}
+
+/**
+ * Detect available formats in sources/raw directory
  */
 function detectFormats(rawDir) {
   const counts = {};
@@ -125,9 +150,6 @@ function detectFormats(rawDir) {
   return counts;
 }
 
-/**
- * Check if a dependency is installed. Uses a simple require check.
- */
 function isDepInstalled(pkgName) {
   try {
     require.resolve(pkgName, { paths: [__dirname] });
@@ -137,17 +159,10 @@ function isDepInstalled(pkgName) {
   }
 }
 
-/**
- * Get a human-readable list of supported format labels
- */
 function getSupportedFormats() {
   return Object.values(EXT_LABELS).map(l => `\`${l}\``).join(', ');
 }
 
-/**
- * Strip a leading YAML frontmatter block from raw content, if present.
- * Avoids emitting double frontmatter when a source .md already carries one.
- */
 function stripFrontmatter(content) {
   if (content.startsWith('---\n') || content.startsWith('---\r\n')) {
     const endIdx = content.indexOf('\n---', 3);
@@ -156,10 +171,6 @@ function stripFrontmatter(content) {
   return content;
 }
 
-/**
- * Convert a directly-readable text format (EXT_OK) to a markdown body.
- * @returns {string} markdown body (without frontmatter)
- */
 function convertOkFormat(ext, filePath, baseName) {
   const content = fs.readFileSync(filePath, 'utf8');
   switch (ext) {
@@ -187,8 +198,6 @@ async function convertPdf(filePath, baseName) {
     const data = await pdfParse(fs.readFileSync(filePath));
     return { body: `# ${baseName}\n\n${data.text}` };
   } catch (pdfErr) {
-    // Graceful degradation: emit a placeholder so downstream steps still see
-    // the document, and surface the parse failure in the manifest.
     return {
       body: `# ${baseName}\n\n*PDF Content Ingested (Placeholder)*\n\n[PDF: ${path.basename(filePath)} needs manual verification or a PDF parser package to extract text fully.]`,
       partial: true,
@@ -228,17 +237,12 @@ function convertXlsx(filePath, baseName) {
   return { body };
 }
 
-/** Extension → async converter returning { body, partial?, note? }. */
 const PROMPT_CONVERTERS = {
   '.docx': convertDocx,
   '.pdf': convertPdf,
   '.xlsx': convertXlsx,
 };
 
-/**
- * Ensure the npm dependency required for a prompt format is installed.
- * @returns {Promise<{ok: true} | {ok: false, status: string, reason: string}>}
- */
 async function ensureDependency(ext, options) {
   const dep = EXT_DEPS[ext];
   if (!dep || isDepInstalled(dep.pkg)) return { ok: true };
@@ -265,10 +269,6 @@ async function ensureDependency(ext, options) {
   }
 }
 
-/**
- * Process one directly-readable file (EXT_OK). Pure of counting side effects;
- * returns a manifest entry with an `outcome` the caller tallies.
- */
 function processOkFile(ext, file, filePath, baseName, mdDir, isSelected) {
   const format = ext === '.txt' ? 'Plain Text' : ext.substring(1).toUpperCase();
   if (!isSelected) {
@@ -277,17 +277,13 @@ function processOkFile(ext, file, filePath, baseName, mdDir, isSelected) {
   try {
     const body = convertOkFormat(ext, filePath, baseName);
     const destPath = path.join(mdDir, `${baseName}.md`);
-    fs.writeFileSync(destPath, generateSourceFrontmatter(filePath, `raw/${file}`) + body, 'utf8');
-    return { format, status: '✅ Processed', action: `Converted to markdown at \`md/${baseName}.md\``, outcome: 'processed' };
+    fs.writeFileSync(destPath, generateSourceFrontmatter(filePath, `sources/raw/${file}`) + body, 'utf8');
+    return { format, status: '✅ Processed', action: `Converted to markdown at \`sources/md/${baseName}.md\``, outcome: 'processed' };
   } catch (err) {
     return { format, status: '❌ Error', action: `Failed to process: ${err.message}`, outcome: 'skipped' };
   }
 }
 
-/**
- * Process one extraction-required file (EXT_PROMPT: docx/pdf/xlsx), handling the
- * dependency gate and user approval before dispatching to a converter.
- */
 async function processPromptFile(ext, file, filePath, baseName, mdDir, isSelected, options) {
   const format = ext.substring(1).toUpperCase();
   if (!isSelected) {
@@ -301,7 +297,7 @@ async function processPromptFile(ext, file, filePath, baseName, mdDir, isSelecte
 
   const destPath = path.join(mdDir, `${baseName}.md`);
   if (fs.existsSync(destPath)) {
-    return { format, status: '✅ Processed', action: `Already converted to markdown at \`md/${baseName}.md\``, outcome: 'processed' };
+    return { format, status: '✅ Processed', action: `Already converted to markdown at \`sources/md/${baseName}.md\``, outcome: 'processed' };
   }
 
   let approve = options.autoAcceptPrompt;
@@ -314,45 +310,36 @@ async function processPromptFile(ext, file, filePath, baseName, mdDir, isSelecte
 
   try {
     const result = await PROMPT_CONVERTERS[ext](filePath, baseName);
-    fs.writeFileSync(destPath, generateSourceFrontmatter(filePath, `raw/${file}`) + result.body, 'utf8');
+    fs.writeFileSync(destPath, generateSourceFrontmatter(filePath, `sources/raw/${file}`) + result.body, 'utf8');
     if (result.partial) {
-      return { format, status: '✅ Processed (Partial)', action: `Created placeholder markdown at \`md/${baseName}.md\`. PDF parsing failed: ${result.note}`, outcome: 'processed' };
+      return { format, status: '✅ Processed (Partial)', action: `Created placeholder markdown at \`sources/md/${baseName}.md\`. PDF parsing failed: ${result.note}`, outcome: 'processed' };
     }
-    return { format, status: '✅ Processed', action: `Converted ${format} to markdown at \`md/${baseName}.md\``, outcome: 'processed' };
+    return { format, status: '✅ Processed', action: `Converted ${format} to markdown at \`sources/md/${baseName}.md\``, outcome: 'processed' };
   } catch (err) {
     return { format, status: '❌ Error', action: `Failed to convert: ${err.message}`, outcome: 'skipped' };
   }
 }
 
 /**
- * Scan raw directory, process files, write the ingestion manifest to md/index.md,
- * and consolidate to md/_all.md
- * @param {string} projectDir
- * @param {object} options
- * @param {string[]} [options.formats] – array of extensions to include (e.g. ['.txt', '.docx']).
- *        If omitted, all detected formats are processed.
- * @param {boolean} [options.autoAcceptPrompt] – auto-accept docx/pdf/xlsx conversion.
- * @param {function} [options.promptCallback] – callback for user approval.
- * @param {function} [options.depPromptCallback] – async (ext) => boolean, called when a
- *        dependency is missing. Return true to install, false to skip.
+ * Scan sources/original, flatten to sources/raw, process files to sources/md
  */
 async function scanAndProcess(projectDir, options = {}) {
-  const rawDir = path.join(projectDir, 'raw');
-  const mdDir = path.join(projectDir, 'md');
-  // Ingestion manifest lives under md/ so the workspace-root index.md stays free
-  // for the semantic iNNfo index (# NN index) written by provenance.js.
+  const originalDir = path.join(projectDir, 'sources', 'original');
+  const rawDir = path.join(projectDir, 'sources', 'raw');
+  const mdDir = path.join(projectDir, 'sources', 'md');
   const indexFile = path.join(mdDir, 'index.md');
 
-  if (!fs.existsSync(rawDir)) {
-    fs.mkdirSync(rawDir, { recursive: true });
-  }
-  if (!fs.existsSync(mdDir)) {
-    fs.mkdirSync(mdDir, { recursive: true });
-  }
+  fs.mkdirSync(originalDir, { recursive: true });
+  fs.mkdirSync(rawDir, { recursive: true });
+  fs.mkdirSync(mdDir, { recursive: true });
 
   const logs = [];
   const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
-  logs.push(`*   **${timestamp}:** Scan initiated in \`${rawDir}\`.`);
+  logs.push(`*   **${timestamp}:** Scan initiated in \`${originalDir}\`.`);
+
+  // Step 1: Flatten original files into raw folder with unique filenames
+  const flattened = flattenOriginalToRaw(originalDir, rawDir);
+  logs.push(`*   **${timestamp}:** Flattened ${flattened.length} file(s) from \`sources/original/\` to \`sources/raw/\`.`);
 
   const files = fs.readdirSync(rawDir);
   let registry = [];
@@ -391,7 +378,7 @@ async function scanAndProcess(projectDir, options = {}) {
     }
 
     registry.push({
-      name: `raw/${file}`,
+      name: `sources/raw/${file}`,
       format: entry.format,
       size: stat.size,
       status: entry.status,
@@ -399,36 +386,10 @@ async function scanAndProcess(projectDir, options = {}) {
     });
   }
 
-  logs.push(`*   **${timestamp}:** Discovered ${totalDiscovered} files.`);
+  logs.push(`*   **${timestamp}:** Discovered ${totalDiscovered} files in \`sources/raw/\`.`);
+  logs.push(`*   **${timestamp}:** Converted ${processedCount} files to Markdown in \`sources/md/\`. (NOTE: _all.md consolidation removed)`);
 
-  // Consolidate files in alphabetical order into md/_all.md
-  const consolidationTimestamp = new Date().toISOString();
-  let consolidatedContent = `---
-title: "Converted Documents Consolidation"
-generated_at: "${consolidationTimestamp}"
-generated_by: "traNNsform v${TRANNNSFORM_VERSION}"
-source_count: ${processedCount}
----
-
-# Converted Documents Consolidation
-
-`;
-  const mdFiles = fs.readdirSync(mdDir)
-    .filter(f => f.endsWith('.md') && f !== '_all.md')
-    .sort();
-
-  for (let i = 0; i < mdFiles.length; i++) {
-    const mdFile = mdFiles[i];
-    const mdPath = path.join(mdDir, mdFile);
-    const content = fs.readFileSync(mdPath, 'utf8').trim();
-    consolidatedContent += '---\n\n' + content + '\n\n';
-  }
-
-  fs.writeFileSync(path.join(mdDir, '_all.md'), consolidatedContent, 'utf8');
-  logs.push(`*   **${timestamp}:** Converted ${processedCount} files to Markdown in \`md/\`.`);
-  logs.push(`*   **${timestamp}:** Consolidated documents in alphabetical order into \`md/_all.md\`.`);
-
-  // Build index.md
+  // Build sources/md/index.md manifest
   let indexContent = `# traNNsform Ingestion Manifest & Processing Log\n\n`;
   indexContent += `## Ingestion Status\n`;
   indexContent += `*   **Total Files Discovered:** ${totalDiscovered}\n`;
@@ -464,6 +425,7 @@ module.exports = {
   computeFileHash,
   generateSourceFrontmatter,
   generateSourceRegistry,
+  flattenOriginalToRaw,
   EXT_LABELS,
   EXT_DEPS
 };

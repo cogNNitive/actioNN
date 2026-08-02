@@ -17,15 +17,13 @@ function listTemplates(projectDir) {
  * Fallback heuristic transformer — used only when the agent cannot perform
  * the transformation directly (e.g. context too large).
  *
- * The primary transformation path is the agent's own LLM (see SKILL.md).
- * This function exists as a basic CLI fallback for scripted/automated use.
+ * Reads individual markdown files from sources/md/ and applies template structure.
  */
 async function applyTransformation(projectDir, templateName, options = {}) {
   const transDir = path.join(projectDir, 'traNNsformations');
-  const allMdFile = path.join(projectDir, 'md', '_all.md');
+  const mdDir = path.join(projectDir, 'sources', 'md');
 
   const cleanTemplateName = path.basename(templateName, '.md').replace(/\s+/g, '_');
-  // Generated deliverables are Artifacts → they live in artifacts/ (see SKILL.md §5).
   const outputDir = path.join(projectDir, 'artifacts');
 
   if (!fs.existsSync(outputDir)) {
@@ -37,15 +35,26 @@ async function applyTransformation(projectDir, templateName, options = {}) {
     throw new Error(`Template not found: ${templateName}`);
   }
 
-  if (!fs.existsSync(allMdFile)) {
-    throw new Error('Consolidated markdown file md/_all.md not found. Please run scan first.');
+  if (!fs.existsSync(mdDir)) {
+    throw new Error('Markdown directory sources/md/ not found. Please run scan first.');
   }
 
-  const sourceContent = fs.readFileSync(allMdFile, 'utf8');
+  const mdFiles = fs.readdirSync(mdDir)
+    .filter(f => f.endsWith('.md') && f !== 'index.md')
+    .sort();
+
+  if (mdFiles.length === 0) {
+    throw new Error('No normalized markdown files found in sources/md/. Please run scan first.');
+  }
+
+  let sourceContent = '';
+  for (const f of mdFiles) {
+    const content = fs.readFileSync(path.join(mdDir, f), 'utf8');
+    sourceContent += `---\n\n# Source File: ${f}\n\n` + content.trim() + '\n\n';
+  }
 
   const transformedOutput = runHeuristicTransformation(templateName, sourceContent);
 
-  // Save Output
   const timestamp = getFormattedTimestamp();
   const outputFileName = `${cleanTemplateName}_${timestamp}.md`;
   const outputPath = path.join(outputDir, outputFileName);
@@ -59,14 +68,6 @@ async function applyTransformation(projectDir, templateName, options = {}) {
   };
 }
 
-/**
- * Heuristic/mock transformer — basic structural transformation based on headers.
- *
- * This is the CLI fallback only: it splits the consolidated source on `---`
- * separators, reads the first `# ` heading of each section as a title, and
- * scaffolds a uniform Description/History/Members block. The real, content-aware
- * transformation is performed by the agent's LLM (see SKILL.md).
- */
 function runHeuristicTransformation(templateName, sourceContent) {
   const sections = sourceContent.split('---');
   let result = `# Transformation Result: ${path.basename(templateName, '.md')}\n\n`;
@@ -77,7 +78,6 @@ function runHeuristicTransformation(templateName, sourceContent) {
     const titleLine = lines.find(l => l.startsWith('# '));
     if (titleLine) {
       const name = titleLine.substring(2).trim();
-      if (name.toLowerCase().includes('consolidation')) continue;
 
       const paragraphs = lines.filter(l => !l.startsWith('#') && !l.startsWith('---'));
       const desc = paragraphs[0] || 'No description available.';
@@ -96,7 +96,7 @@ function runHeuristicTransformation(templateName, sourceContent) {
   }
 
   if (!processedAny) {
-    result += `*No structural headers or data found in consolidated input to transform.*\n`;
+    result += `*No structural headers or data found in input markdown files to transform.*\n`;
   }
 
   return result;
