@@ -175,7 +175,7 @@
       border: 1px solid var(--border);
       border-radius: var(--radius);
       padding: 32px;
-      max-width: 960px;
+      max-width: 900px;
       margin: 0 auto;
       overflow-x: auto;
     }
@@ -303,37 +303,44 @@
       </div>
     </section>
 
-    <!-- How Skills Cooperate Diagram -->
+    <!-- Option 20 Master Diagram -->
     <section style="background: var(--canvas-inert);">
       <div class="container">
         <div class="section-title">
-          <h2>How Skills & Tools Cooperate</h2>
-          <p>Visual interaction between OpenCode, actioNN skills, MCP tools, and iNNfo engine.</p>
+          <h2>Skills Integration Architecture</h2>
+          <p>How actioNN skills integrate OpenCode, innfo-mcp, and the iNNfo Modeler App into a single pipeline.</p>
         </div>
         <div class="diagram-card">
           <pre class="mermaid">
-flowchart LR
-    subgraph UserSpace["User Workspace"]
-        A["👤 User"] <-->|Prompts & Commands| B["💻 OpenCode Desktop"]
+flowchart TD
+    subgraph Step1["Step 1: Ingestion & Setup"]
+        U["👤 User in OpenCode"] -->|Bootstrap Prompt| Router["⚡ actioNN Skills (Router & traNNsform)"]
+        RawDocs["📄 Raw Documents (PDF, DOCX)"] --> Router
     end
 
-    subgraph cogNNitiveEcosystem["cogNNitive Ecosystem"]
-        B <-->|Loads Skills| C["⚡ actioNN Skills"]
-        C <-->|Invokes MCP Tools| D["⚙️ innfo-mcp Server"]
-        D <-->|Parses & Validates| E["📘 iNNfo Core Engine"]
+    subgraph Step2["Step 2: Validation & Engine"]
+        Router --> Models["📘 Structured Models (_NN.md)"]
+        Models <--> MCP["⚙️ innfo-mcp Server + Core Engine"]
     end
 
-    subgraph VisualApps["Visual Interfaces"]
-        E <-->|Renders & Edits| F["🛠️ iNNfo Modeler App"]
+    subgraph Step3["Step 3: Delivery & Access"]
+        MCP <--> Modeler["🛠️ iNNfo Modeler App (Web Editor)"]
+        MCP <--> AgentChat["💬 OpenCode Conversational Queries"]
     end
 
-    classDef user fill:#F6EEF6,stroke:#4D0E4E,stroke-width:2px,color:#4D0E4E;
-    classDef eco fill:#FAFAFC,stroke:#6A1B6B,stroke-width:2px,color:#111112;
-    classDef app fill:#4D0E4E,stroke:#4D0E4E,stroke-width:2px,color:#FFFFFF;
+    subgraph Step4["Step 4: Artifact Generation"]
+        Modeler & AgentChat --> Artifacts["📊 Final Deliverables\n(Visual Dashboards, Exec Summaries, Scripts)"]
+    end
 
-    class A,B user;
-    class C,D,E eco;
-    class F app;
+    classDef s1 fill:#FAFAFC,stroke:#636366,color:#111112;
+    classDef s2 fill:#F6EEF6,stroke:#4D0E4E,color:#4D0E4E;
+    classDef s3 fill:#FAFAFC,stroke:#6A1B6B,color:#111112;
+    classDef s4 fill:#4D0E4E,stroke:#4D0E4E,color:#FFFFFF;
+
+    class U,Router,RawDocs s1;
+    class Models,MCP s2;
+    class Modeler,AgentChat s3;
+    class Artifacts s4;
           </pre>
         </div>
       </div>

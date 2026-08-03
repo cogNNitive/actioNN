@@ -21,22 +21,27 @@ Teach your AI agent domain capabilities: model evaluation, skills management, do
 
 ---
 
-## How Skills & Tools Cooperate
+## Skills Integration Architecture
 
 ```mermaid
-flowchart LR
-    subgraph UserSpace["User Workspace"]
-        A["👤 User"] <-->|Prompts & Commands| B["💻 OpenCode Desktop"]
+flowchart TD
+    subgraph Step1["Step 1: Ingestion & Setup"]
+        U["👤 User in OpenCode"] -->|Bootstrap Prompt| Router["⚡ actioNN Skills (Router & traNNsform)"]
+        RawDocs["📄 Raw Documents (PDF, DOCX)"] --> Router
     end
 
-    subgraph cogNNitiveEcosystem["cogNNitive Ecosystem"]
-        B <-->|Loads Skills| C["⚡ actioNN Skills"]
-        C <-->|Invokes MCP Tools| D["⚙️ innfo-mcp Server"]
-        D <-->|Parses & Validates| E["📘 iNNfo Core Engine"]
+    subgraph Step2["Step 2: Validation & Engine"]
+        Router --> Models["📘 Structured Models (_NN.md)"]
+        Models <--> MCP["⚙️ innfo-mcp Server + Core Engine"]
     end
 
-    subgraph VisualApps["Visual Interfaces"]
-        E <-->|Renders & Edits| F["🛠️ iNNfo Modeler App"]
+    subgraph Step3["Step 3: Delivery & Access"]
+        MCP <--> Modeler["🛠️ iNNfo Modeler App (Web Editor)"]
+        MCP <--> AgentChat["💬 OpenCode Conversational Queries"]
+    end
+
+    subgraph Step4["Step 4: Artifact Generation"]
+        Modeler & AgentChat --> Artifacts["📊 Final Deliverables\n(Visual Dashboards, Exec Summaries, Scripts)"]
     end
 ```
 
