@@ -12,7 +12,7 @@ pages:
     description: "Skills ecosystem for AI agents. Model Router, Skills Manager, traNNsform, and Design System."
     last_modified: "2026-06-27"
     format: markdown
-    url: "https://actionn.cognnitive.com/web/index.md"
+    url: "https://actionn.cognnitive.com/index.md"
   - path: "/documentation/"
     title: "cogNNitive — Documentation"
     description: "Technical documentation for the cogNNitive skills ecosystem"
