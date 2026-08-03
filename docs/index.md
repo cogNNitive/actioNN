@@ -26,8 +26,3 @@ Teach your AI agent domain capabilities: model evaluation, skills management, do
 1. **Tell Your OpenCode Agent**: Say the single bootstrap phrase in OpenCode Desktop chat: `I want to use https://cognnitive.com/use`
 2. **Skills Installed Automatically**: OpenCode fetches the manifest, downloads all skills from GitHub, and presents an interactive workflow menu.
 
----
-
-## Misc Review (Removed Technical Details)
-
-Technical flags, Windows Junction specifications, and YAML frontmatter schemas have been moved to [Documentation](https://actionn.cognnitive.com/documentation/).
