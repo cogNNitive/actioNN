@@ -12,12 +12,12 @@ const TRANNNSFORM_VERSION = (() => {
 })();
 
 // Supported extensions by category
-const EXT_OK = ['.txt', '.md', '.csv', '.json'];
+const EXT_OK = ['.txt', '.md', '.csv', '.json', '.html', '.htm'];
 const EXT_PROMPT = ['.docx', '.pdf', '.xlsx'];
 const EXT_NO = ['.mp3', '.wav', '.png', '.jpg', '.jpeg', '.gif'];
 
 const EXT_LABELS = {
-  '.txt': 'txt', '.md': 'md', '.csv': 'csv', '.json': 'json',
+  '.txt': 'txt', '.md': 'md', '.csv': 'csv', '.json': 'json', '.html': 'html', '.htm': 'htm',
   '.docx': 'docx', '.pdf': 'pdf', '.xlsx': 'xlsx'
 };
 
@@ -35,118 +35,110 @@ function computeFileHash(filePath) {
   return crypto.createHash('sha256').update(content).digest('hex');
 }
 
+function escapeYamlString(value) {
+  return String(value)
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/\r?\n/g, ' ');
+}
+
 /**
- * Generate YAML frontmatter with source traceability
+ * Generate the canonical flat YAML frontmatter for a normalized source file.
+ *
+ * Schema (must match the iNNfo editor exactly — flat, no nesting):
+ *   source_file, sha256, size_bytes, normalized_at, normalized_by
+ * Optional (web-imported sources only): source_url, downloaded_at, title, description, author.
  */
-function generateSourceFrontmatter(originalFilePath, relativeSourcePath) {
+function generateSourceFrontmatter(originalFilePath, relativeSourcePath, extra = {}) {
   const hash = computeFileHash(originalFilePath);
   const timestamp = new Date().toISOString();
   const stat = fs.statSync(originalFilePath);
 
-  return `---
-source:
-  file: "${relativeSourcePath}"
-  hash: "sha256:${hash}"
-  size: ${stat.size}
-  normalized_at: "${timestamp}"
-  normalized_by: "traNNsform v${TRANNNSFORM_VERSION}"
----
+  const lines = [
+    '---',
+    `source_file: "${relativeSourcePath}"`,
+    `sha256: "${hash}"`,
+    `size_bytes: ${stat.size}`,
+    `normalized_at: "${timestamp}"`,
+    `normalized_by: "traNNsform v${TRANNNSFORM_VERSION}"`,
+  ];
 
-`;
+  if (extra.source_url) lines.push(`source_url: "${escapeYamlString(extra.source_url)}"`);
+  if (extra.downloaded_at) lines.push(`downloaded_at: "${escapeYamlString(extra.downloaded_at)}"`);
+  if (extra.title) lines.push(`title: "${escapeYamlString(extra.title)}"`);
+  if (extra.description) lines.push(`description: "${escapeYamlString(extra.description)}"`);
+  if (extra.author) lines.push(`author: "${escapeYamlString(extra.author)}"`);
+
+  lines.push('---', '', '');
+  return lines.join('\n');
 }
 
 /**
- * Scan sources/md/ directory and generate a source registry mapping src-NNN IDs to file paths.
- * @param {string} mdDir - Path to the sources/md/ directory
- * @returns {Array<{id: string, path: string}>} - Registry entries sorted by path
+ * Read the sha256 field back out of an already-normalized markdown file's frontmatter.
+ * Used to decide whether an expensive re-conversion can be skipped.
  */
-function generateSourceRegistry(mdDir) {
-  const registry = [];
-  if (!fs.existsSync(mdDir)) return registry;
-
-  const mdFiles = fs.readdirSync(mdDir)
-    .filter(f => f.endsWith('.md') && f !== 'index.md')
-    .sort();
-
-  let srcCounter = 0;
-  const seen = new Map();
-
-  for (const mdFile of mdFiles) {
-    const mdPath = path.join(mdDir, mdFile);
-    const content = fs.readFileSync(mdPath, 'utf8');
-
-    const fmMatch = content.match(/^---\n([\s\S]*?)\n---/);
-    if (!fmMatch) continue;
-
-    const fmLines = fmMatch[1].split('\n');
-    let sourceFile = null;
-
-    for (const line of fmLines) {
-      const match = line.match(/^\s*file:\s*"([^"]+)"\s*$/);
-      if (match) {
-        sourceFile = match[1];
-        break;
-      }
-    }
-
-    if (!sourceFile) continue;
-    if (seen.has(sourceFile)) continue;
-
-    srcCounter++;
-    const id = 'src-' + String(srcCounter).padStart(3, '0');
-    seen.set(sourceFile, id);
-    registry.push({ id, path: sourceFile });
+function readExistingSha256(destPath) {
+  if (!fs.existsSync(destPath)) return null;
+  try {
+    const content = fs.readFileSync(destPath, 'utf8');
+    const m = content.match(/^sha256:\s*"([a-f0-9]{64})"\s*$/m);
+    return m ? m[1] : null;
+  } catch {
+    return null;
   }
-
-  return registry;
 }
 
 /**
- * Flatten files recursively from sources/original into sources/raw with unique filenames
+ * Recursively walk sources/original (or any directory), returning files with
+ * their path relative to the root — subfolders are preserved, never flattened.
  */
-function flattenOriginalToRaw(originalDir, rawDir) {
-  if (!fs.existsSync(originalDir)) return [];
-
-  const copyFileRecursive = (dir, currentRelPath = '') => {
-    let copied = [];
+function walkOriginal(originalDir) {
+  const results = [];
+  const walk = (dir, relDir) => {
     const entries = fs.readdirSync(dir, { withFileTypes: true });
-
     for (const entry of entries) {
       if (entry.name.startsWith('.') || entry.name.startsWith('~$') || entry.name.toLowerCase() === 'desktop.ini') {
         continue;
       }
       const fullPath = path.join(dir, entry.name);
-      const relPath = currentRelPath ? path.join(currentRelPath, entry.name) : entry.name;
+      const relPath = relDir ? path.join(relDir, entry.name) : entry.name;
 
       if (entry.isDirectory()) {
-        copied = copied.concat(copyFileRecursive(fullPath, relPath));
+        walk(fullPath, relPath);
       } else if (entry.isFile()) {
-        const uniqueName = relPath.replace(/[/\\]+/g, '__');
-        const destPath = path.join(rawDir, uniqueName);
-        fs.copyFileSync(fullPath, destPath);
-        copied.push({ originalRelPath: relPath, rawFileName: uniqueName, destPath });
+        results.push({ absPath: fullPath, relPath });
       }
     }
-    return copied;
   };
 
-  return copyFileRecursive(originalDir);
+  if (fs.existsSync(originalDir)) walk(originalDir, '');
+  return results.sort((a, b) => a.relPath.localeCompare(b.relPath));
 }
 
 /**
- * Detect available formats in sources/raw directory
+ * Detect available formats in a directory (recursive).
  */
-function detectFormats(rawDir) {
+function detectFormats(dir) {
   const counts = {};
-  if (!fs.existsSync(rawDir)) return counts;
+  if (!fs.existsSync(dir)) return counts;
 
-  const files = fs.readdirSync(rawDir);
-  for (const file of files) {
-    const ext = path.extname(file).toLowerCase();
-    if (ext in EXT_LABELS) {
-      counts[ext] = (counts[ext] || 0) + 1;
+  const walk = (d) => {
+    const entries = fs.readdirSync(d, { withFileTypes: true });
+    for (const entry of entries) {
+      if (entry.name.startsWith('.') || entry.name.startsWith('~$') || entry.name.toLowerCase() === 'desktop.ini') {
+        continue;
+      }
+      const full = path.join(d, entry.name);
+      if (entry.isDirectory()) {
+        walk(full);
+      } else if (entry.isFile()) {
+        const ext = path.extname(entry.name).toLowerCase();
+        if (ext in EXT_LABELS) counts[ext] = (counts[ext] || 0) + 1;
+      }
     }
-  }
+  };
+
+  walk(dir);
   return counts;
 }
 
@@ -171,6 +163,31 @@ function stripFrontmatter(content) {
   return content;
 }
 
+/**
+ * Zero-dependency HTML-to-plain-text conversion (simple string/regex based —
+ * no cheerio/jsdom). Good enough for normalizing downloaded web pages.
+ */
+function htmlToPlainText(html) {
+  return html
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/<head[\s\S]*?<\/head>/gi, '')
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/(p|div|h[1-6]|li|tr|section|article)>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n[ \t]+/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 function convertOkFormat(ext, filePath, baseName) {
   const content = fs.readFileSync(filePath, 'utf8');
   switch (ext) {
@@ -180,6 +197,9 @@ function convertOkFormat(ext, filePath, baseName) {
       return `# ${baseName}\n\n\`\`\`json\n${content}\n\`\`\``;
     case '.csv':
       return `# ${baseName}\n\n\`\`\`csv\n${content}\n\`\`\``;
+    case '.html':
+    case '.htm':
+      return `# ${baseName}\n\n${htmlToPlainText(content)}`;
     case '.txt':
     default:
       return content;
@@ -196,7 +216,7 @@ async function convertPdf(filePath, baseName) {
   try {
     const pdfParse = require('pdf-parse');
     const data = await pdfParse(fs.readFileSync(filePath));
-    return { body: `# ${baseName}\n\n${data.text}` };
+    return { body: `# ${baseName}\n\n${data.text}`, info: data.info };
   } catch (pdfErr) {
     return {
       body: `# ${baseName}\n\n*PDF Content Ingested (Placeholder)*\n\n[PDF: ${path.basename(filePath)} needs manual verification or a PDF parser package to extract text fully.]`,
@@ -269,22 +289,23 @@ async function ensureDependency(ext, options) {
   }
 }
 
-function processOkFile(ext, file, filePath, baseName, mdDir, isSelected) {
+function processOkFile(ext, absPath, sourceFileField, destPath, displayOutPath, isSelected, extra) {
   const format = ext === '.txt' ? 'Plain Text' : ext.substring(1).toUpperCase();
   if (!isSelected) {
     return { format, status: '⚠️ Skipped', action: `Format ${EXT_LABELS[ext]} excluded by user selection.`, outcome: 'skipped' };
   }
   try {
-    const body = convertOkFormat(ext, filePath, baseName);
-    const destPath = path.join(mdDir, `${baseName}.md`);
-    fs.writeFileSync(destPath, generateSourceFrontmatter(filePath, `sources/raw/${file}`) + body, 'utf8');
-    return { format, status: '✅ Processed', action: `Converted to markdown at \`sources/md/${baseName}.md\``, outcome: 'processed' };
+    const baseName = path.basename(displayOutPath, '.md');
+    const body = convertOkFormat(ext, absPath, baseName);
+    fs.mkdirSync(path.dirname(destPath), { recursive: true });
+    fs.writeFileSync(destPath, generateSourceFrontmatter(absPath, sourceFileField, extra) + body, 'utf8');
+    return { format, status: '✅ Processed', action: `Converted to markdown at \`sources/markdown/${displayOutPath}\``, outcome: 'processed' };
   } catch (err) {
     return { format, status: '❌ Error', action: `Failed to process: ${err.message}`, outcome: 'skipped' };
   }
 }
 
-async function processPromptFile(ext, file, filePath, baseName, mdDir, isSelected, options) {
+async function processPromptFile(ext, absPath, sourceFileField, destPath, displayOutPath, isSelected, options, extra) {
   const format = ext.substring(1).toUpperCase();
   if (!isSelected) {
     return { format, status: '⚠️ Skipped', action: `Format ${EXT_LABELS[ext]} excluded by user selection.`, outcome: 'skipped' };
@@ -295,75 +316,95 @@ async function processPromptFile(ext, file, filePath, baseName, mdDir, isSelecte
     return { format, status: dep.status, action: dep.reason, outcome: 'skipped' };
   }
 
-  const destPath = path.join(mdDir, `${baseName}.md`);
-  if (fs.existsSync(destPath)) {
-    return { format, status: '✅ Processed', action: `Already converted to markdown at \`sources/md/${baseName}.md\``, outcome: 'processed' };
+  // Performance optimization preserved from the previous implementation, but now
+  // based on comparing sha256 of the source against the sha256 already recorded
+  // in the normalized file's frontmatter — not on raw/ artifacts or mere existence.
+  const newHash = computeFileHash(absPath);
+  const existingHash = readExistingSha256(destPath);
+  if (existingHash && existingHash === newHash) {
+    return { format, status: '✅ Processed', action: `Already up to date at \`sources/markdown/${displayOutPath}\` (unchanged, sha256 match).`, outcome: 'processed' };
   }
 
   let approve = options.autoAcceptPrompt;
   if (!approve && options.promptCallback) {
-    approve = await options.promptCallback(file);
+    approve = await options.promptCallback(sourceFileField);
   }
   if (!approve) {
     return { format, status: '⚠️ Skipped', action: 'Extraction declined or skipped.', outcome: 'skipped' };
   }
 
   try {
-    const result = await PROMPT_CONVERTERS[ext](filePath, baseName);
-    fs.writeFileSync(destPath, generateSourceFrontmatter(filePath, `sources/raw/${file}`) + result.body, 'utf8');
-    if (result.partial) {
-      return { format, status: '✅ Processed (Partial)', action: `Created placeholder markdown at \`sources/md/${baseName}.md\`. PDF parsing failed: ${result.note}`, outcome: 'processed' };
+    const baseName = path.basename(displayOutPath, '.md');
+    const result = await PROMPT_CONVERTERS[ext](absPath, baseName);
+
+    // Best-effort PDF metadata (title/author) from pdf-parse's own `info` object —
+    // no separate PDF metadata extractor, no new dependency.
+    const mergedExtra = { ...extra };
+    if (ext === '.pdf' && result.info) {
+      if (result.info.Title && !mergedExtra.title) mergedExtra.title = result.info.Title;
+      if (result.info.Author && !mergedExtra.author) mergedExtra.author = result.info.Author;
     }
-    return { format, status: '✅ Processed', action: `Converted ${format} to markdown at \`sources/md/${baseName}.md\``, outcome: 'processed' };
+
+    fs.mkdirSync(path.dirname(destPath), { recursive: true });
+    fs.writeFileSync(destPath, generateSourceFrontmatter(absPath, sourceFileField, mergedExtra) + result.body, 'utf8');
+    if (result.partial) {
+      return { format, status: '✅ Processed (Partial)', action: `Created placeholder markdown at \`sources/markdown/${displayOutPath}\`. PDF parsing failed: ${result.note}`, outcome: 'processed' };
+    }
+    return { format, status: '✅ Processed', action: `Converted ${format} to markdown at \`sources/markdown/${displayOutPath}\``, outcome: 'processed' };
   } catch (err) {
     return { format, status: '❌ Error', action: `Failed to convert: ${err.message}`, outcome: 'skipped' };
   }
 }
 
 /**
- * Scan sources/original, flatten to sources/raw, process files to sources/md
+ * Scan sources/original/ (recursively, subfolders preserved) and normalize
+ * straight into sources/markdown/, mirroring the same relative paths.
+ *
+ * options.webImportMeta: optional map of { "<relPath-posix-under-original>": { source_url, downloaded_at, title, description, author } }
+ * for files that were downloaded via webImport.downloadToOriginal — merged into
+ * that file's frontmatter when it is normalized.
  */
 async function scanAndProcess(projectDir, options = {}) {
   const originalDir = path.join(projectDir, 'sources', 'original');
-  const rawDir = path.join(projectDir, 'sources', 'raw');
-  const mdDir = path.join(projectDir, 'sources', 'md');
-  const indexFile = path.join(mdDir, 'index.md');
+  const markdownDir = path.join(projectDir, 'sources', 'markdown');
+  const indexFile = path.join(markdownDir, 'index.md');
 
   fs.mkdirSync(originalDir, { recursive: true });
-  fs.mkdirSync(rawDir, { recursive: true });
-  fs.mkdirSync(mdDir, { recursive: true });
+  fs.mkdirSync(markdownDir, { recursive: true });
 
   const logs = [];
   const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
   logs.push(`*   **${timestamp}:** Scan initiated in \`${originalDir}\`.`);
 
-  // Step 1: Flatten original files into raw folder with unique filenames
-  const flattened = flattenOriginalToRaw(originalDir, rawDir);
-  logs.push(`*   **${timestamp}:** Flattened ${flattened.length} file(s) from \`sources/original/\` to \`sources/raw/\`.`);
+  const files = walkOriginal(originalDir);
+  logs.push(`*   **${timestamp}:** Discovered ${files.length} file(s) in \`sources/original/\` (subfolders preserved).`);
 
-  const files = fs.readdirSync(rawDir);
+  const webImportMeta = options.webImportMeta || {};
+
   let registry = [];
   let totalDiscovered = 0;
   let processedCount = 0;
   let skippedCount = 0;
 
-  files.sort();
+  for (const { absPath, relPath } of files) {
+    const stat = fs.statSync(absPath);
+    const ext = path.extname(relPath).toLowerCase();
+    const relDir = path.dirname(relPath);
+    const baseName = path.basename(relPath, ext);
+    const outRelDir = relDir === '.' ? '' : relDir;
+    const displayOutPath = (outRelDir ? path.join(outRelDir, `${baseName}.md`) : `${baseName}.md`).replace(/\\/g, '/');
+    const destPath = path.join(markdownDir, displayOutPath);
 
-  for (const file of files) {
-    if (file.toLowerCase() === 'desktop.ini' || file.startsWith('.') || file.startsWith('~$')) {
-      continue;
-    }
-    const filePath = path.join(rawDir, file);
-    const stat = fs.statSync(filePath);
-    const ext = path.extname(file).toLowerCase();
-    const baseName = path.basename(file, ext);
+    const relPathPosix = relPath.replace(/\\/g, '/');
+    const sourceFileField = `sources/original/${relPathPosix}`;
     const isSelected = !options.formats || options.formats.includes(ext);
+    const extra = webImportMeta[relPathPosix] || {};
 
     let entry;
     if (EXT_OK.includes(ext)) {
-      entry = processOkFile(ext, file, filePath, baseName, mdDir, isSelected);
+      entry = processOkFile(ext, absPath, sourceFileField, destPath, displayOutPath, isSelected, extra);
     } else if (EXT_PROMPT.includes(ext)) {
-      entry = await processPromptFile(ext, file, filePath, baseName, mdDir, isSelected, options);
+      entry = await processPromptFile(ext, absPath, sourceFileField, destPath, displayOutPath, isSelected, options, extra);
     } else if (EXT_NO.includes(ext)) {
       entry = { format: ext.substring(1).toUpperCase(), status: '🚫 Blocked', action: 'Unsupported format (needs manual action)', outcome: 'skipped' };
     } else {
@@ -378,7 +419,7 @@ async function scanAndProcess(projectDir, options = {}) {
     }
 
     registry.push({
-      name: `sources/raw/${file}`,
+      name: sourceFileField,
       format: entry.format,
       size: stat.size,
       status: entry.status,
@@ -386,10 +427,9 @@ async function scanAndProcess(projectDir, options = {}) {
     });
   }
 
-  logs.push(`*   **${timestamp}:** Discovered ${totalDiscovered} files in \`sources/raw/\`.`);
-  logs.push(`*   **${timestamp}:** Converted ${processedCount} files to Markdown in \`sources/md/\`. (NOTE: _all.md consolidation removed)`);
+  logs.push(`*   **${timestamp}:** Converted ${processedCount} file(s) to Markdown in \`sources/markdown/\`, mirroring \`sources/original/\` subfolders.`);
 
-  // Build sources/md/index.md manifest
+  // Build sources/markdown/index.md manifest
   let indexContent = `# traNNsform Ingestion Manifest & Processing Log\n\n`;
   indexContent += `## Ingestion Status\n`;
   indexContent += `*   **Total Files Discovered:** ${totalDiscovered}\n`;
@@ -424,8 +464,7 @@ module.exports = {
   getSupportedFormats,
   computeFileHash,
   generateSourceFrontmatter,
-  generateSourceRegistry,
-  flattenOriginalToRaw,
+  walkOriginal,
   EXT_LABELS,
   EXT_DEPS
 };

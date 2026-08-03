@@ -11,11 +11,12 @@ const config = require('./config');
 const scanner = require('./scanner');
 const transformer = require('./transformer');
 const provenance = require('./provenance');
+const webImport = require('./webImport');
 
 async function main() {
   const argv = minimist(process.argv.slice(2));
 
-  const hasArgs = argv.scan || argv.apply || argv.provenance || argv.src || argv.dest || argv.name;
+  const hasArgs = argv.scan || argv.apply || argv.provenance || argv.src || argv.dest || argv.name || argv['import-url'];
 
   if (hasArgs) {
     await handleCliMode(argv);
@@ -46,17 +47,41 @@ async function handleCliMode(argv) {
     process.exit(1);
   }
 
+  let importResult = null;
+  if (argv['import-url']) {
+    const originalDir = path.join(projectDir, 'sources', 'original');
+    fs.mkdirSync(originalDir, { recursive: true });
+    console.log(`Downloading "${argv['import-url']}" into sources/original/...`);
+    try {
+      importResult = await webImport.downloadToOriginal(argv['import-url'], originalDir);
+      console.log(`Downloaded to: sources/original/${importResult.relPath}`);
+    } catch (err) {
+      console.error(`Error downloading URL: ${err.message}`);
+      process.exit(1);
+    }
+  }
+
   if (argv.scan) {
     console.log(`Scanning and converting documents in "${projectDir}"...`);
 
     const scanOptions = { autoAcceptPrompt: true };
 
     if (argv.formats) {
-      const rawDir = path.join(projectDir, 'sources', 'raw');
-      if (fs.existsSync(rawDir)) {
+      const originalDir = path.join(projectDir, 'sources', 'original');
+      if (fs.existsSync(originalDir)) {
         const selected = argv.formats.split(',').map(f => '.' + f.trim().replace(/^\./, ''));
         scanOptions.formats = selected;
       }
+    }
+
+    if (importResult) {
+      scanOptions.webImportMeta = {
+        [importResult.relPath]: {
+          source_url: importResult.sourceUrl,
+          downloaded_at: importResult.downloadedAt,
+          ...importResult.meta,
+        }
+      };
     }
 
     const result = await scanner.scanAndProcess(projectDir, scanOptions);
@@ -89,10 +114,8 @@ async function handleInteractiveMode() {
   console.log('=== Welcome to traNNsform CLI ===\n');
 
   let projectDir = getActiveProjectDir();
-  let projectExists = fs.existsSync(projectDir) && (
-    fs.existsSync(path.join(projectDir, 'sources', 'original')) ||
-    fs.existsSync(path.join(projectDir, 'sources', 'raw'))
-  );
+  let projectExists = fs.existsSync(projectDir) &&
+    fs.existsSync(path.join(projectDir, 'sources', 'original'));
 
   const choices = [];
   if (projectExists) {
@@ -207,8 +230,7 @@ function bootstrapProject(srcDir, destParentDir, projectName) {
 
   const dirs = [
     path.join('sources', 'original'),
-    path.join('sources', 'raw'),
-    path.join('sources', 'md'),
+    path.join('sources', 'markdown'),
     'models',
     'procedures',
     'artifacts',
@@ -224,7 +246,7 @@ function bootstrapProject(srcDir, destParentDir, projectName) {
 
 Transform (traNNsform) is a tool to structure and process unstructured documents:
 1. Place files in \`sources/original/\`.
-2. Scan and normalize to \`sources/md/\`.
+2. Scan and normalize to \`sources/markdown/\`.
 3. Track provenance with \`<Project>_V_0-1-0_cogNNitive_NN.md\`.
 `;
     fs.writeFileSync(readmePath, readmeContent, 'utf8');
@@ -278,16 +300,13 @@ async function runProjectMenu(projectDir) {
   }
 
   if (response.action === 'scan') {
-    const originalDir = path.join(projectDir, 'sources', 'original');
-    const rawDir = path.join(projectDir, 'sources', 'raw');
-
-    // Run scanner which flattens original to raw
+    // Scan sources/original directly, normalizing straight into sources/markdown
     console.log('\nScanning sources/original directory...');
     const result = await scanner.scanAndProcess(projectDir, { autoAcceptPrompt: true });
     console.log('\n=== Ingestion Manifest Created ===');
     console.log(`Processed: ${result.processedCount} files successfully.`);
     console.log(`Skipped/Needs Review: ${result.skippedCount} files.`);
-    console.log(`Review the manifest log at: ${path.join(projectDir, 'sources', 'md', 'index.md')}`);
+    console.log(`Review the manifest log at: ${path.join(projectDir, 'sources', 'markdown', 'index.md')}`);
 
     const prov = provenance.buildProvenanceModel(projectDir);
     console.log(`cogNNitive Provenance model ${prov.created ? 'created' : 'refreshed'} with ${prov.sourceCount} source(s): ${prov.modelPath}\n`);
@@ -390,7 +409,7 @@ ${answers.structure || ''}
 
 function getActiveProjectDir() {
   const cwd = process.cwd();
-  if (fs.existsSync(path.join(cwd, 'sources', 'original')) || fs.existsSync(path.join(cwd, 'sources', 'raw'))) {
+  if (fs.existsSync(path.join(cwd, 'sources', 'original'))) {
     return cwd;
   }
 

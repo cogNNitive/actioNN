@@ -2,7 +2,7 @@
 
 ## Automated Tests (Zero-Dependency)
 
-Unit tests cover `config.js`, `scanner.js` and `provenance.js` using Node's built-in `assert`:
+Unit tests cover `config.js`, `scanner.js`, `provenance.js` and `webImport.js` using Node's built-in `assert`:
 
 ```bash
 cd skills/nn-trannsform
@@ -17,7 +17,7 @@ npm run test:unit
 npm run test:integration
 ```
 
-49 tests covering: config read/write/merge, format detection, file hashing, frontmatter generation, source registry, dependency checking, and provenance model generation (slugify, source auto-population, asset materialization, semantic index, idempotent refresh with section preservation).
+Tests cover: config read/write/merge, format detection, file hashing, flat frontmatter generation (with mirrored subfolder output), dependency checking, HTML metadata extraction, and provenance model generation (slugify, source auto-population, asset materialization, semantic index, idempotent refresh with section preservation).
 
 ## Manual Test Guide
 
@@ -69,8 +69,8 @@ Luis,28,Technician
 > Using the nn-trannsform skill, bootstrap a project with the files in the current folder as source. Project name: "test-docs".
 
 **Expected result:**
-- ✅ OpenCode creates the structure `test-docs/raw/`, `test-docs/md/`, `test-docs/models/`, `test-docs/procedures/`, `test-docs/artifacts/`, `test-docs/traNNsformations/`
-- ✅ Files are copied to `test-docs/raw/`
+- ✅ OpenCode creates the structure `test-docs/sources/original/`, `test-docs/sources/markdown/`, `test-docs/models/`, `test-docs/procedures/`, `test-docs/artifacts/`, `test-docs/artifacts/reports/`, `test-docs/traNNsformations/` (no `sources/raw/`)
+- ✅ Files are copied to `test-docs/sources/original/`
 - ✅ OpenCode reports no errors
 
 ---
@@ -84,12 +84,12 @@ Luis,28,Technician
 **Expected result:**
 - ✅ OpenCode executes `node scripts/index.js --scan --src test-docs`
 - ✅ Summary appears: "Discovered: X, Processed: Y, Skipped: Z"
-- ✅ `test-docs/md/index.md` (ingestion manifest) is created
+- ✅ `test-docs/sources/markdown/index.md` (ingestion manifest) is created
 - ✅ `test-docs/index.md` (semantic `# NN index`) is created
-- ✅ `test-docs/<name>_V_0-1-0_trannsform_NN.md` (provenance model) is created with the Sources populated
-- ✅ `test-docs/md/report.md` is created with the txt content
-- ✅ `test-docs/md/data.md` is created with the csv content
-- ✅ `test-docs/md/_all.md` is created with both documents consolidated
+- ✅ `test-docs/<name>_V_0-1-0_cogNNitive_NN.md` (provenance model) is created with the Sources populated
+- ✅ `test-docs/sources/markdown/report.md` is created with the txt content, with flat frontmatter (`source_file`, `sha256`, `size_bytes`, `normalized_at`, `normalized_by`)
+- ✅ `test-docs/sources/markdown/data.md` is created with the csv content
+- ✅ If the source files live in subfolders under `sources/original/`, the same subfolders appear under `sources/markdown/`
 
 ---
 
@@ -148,6 +148,21 @@ If you have a docx or pdf file in the source folder, when running the scan:
 
 ---
 
+## Test 8: Import from the web
+
+**Instruction for OpenCode:**
+
+> Import this URL into test-docs: `<some URL to an HTML page or PDF>`
+
+**Expected result:**
+- ✅ OpenCode runs `node scripts/index.js --import-url "<url>" --scan --src test-docs`
+- ✅ The downloaded file appears under `test-docs/sources/original/` (extension inferred from `Content-Type`, falling back to the URL)
+- ✅ After the scan, the corresponding file in `test-docs/sources/markdown/` includes `source_url` and `downloaded_at` in its frontmatter
+- ✅ For an HTML page, `title`/`description`/`author` appear in the frontmatter when discoverable
+- ✅ For a PDF, the existing `.pdf` handling (pdf-parse) runs and, if present, `info.Title`/`info.Author` populate `title`/`author`
+
+---
+
 ## Results Summary
 
 | Test | Description | Result |
@@ -159,3 +174,4 @@ If you have a docx or pdf file in the source folder, when running the scan:
 | 5 | Final transformation | — |
 | 6 | Traceability (if applicable) | — |
 | 7 | CLI fallback | — |
+| 8 | Import from the web | — |

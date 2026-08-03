@@ -4,14 +4,15 @@ Agent skill for document ingestion, normalization, and template-based transforma
 
 ## How it works
 
-The skill ships with a Node.js CLI tool (`scripts/index.js`) that handles file operations — scanning directories, converting binary formats (docx, pdf, xlsx) to Markdown, and maintaining an ingestion manifest. The actual content transformation and multi-step procedure orchestration is executed using the agent's LLM and `procedures_V_0-2-0_NN.md` specifications.
+The skill ships with a Node.js CLI tool (`scripts/index.js`) that handles file operations — scanning directories, converting binary formats (docx, pdf, xlsx, html) to Markdown, downloading web resources, and maintaining an ingestion manifest. The actual content transformation and multi-step procedure orchestration is executed using the agent's LLM and `procedures_V_0-3-0_NN.md` specifications.
 
 The workflow is:
 
-1. **Bootstrap** — The agent creates a project directory with standard workspace folders: `raw/` (source files), `md/` (normalized Markdown), `models/` (iNNfo Level 3 models), `procedures/` (transformation specs), and `artifacts/` (generated deliverables, with `reports/` for audit logs).
-2. **Scan & normalize** — The CLI tool reads files from `raw/`, converts supported formats to Markdown, writes the ingestion manifest (`md/index.md`) plus consolidated content (`md/_all.md`), and generates/refreshes the **provenance model** (`<Project>_V_0-1-0_trannsform_NN.md`) whose Sources are auto-populated from the ingested files. The workspace-root `index.md` is the semantic `# NN index`.
-3. **Transform & Orchestrate** — The agent applies template-based transformations or multi-step procedure specs (`procedures_V_0-2-0_NN.md`) to generate models or Artifacts, and records each in the provenance model (Models/Artifacts/Procedures) with explicit lineage.
-4. **Post-Transformation Feedback Protocol** — If modifications to the transformation logic occurred during the conversation, the agent prompts the user to save a new `procedures` spec, update the existing one, or leave specs unchanged.
+1. **Bootstrap** — The agent creates a project directory with standard workspace folders: `sources/original/` (the user's untouched dropbox), `sources/markdown/` (normalized Markdown, mirroring `sources/original/`'s subfolders), `models/` (iNNfo Level 3 models), `procedures/` (transformation specs), and `artifacts/` (generated deliverables, with `reports/` for audit logs). There is no `sources/raw/` staging folder.
+2. **Scan & normalize** — The CLI tool reads files directly from `sources/original/` (recursively, preserving subfolders), converts supported formats straight into the matching path under `sources/markdown/`, writes the ingestion manifest (`sources/markdown/index.md`), and generates/refreshes the **provenance model** (`<Project>_V_0-1-0_cogNNitive_NN.md`) whose Sources are auto-populated from the ingested files. The workspace-root `index.md` is the semantic `# NN index`. Change detection is based on the sha256 already recorded in a file's normalized frontmatter — no separate snapshot/versioning folder; git already versions the workspace.
+3. **Import from the web** — The user can paste a URL in chat; the agent runs `node scripts/index.js --import-url "<url>" --scan --src "<project-dir>"`, which downloads the resource straight into `sources/original/` (same dropbox as manually-dropped files) and immediately normalizes it, recording `source_url`/`downloaded_at` and, best-effort, `title`/`description`/`author`.
+4. **Transform & Orchestrate** — The agent applies template-based transformations or multi-step procedure specs (`procedures_V_0-3-0_NN.md`) to generate models or Artifacts, and records each in the provenance model (Models/Artifacts/Procedures) with explicit lineage.
+5. **Post-Transformation Feedback Protocol** — If modifications to the transformation logic occurred during the conversation, the agent prompts the user to save a new `procedures` spec, update the existing one, or leave specs unchanged.
 
 ## Installation
 
@@ -37,8 +38,9 @@ nn-trannsform/
   package.json              Declares npm dependencies (mammoth, minimist, prompts)
   README.md                 You are here
   scripts/
-    index.js                CLI entry point — bootstrap, scan, apply transformations
-    scanner.js              Format detection, file conversion (txt, md, csv, json, docx, pdf, xlsx)
+    index.js                CLI entry point — bootstrap, scan, apply transformations, web import
+    scanner.js              Format detection, file conversion (txt, md, csv, json, html, docx, pdf, xlsx)
+    webImport.js            Downloads a URL straight into sources/original/ + HTML metadata extraction
     transformer.js          Template listing and fallback heuristic transformation
     provenance.js           Builds/refreshes the provenance model + semantic index.md
     config.js               Persistent config (last project path, default directories)
@@ -61,6 +63,7 @@ When the agent executes `node scripts/index.js` and encounters a `MODULE_NOT_FOU
 | md     | ✅ Read directly | — |
 | csv    | ✅ Read directly | — |
 | json   | ✅ Read directly | — |
+| html/htm | ✅ Read directly | zero-dep tag stripping |
 | pdf    | ⚠️ Model-dependent | pdf-parse |
 | docx   | ❌ Not available | mammoth |
 | xlsx   | ❌ Not available | xlsx |

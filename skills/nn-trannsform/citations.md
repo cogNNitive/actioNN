@@ -25,7 +25,7 @@ Rules:
 - Remove the HTML comment and original `— Source:` visible text.
 
 Example:
-- Draft: `<!-- cite: src-001, section IOE.1 --> — Source: IF Narrative GV22BO-1, section IOE.1`
+- Draft: `<!-- cite: sources/markdown/if-narrative-gv22bo-1.md#L12-L18, section IOE.1 --> — Source: IF Narrative GV22BO-1, section IOE.1`
 - APA: `The organization had 45 active members in 2023 (IF Narrative, 2024, section IOE.1).`
 
 Generate a reference list at the end titled "References" with full entries per source.
@@ -91,12 +91,12 @@ Rules:
 
 ## Format: BibTeX — Export `.bib` File
 
-Create a `.bib` file alongside the final document, with one entry per unique `src-NNN`.
+Create a `.bib` file alongside the final document, with one entry per unique source file in `sources/markdown/`.
 
-Use this template for each entry. Fill placeholder fields from the source filename and frontmatter:
+Use this template for each entry. Fill placeholder fields from the source filename and frontmatter. The citation key is a slugified version of the `sources/markdown/` path (slashes and dots become hyphens):
 
 ```bibtex
-@techreport{src-NNN,
+@techreport{sources-markdown-relative-path-to-source-md,
   author       = {Organization or Author Name},
   title        = {Full Source Title},
   year         = {YYYY},
@@ -106,23 +106,23 @@ Use this template for each entry. Fill placeholder fields from the source filena
 ```
 
 Rules:
-- One entry per unique `src-NNN` — reuse IDs, do not duplicate.
+- One entry per unique source path under `sources/markdown/` — reuse keys, do not duplicate.
 - Adapt entry type for non-report sources:
-  - Interviews: `@misc{src-NNN, author={...}, title={...}, year={...}, howpublished={\url{...}}}`
-  - Web pages: `@misc{src-NNN, author={...}, title={...}, year={...}, howpublished={\url{...}}}`
-  - Articles: `@article{src-NNN, author={...}, title={...}, journal={...}, year={...}}`
-- The citation key MUST match the `src-NNN` value (e.g., `src-001`).
+  - Interviews: `@misc{<key>, author={...}, title={...}, year={...}, howpublished={\url{...}}}`
+  - Web pages: `@misc{<key>, author={...}, title={...}, year={...}, howpublished={\url{...}}}`
+  - Articles: `@article{<key>, author={...}, title={...}, journal={...}, year={...}}`
+- The citation key MUST be derived deterministically from the `sources/markdown/` path (e.g., `sources/markdown/if-narrative-gv22bo-1.md` → `sources-markdown-if-narrative-gv22bo-1-md`), never an arbitrary counter.
 - Save the output file as `[template-name]_V_x-y-z.bib` in the same `output/[template-name]/` folder.
 - Do NOT include HTML comments or visible citations in the main document body — produce a clean document with parenthetical numbers pointing to the `.bib` entries.
 
 Example entry for a report source:
 
 ```bibtex
-@techreport{src-001,
+@techreport{sources-markdown-if-narrative-gv22bo-1-md,
   author       = {IF Narrative GV22BO-1},
   title        = {IF Narrative GV22BO-1},
   year         = {2024},
   type         = {Report},
-  howpublished = {\url{raw/if-narrative-gv22bo-1.md}}
+  howpublished = {\url{sources/markdown/if-narrative-gv22bo-1.md}}
 }
 ```

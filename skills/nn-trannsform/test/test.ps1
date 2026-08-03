@@ -110,13 +110,14 @@ Push-Location $SKILL_DIR
 try {
   node scripts/index.js --src "$TEST_DIR\source" --dest "$TEST_DIR" --name "test-project" 2>&1 | Out-Null
   Assert-True (Test-Path "$TEST_DIR\test-project") "Project directory created"
-  Assert-True (Test-Path "$TEST_DIR\test-project\raw") "raw/ directory created"
-  Assert-True (Test-Path "$TEST_DIR\test-project\md") "md/ directory created"
+  Assert-True (Test-Path "$TEST_DIR\test-project\sources\original") "sources/original/ directory created"
+  Assert-True (Test-Path "$TEST_DIR\test-project\sources\markdown") "sources/markdown/ directory created"
+  Assert-True (-not (Test-Path "$TEST_DIR\test-project\sources\raw")) "sources/raw/ directory NOT created"
   Assert-True (Test-Path "$TEST_DIR\test-project\traNNsformations") "traNNsformations/ directory created"
   Assert-True (Test-Path "$TEST_DIR\test-project\models") "models/ directory created"
   Assert-True (Test-Path "$TEST_DIR\test-project\procedures") "procedures/ directory created"
   Assert-True (Test-Path "$TEST_DIR\test-project\artifacts") "artifacts/ directory created"
-  Assert-True (Test-Path "$TEST_DIR\test-project\raw\hello.txt") "Source file copied to raw/"
+  Assert-True (Test-Path "$TEST_DIR\test-project\sources\original\hello.txt") "Source file copied to sources/original/"
 } finally {
   Pop-Location
 }
@@ -127,16 +128,17 @@ Write-Host "â”€â”€ Step 6: Run scan â”€â”€" -ForegroundColor
 Push-Location $SKILL_DIR
 try {
   node scripts/index.js --scan --src "$TEST_DIR\test-project" 2>&1 | Out-Null
-  Assert-True (Test-Path "$TEST_DIR\test-project\md\index.md") "ingestion manifest created at md/index.md"
+  Assert-True (Test-Path "$TEST_DIR\test-project\sources\markdown\index.md") "ingestion manifest created at sources/markdown/index.md"
   Assert-True (Test-Path "$TEST_DIR\test-project\index.md") "semantic workspace index.md created"
-  Assert-True (Test-Path "$TEST_DIR\test-project\md\hello.md") "hello.md created in md/"
-  Assert-True (Test-Path "$TEST_DIR\test-project\md\_all.md") "_all.md created"
+  Assert-True (Test-Path "$TEST_DIR\test-project\sources\markdown\hello.md") "hello.md created in sources/markdown/"
 
-  $provModel = Get-ChildItem "$TEST_DIR\test-project" -Filter "*_trannsform_NN.md" -ErrorAction SilentlyContinue
-  Assert-True ($null -ne $provModel) "provenance model (*_trannsform_NN.md) created"
+  $provModel = Get-ChildItem "$TEST_DIR\test-project" -Filter "*_cogNNitive_NN.md" -ErrorAction SilentlyContinue
+  Assert-True ($null -ne $provModel) "provenance model (*_cogNNitive_NN.md) created"
 
-  $allContent = Get-Content "$TEST_DIR\test-project\md\_all.md" -Raw
-  Assert-True ($allContent -match 'Hello world') "_all.md contains 'Hello world'"
+  $helloContent = Get-Content "$TEST_DIR\test-project\sources\markdown\hello.md" -Raw
+  Assert-True ($helloContent -match 'Hello world') "hello.md contains 'Hello world'"
+  Assert-True ($helloContent -match 'source_file: "sources/original/hello.txt"') "hello.md frontmatter has flat source_file field"
+  Assert-True ($helloContent -match 'sha256: "[a-f0-9]{64}"') "hello.md frontmatter has sha256 field"
 } finally {
   Pop-Location
 }

@@ -5,13 +5,12 @@ const os = require('os');
 
 const provenance = require('../../scripts/provenance');
 
-const SRC_FM = (file, hash) => `---
-source:
-  file: "${file}"
-  hash: "sha256:${hash}"
-  size: 123
-  normalized_at: "2026-08-01T10:00:00Z"
-  normalized_by: "traNNsform v1.5"
+const SRC_FM = (sourceFile, hash) => `---
+source_file: "${sourceFile}"
+sha256: "${hash}"
+size_bytes: 123
+normalized_at: "2026-08-01T10:00:00Z"
+normalized_by: "traNNsform v1.5"
 ---
 
 # Body
@@ -49,22 +48,32 @@ function run() {
     eq(provenance.slugify('market-report.docx'), 'market-reportdocx', 'slugify strips dots');
     eq(provenance.slugify('Exec Summary'), 'exec-summary', 'slugify hyphenates spaces');
 
-    // build a project with two normalized md sources
+    // build a project with two normalized md sources under sources/markdown/ (one nested in a subfolder,
+    // mirroring sources/original/clientA/)
     const proj = path.join(TMP, 'Acme');
-    fs.mkdirSync(path.join(proj, 'md'), { recursive: true });
-    fs.writeFileSync(path.join(proj, 'md', 'market-report.md'), SRC_FM('raw/market-report.docx', 'aaa'));
-    fs.writeFileSync(path.join(proj, 'md', 'team.md'), SRC_FM('raw/team.csv', 'bbb'));
+    fs.mkdirSync(path.join(proj, 'sources', 'markdown', 'clientA'), { recursive: true });
+    fs.writeFileSync(
+      path.join(proj, 'sources', 'markdown', 'clientA', 'market-report.md'),
+      SRC_FM('sources/original/clientA/market-report.docx', 'aaa')
+    );
+    fs.writeFileSync(
+      path.join(proj, 'sources', 'markdown', 'team.md'),
+      SRC_FM('sources/original/team.csv', 'bbb')
+    );
 
     const r1 = provenance.buildProvenanceModel(proj, { projectName: 'Acme' });
     eq(r1.created, true, 'model created on first run');
     eq(r1.sourceCount, 2, 'two sources registered');
     ok(fs.existsSync(r1.modelPath), 'model file written');
+    eq(path.basename(r1.modelPath), 'Acme_V_0-1-0_cogNNitive_NN.md', 'model file named after the cogNNitive template (not trannsform)');
 
     const model1 = fs.readFileSync(r1.modelPath, 'utf8');
-    ok(/parent_spec:\s*\n\s*name: "trannsform_V_0-1-0"/.test(model1), 'parent_spec points to traNNsform template');
+    ok(/parent_spec:\s*\n\s*name: "cogNNitive_V_0-1-0"/.test(model1), 'parent_spec points to the cogNNitive template');
     ok(/## NN Sources: market-report\.docx/.test(model1), 'source element present');
     ok(/source_format:: docx/.test(model1), 'source_format derived from extension');
-    ok(/normalized_content:: market-report\.md/.test(model1), 'normalized_content set');
+    ok(/normalized_content:: sources\/markdown\/clientA\/market-report\.md/.test(model1), 'normalized_content records the full sources/markdown/ path, subfolders preserved');
+    ok(!/source_id/.test(model1), 'provenance model never emits source_id');
+    ok(!/src-\d{3}/.test(model1), 'provenance model never emits a src-NNN id');
 
     // assets materialized at assets/{slug}/{file}
     ok(fs.existsSync(path.join(proj, 'assets', 'market-reportdocx', 'market-report.md')), 'asset copied to slug dir');
@@ -72,15 +81,15 @@ function run() {
     // semantic index.md written at root
     const idx = fs.readFileSync(path.join(proj, 'index.md'), 'utf8');
     ok(/# NN index/.test(idx), 'semantic index has # NN index');
-    ok(/Acme_V_0-1-0_trannsform_NN\.md/.test(idx), 'index links the provenance model');
+    ok(/Acme_V_0-1-0_cogNNitive_NN\.md/.test(idx), 'index links the provenance model');
 
     // agent adds a Models element, then re-run preserves it and refreshes Sources
     const withModel = model1.replace(
       /# NN Models\n\n<!--[\s\S]*?-->\n/,
-      '# NN Models\n\n## NN Models: Acme Plan\nmodel_template:: business\nderived_from:: [market-report.docx]\n'
+      '# NN Models\n\n## NN Models: Acme Plan\nmodel_template:: business\nsources:: [sources/markdown/clientA/market-report.md]\n'
     );
     fs.writeFileSync(r1.modelPath, withModel);
-    fs.rmSync(path.join(proj, 'md', 'team.md')); // drop one source
+    fs.rmSync(path.join(proj, 'sources', 'markdown', 'team.md')); // drop one source
 
     const r2 = provenance.buildProvenanceModel(proj, { projectName: 'Acme' });
     eq(r2.created, false, 'model refreshed (not recreated) on second run');

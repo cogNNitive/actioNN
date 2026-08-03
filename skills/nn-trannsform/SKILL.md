@@ -52,7 +52,7 @@ This skill enables the agent to interactively guide the user through document in
 ### 1. Project Initialization & Bootstrap
 
 Ask the user for confirmation before creating directories:
-1. **Source Folder**: Where are the raw files?
+1. **Source Folder**: Where are the original files?
 2. **Project Name & Destination**: Name for the project and where to save it (recommend `%USERPROFILE%\Documents\_NN\[project-name]`).
 
 #### Standard Workspace Directory Layout
@@ -61,16 +61,21 @@ Every project workspace MUST adhere to the following structure:
 
 ```
 [project-name]/
-├── raw/                 # Original user files (PDFs, Word, CSV, TXT, Excel...)
 ├── sources/
-│   └── markdown/        # Normalized Markdown files with mandatory provenance frontmatter
-├── models/              # Structured semantic iNNfo Level 3 models (*_NN.md)
-├── procedures/          # Reusable transformation procedure specs (*_procedures_V_0-3-0_NN.md)
-├── artifacts/           # Derivative deliverables and generated output products
-│   ├── exports/         # Final deliverables (clean Markdown, HTML, PDF)
-│   └── reports/         # Validation reports and audit trails
-└── index.md             # Semantic workspace index (# NN index)
+│   ├── original/         # User's dropbox — untouched by the tool. NEVER move/rename/delete.
+│   │                      # The user may organize subfolders however they like.
+│   └── markdown/          # Normalized Markdown, mirroring the same subfolder structure
+│                          # as sources/original/ (e.g. sources/original/clientA/report.docx
+│                          # → sources/markdown/clientA/report.md). Never flattened.
+├── models/               # Structured semantic iNNfo Level 3 models (*_NN.md)
+├── procedures/           # Reusable transformation procedure specs (*_procedures_V_0-3-0_NN.md)
+├── artifacts/            # Derivative deliverables and generated output products
+│   ├── exports/          # Final deliverables (clean Markdown, HTML, PDF)
+│   └── reports/          # Validation reports and audit trails
+└── index.md              # Semantic workspace index (# NN index)
 ```
+
+There is no `sources/raw/` — the scanner reads directly from `sources/original/` and writes directly to `sources/markdown/`. Change detection uses the sha256 of the original file's content (recorded in the normalized frontmatter); git, which already versions the workspace, is the history/versioning mechanism — no separate snapshot folder is needed.
 
 Then run:
 ```bash
@@ -81,26 +86,41 @@ node scripts/index.js --src "<source-folder>" --dest "<destination-parent-folder
 
 ### 2. Capability Scan & Provenance Ingestion Protocol (MANDATORY)
 
-#### 2a-0. Prepare `raw/` and Ingest to `sources/markdown/`
+#### 2a-0. Ingest `sources/original/` to `sources/markdown/`
 
-**All files MUST pass through `raw/` before scanner normalization.**
+**All files live in `sources/original/` — the user's dropbox. The tool never moves, renames, or deletes anything there; it only reads.**
 
-1. **Check if `raw/` exists** inside the project directory. If not, ask the user and create it: `mkdir raw/`
-2. **Copy files into `raw/`** (preserve originals in-place; DO NOT move or delete user files without consent).
+1. **Check if `sources/original/` exists** inside the project directory. If not, ask the user and create it: `mkdir sources/original`
+2. **Copy files into `sources/original/`** (preserve originals in-place; DO NOT move or delete user files without consent). The user may organize subfolders freely — the scanner mirrors that structure into `sources/markdown/`.
 3. **Scanner Normalization with Provenance Frontmatter**:
-   Every normalized file generated under `sources/markdown/` (or `md/`) MUST include the mandatory scanner traceability frontmatter:
+   Every normalized file generated under `sources/markdown/` MUST include the mandatory, flat scanner traceability frontmatter — this schema is exact and must match the iNNfo editor:
 
 ```yaml
 ---
-source_file: "raw/interview_transcript.pdf"
+source_file: "sources/original/interview_transcript.pdf"
 sha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 size_bytes: 1048576
 normalized_at: "2026-08-02T13:30:00Z"
-source_id: "src-001"
+normalized_by: "traNNsform v2.0"
 ---
 ```
 
-> **⚠️ Traceability Requirement**: Downstream Level 3 models MUST reference `source_id` via `source_ref:: src-NNN (path#lines)`. Skipping scanner frontmatter invalidates traceability.
+When the source was imported from the web (see §2c below), also include `source_url` and `downloaded_at`, and — best-effort — `title`, `description`, `author` when discovered.
+
+> **⚠️ Traceability Requirement**: There is no `source_id`/`src-NNN` system. Downstream Level 3 models reference sources directly by path via `sources:: sources/markdown/<path>.md#L<start>-L<end>` (multiple values use list syntax: `sources:: [sources/markdown/a.md#L1-L10, sources/markdown/b.md#L20]`). Skipping scanner frontmatter invalidates traceability.
+
+#### 2c. Importing from the Web (URL / online PDF)
+
+When the user pastes a URL in chat and wants it ingested:
+
+1. Confirm the URL and target project with the user (Zero Unilateral Mutation still applies).
+2. Run the download step, which saves the resource directly into `sources/original/` (same dropbox as manually-dropped files — no separate branch in the pipeline):
+   ```bash
+   node scripts/index.js --import-url "<url>" --scan --src "<project-dir>"
+   ```
+   `--import-url` downloads the resource (content type decides the extension, from the response's `Content-Type` header or the URL as fallback), saves it under `sources/original/`, and — chained with `--scan` — immediately normalizes it into `sources/markdown/` with `source_url`/`downloaded_at` (and, for HTML pages, best-effort `title`/`description`/`author` scraped from `<title>`, Open Graph tags, meta tags, and JSON-LD) merged into its frontmatter.
+3. Confirm to the user that the file landed in `sources/original/`, then continue with the normal scan/normalize flow.
+4. Downloaded PDFs go through the same existing `.pdf` handling as a manually dropped PDF (pdf-parse, on-demand install); if pdf-parse's own `info.Title`/`info.Author` are available, they populate the same optional frontmatter keys.
 
 #### 2b. Capability Assessment — Decision Matrix
 
@@ -152,15 +172,17 @@ When creating a new transformation, ask the user:
 When transforming normalized Markdown into an iNNfo Level 3 Model:
 - Frontmatter MUST use lightweight V_0-3-0 format (`level: 3`, `spec_version: "V_0-3-0"`, `parent_spec: { name, url }`).
 - Body MUST use unified NN syntax: `# NN <Concept>`, `## NN <Concept>: <Element>`, `key:: value`.
-- Every element MUST include explicit provenance pointers `source_ref:: src-NNN (path#lines)`:
+- Every element MUST include explicit provenance pointers via `sources::`, which points directly at the file(s) in `sources/markdown/` and accepts iNNfo's generic list syntax for multiple values:
 
 ```markdown
 # NN Stakeholders
 
 ## NN Stakeholders: Enterprise Clients
-source_ref:: sources/markdown/interview_transcript.md#L45-L60
+sources:: [sources/markdown/interview_transcript.md#L45-L60, sources/markdown/notes.md#L3-L8]
 relationship_model:: B2B Long-term
 ```
+
+A single value may be written without brackets: `sources:: sources/markdown/interview_transcript.md#L45-L60`. There is no `src-NNN`/`source_id` system anywhere in this pipeline.
 
 #### 3c. Version & Citation Selection
 
@@ -181,7 +203,7 @@ Do you want to generate a draft with comments and citations, or a final version?
 Draft deliverables (`_draft.md`) MUST include:
 1. Header: `# DRAFT FOR REVIEW — NOT FINAL VERSION`
 2. Dual-mode citation pointers per claim:
-   - HTML comment (machine-readable): `<!-- cite: src-NNN, section <section-name> -->`
+   - HTML comment (machine-readable): `<!-- cite: sources/markdown/<path>.md#L<start>-L<end>, section <section-name> -->`
    - Visible text (human-readable): `— Source: <filename>, section <section-name>`
 
 ---
@@ -190,8 +212,8 @@ Draft deliverables (`_draft.md`) MUST include:
 
 | Entity Type | Target Directory | Example File Path | Notes |
 |------|------|---------|-------|
-| **Normalized Markdown** | `sources/markdown/` | `sources/markdown/doc1_src-001.md` | Ingested source with scanner frontmatter |
-| **Model** (`*_NN.md`) | `models/` | `models/Business_Plan_V_1-0-0_NN.md` | iNNfo Level 3 V_0-3-0 semantic models with `source_ref` |
+| **Normalized Markdown** | `sources/markdown/` | `sources/markdown/clientA/doc1.md` | Ingested source with scanner frontmatter, mirrors `sources/original/` subfolders |
+| **Model** (`*_NN.md`) | `models/` | `models/Business_Plan_V_1-0-0_NN.md` | iNNfo Level 3 V_0-3-0 semantic models with `sources::` |
 | **Export Deliverable** | `artifacts/exports/` | `artifacts/exports/Executive_Summary_V_1-0-0.md` | Clean final deliverable |
 | **Draft Deliverable** | `artifacts/exports/` | `artifacts/exports/Executive_Summary_V_1-0-0_draft.md` | Annotated draft |
 | **Procedure Spec** | `procedures/` | `procedures/Document_Ingest_V_1-0-0_procedures_NN.md` | Procedure spec compliant with `procedures_V_0-3-0_NN.md` |
@@ -209,9 +231,9 @@ At the end of transformation:
 
 ## Core Rules
 
-1. **Zero Unilateral Mutation**: NEVER move or rename user files without prior explicit confirmation.
+1. **Zero Unilateral Mutation**: NEVER move, rename, or delete files in `sources/original/` (or any user file) without prior explicit confirmation.
 2. **Recommended Option First**: Always prefix option `[a]` with `(Recomendado)` or `(Recomendada)`.
 3. **Multi-Selection Notice**: Add *"Podés seleccionar una opción o una combinación"* when applicable.
-4. **Mandatory Scanner Provenance**: Normalized Markdown in `sources/markdown/` MUST include scanner frontmatter (`source_file`, `sha256`, `size_bytes`, `normalized_at`, `source_id: src-NNN`).
-5. **Mandatory Model Provenance**: Level 3 elements MUST include `source_ref:: src-NNN (path#lines)`.
+4. **Mandatory Scanner Provenance**: Normalized Markdown in `sources/markdown/` MUST include the flat scanner frontmatter (`source_file`, `sha256`, `size_bytes`, `normalized_at`, `normalized_by`, plus `source_url`/`downloaded_at`/`title`/`description`/`author` when applicable). No `source_id`/`src-NNN`.
+5. **Mandatory Model Provenance**: Level 3 elements MUST include `sources:: <path.md#L..-L..>` (or a list `sources:: [a, b]`) pointing directly at `sources/markdown/` — no `src-NNN` IDs.
 6. **V_0-3-0 Compliance**: Target iNNfo V_0-3-0 meta-template specification and unified NN syntax (`# NN`, `## NN`, `key:: value`).

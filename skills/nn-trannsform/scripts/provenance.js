@@ -45,33 +45,56 @@ function parseSourceFrontmatter(content) {
     const m = block.match(new RegExp('^\\s*' + key + ':\\s*"?([^"\\n]+)"?\\s*$', 'm'));
     return m ? m[1].trim() : null;
   };
-  const file = get('file');
+  const file = get('source_file');
   if (!file) return null;
   return {
     file,
-    hash: get('hash'),
-    size: get('size'),
+    hash: get('sha256'),
+    size: get('size_bytes'),
     normalized_at: get('normalized_at'),
     normalized_by: get('normalized_by'),
   };
+}
+
+/**
+ * Recursively collect *.md files under sources/markdown/, preserving their
+ * path relative to that directory (subfolders mirror sources/original/).
+ * The top-level ingestion manifest (index.md) is excluded.
+ */
+function walkMarkdown(mdDir) {
+  const results = [];
+  const walk = (dir, rel) => {
+    if (!fs.existsSync(dir)) return;
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      const abs = path.join(dir, entry.name);
+      const relPath = rel ? path.join(rel, entry.name) : entry.name;
+      if (entry.isDirectory()) {
+        walk(abs, relPath);
+      } else if (entry.isFile() && entry.name.endsWith('.md')) {
+        if (relPath === 'index.md') continue;
+        results.push(relPath);
+      }
+    }
+  };
+  walk(mdDir, '');
+  return results.sort();
 }
 
 function collectSources(mdDir) {
   const sources = [];
   if (!fs.existsSync(mdDir)) return sources;
 
-  const files = fs
-    .readdirSync(mdDir)
-    .filter((f) => f.endsWith('.md') && f !== 'index.md')
-    .sort();
+  const files = walkMarkdown(mdDir);
 
-  for (const mdFile of files) {
-    const content = fs.readFileSync(path.join(mdDir, mdFile), 'utf8');
+  for (const relFile of files) {
+    const content = fs.readFileSync(path.join(mdDir, relFile), 'utf8');
     const fmData = parseSourceFrontmatter(content);
     if (!fmData) continue;
 
     const rawBase = path.basename(fmData.file);
     const ext = path.extname(rawBase).replace(/^\./, '').toLowerCase();
+    const relFilePosix = relFile.replace(/\\/g, '/');
 
     sources.push({
       name: rawBase,
@@ -81,21 +104,21 @@ function collectSources(mdDir) {
       source_format: ext,
       normalized_at: fmData.normalized_at,
       normalized_by: fmData.normalized_by,
-      normalized_content: mdFile,
-      mdFile,
+      normalized_content: `sources/markdown/${relFilePosix}`,
+      mdFile: relFile,
     });
   }
   return sources;
 }
 
 function materializeAssets(projectDir, sources) {
-  const mdDir = path.join(projectDir, 'sources', 'md');
+  const mdDir = path.join(projectDir, 'sources', 'markdown');
   for (const src of sources) {
     const slug = slugify(src.name);
     const destDir = path.join(projectDir, 'assets', slug);
     fs.mkdirSync(destDir, { recursive: true });
     const from = path.join(mdDir, src.mdFile);
-    const to = path.join(destDir, src.normalized_content);
+    const to = path.join(destDir, path.basename(src.mdFile));
     if (fs.existsSync(from)) fs.copyFileSync(from, to);
   }
 }
@@ -252,7 +275,7 @@ function writeWorkspaceIndex(projectDir) {
  */
 function buildProvenanceModel(projectDir, options = {}) {
   const projectName = options.projectName || path.basename(projectDir);
-  const mdDir = path.join(projectDir, 'sources', 'md');
+  const mdDir = path.join(projectDir, 'sources', 'markdown');
   const sources = collectSources(mdDir);
 
   materializeAssets(projectDir, sources);

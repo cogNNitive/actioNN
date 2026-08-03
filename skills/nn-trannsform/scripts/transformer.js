@@ -14,14 +14,38 @@ function listTemplates(projectDir) {
 }
 
 /**
+ * Recursively collect *.md files under sources/markdown/, preserving the path
+ * relative to that directory (it mirrors sources/original/'s subfolders).
+ * The top-level ingestion manifest (index.md) is excluded.
+ */
+function collectMarkdownFiles(mdDir) {
+  const results = [];
+  const walk = (dir, rel) => {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      const abs = path.join(dir, entry.name);
+      const relPath = rel ? path.join(rel, entry.name) : entry.name;
+      if (entry.isDirectory()) {
+        walk(abs, relPath);
+      } else if (entry.isFile() && entry.name.endsWith('.md')) {
+        if (relPath === 'index.md') continue;
+        results.push(relPath);
+      }
+    }
+  };
+  walk(mdDir, '');
+  return results.sort();
+}
+
+/**
  * Fallback heuristic transformer — used only when the agent cannot perform
  * the transformation directly (e.g. context too large).
  *
- * Reads individual markdown files from sources/md/ and applies template structure.
+ * Reads individual markdown files from sources/markdown/ and applies template structure.
  */
 async function applyTransformation(projectDir, templateName, options = {}) {
   const transDir = path.join(projectDir, 'traNNsformations');
-  const mdDir = path.join(projectDir, 'sources', 'md');
+  const mdDir = path.join(projectDir, 'sources', 'markdown');
 
   const cleanTemplateName = path.basename(templateName, '.md').replace(/\s+/g, '_');
   const outputDir = path.join(projectDir, 'artifacts');
@@ -36,21 +60,19 @@ async function applyTransformation(projectDir, templateName, options = {}) {
   }
 
   if (!fs.existsSync(mdDir)) {
-    throw new Error('Markdown directory sources/md/ not found. Please run scan first.');
+    throw new Error('Markdown directory sources/markdown/ not found. Please run scan first.');
   }
 
-  const mdFiles = fs.readdirSync(mdDir)
-    .filter(f => f.endsWith('.md') && f !== 'index.md')
-    .sort();
+  const mdFiles = collectMarkdownFiles(mdDir);
 
   if (mdFiles.length === 0) {
-    throw new Error('No normalized markdown files found in sources/md/. Please run scan first.');
+    throw new Error('No normalized markdown files found in sources/markdown/. Please run scan first.');
   }
 
   let sourceContent = '';
   for (const f of mdFiles) {
     const content = fs.readFileSync(path.join(mdDir, f), 'utf8');
-    sourceContent += `---\n\n# Source File: ${f}\n\n` + content.trim() + '\n\n';
+    sourceContent += `---\n\n# Source File: ${f.replace(/\\/g, '/')}\n\n` + content.trim() + '\n\n';
   }
 
   const transformedOutput = runHeuristicTransformation(templateName, sourceContent);

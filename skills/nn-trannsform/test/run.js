@@ -31,19 +31,24 @@ async function main() {
     printBanner('Unit Tests');
 
     const configTest = require('./unit/test-config');
-    const configResult = configTest.run();
+    const configResult = await configTest.run();
     totalPassed += configResult.passed;
     totalFailed += configResult.failed;
 
     const scannerTest = require('./unit/test-scanner');
-    const scannerResult = scannerTest.run();
+    const scannerResult = await scannerTest.run();
     totalPassed += scannerResult.passed;
     totalFailed += scannerResult.failed;
 
     const provenanceTest = require('./unit/test-provenance');
-    const provenanceResult = provenanceTest.run();
+    const provenanceResult = await provenanceTest.run();
     totalPassed += provenanceResult.passed;
     totalFailed += provenanceResult.failed;
+
+    const webImportTest = require('./unit/test-web-import');
+    const webImportResult = await webImportTest.run();
+    totalPassed += webImportResult.passed;
+    totalFailed += webImportResult.failed;
   }
 
   if (mode === 'all' || mode === 'integration') {
