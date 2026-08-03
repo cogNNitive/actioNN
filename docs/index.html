@@ -3,34 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>cogNNitive — AI Agent Skills for OpenCode</title>
-  <meta name="description" content="Skills ecosystem for AI agents in OpenCode. traNNsform, iNNfo, Workflow Orchestrator, Site Generator, and Design Presets.">
+  <title>actioNN — AI Agent Skills for OpenCode</title>
+  <meta name="description" content="Modular skills ecosystem for AI agents in OpenCode. Model Router, Skills Manager, traNNsform, and Web Design Guide.">
   <meta name="generator" content="https://actionn.cognnitive.com/nn-design-presets">
   <link rel="alternate" type="text/markdown" href="https://actionn.cognnitive.com/index.md" title="cogNNitive — Markdown source">
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <link rel="icon" type="image/x-icon" href="/favicon.ico">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-  <script src="/js/analytics.js" defer></script>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;1,400;1,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    "name": "cogNNitive",
+    "name": "actioNN",
     "url": "https://actionn.cognnitive.com",
-    "description": "AI Agent Skills ecosystem for OpenCode — modular skills that power AI agents with specialized capabilities",
-    "author": {
-      "@type": "Organization",
-      "name": "cogNNitive"
-    },
+    "description": "AI Agent Skills ecosystem for OpenCode — modular skills that power AI agents with specialized capabilities.",
+    "author": { "@type": "Organization", "name": "cogNNitive" },
     "inLanguage": "en",
-    "isAccessibleForFree": true,
-    "dateModified": "2026-06-27",
-    "keywords": ["opencode", "ai-agent", "skills", "trannsform", "innfo", "workflow-orchestrator", "site-generator", "design-presets"]
+    "isAccessibleForFree": true
   }
   </script>
   <style>
@@ -39,26 +29,18 @@
       --canvas-inert: #FAFAFC;
       --brand: #4D0E4E;
       --brand-light: #6A1B6B;
+      --brand-subtle: #F6EEF6;
       --border: #F2F2F7;
       --ink: #111112;
       --ink-muted: #636366;
-      --sans: 'Plus Jakarta Sans', 'Geist Sans', system-ui, sans-serif;
-      --serif: 'Playfair Display', Georgia, serif;
-      --mono: 'JetBrains Mono', 'Geist Mono', monospace;
-      --max-w: 1280px;
-      --space-xs: 4px;
-      --space-sm: 8px;
-      --space-md: 16px;
-      --space-lg: 24px;
-      --space-xl: 48px;
-      --space-xxl: 80px;
+      --sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+      --max-w: 1200px;
       --radius: 10px;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     html { scroll-behavior: smooth; }
-
     body {
       font-family: var(--sans);
       font-size: 16px;
@@ -68,652 +50,309 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    .container {
-      max-width: var(--max-w);
-      margin: 0 auto;
-      padding: 0 var(--space-lg);
-    }
+    .container { max-width: var(--max-w); margin: 0 auto; padding: 0 24px; }
 
-    /* --- Navigation --- */
-    nav {
-      padding: var(--space-md) 0;
+    /* Unified Header */
+    .header {
+      padding: 16px 0;
       border-bottom: 1px solid var(--border);
       background: var(--canvas);
       position: sticky;
       top: 0;
       z-index: 100;
     }
-
-    nav .container {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
+    .header-inner { display: flex; align-items: center; justify-content: space-between; }
     .logo {
       display: inline-flex;
       align-items: center;
       gap: 10px;
       font-weight: 800;
-      font-size: 22px;
+      font-size: 20px;
       color: var(--brand);
       text-decoration: none;
       letter-spacing: -0.02em;
     }
-    .logo img {
-      height: 32px;
-      width: auto;
-    }
-
-    .nav-links {
-      display: flex;
-      gap: var(--space-lg);
-      align-items: center;
-      list-style: none;
-    }
-
-    .nav-links a {
+    .logo img { height: 28px; width: auto; }
+    .nav { display: flex; gap: 24px; align-items: center; }
+    .nav-link {
       text-decoration: none;
       color: var(--ink-muted);
       font-size: 14px;
-      font-weight: 500;
+      font-weight: 600;
       transition: color 0.2s;
     }
-
-    .nav-links a:hover { color: var(--brand); }
-
-    .nav-cta {
-      background: var(--brand);
-      color: #fff !important;
-      padding: 8px 20px;
-      border-radius: var(--radius);
-      font-size: 13px !important;
-      font-weight: 600 !important;
-      transition: background 0.2s;
-    }
-
-    .nav-cta:hover { background: var(--brand-light) !important; }
-
-    /* --- Hero --- */
-    .hero {
-      padding: 120px 0 var(--space-xxl);
-      text-align: center;
-    }
-
-    .hero h1 {
-      font-size: 48px;
-      line-height: 1.15;
-      font-weight: 800;
-      letter-spacing: -0.03em;
-      max-width: 900px;
-      margin: 0 auto var(--space-md);
-    }
-
-    .hero h1 .accent {
-      font-family: var(--serif);
-      font-weight: 600;
-      font-style: italic;
-      color: var(--brand);
-    }
-
-    .hero p {
-      font-size: 18px;
-      color: var(--ink-muted);
-      max-width: 600px;
-      margin: 0 auto var(--space-xl);
-    }
-
-    .hero-actions {
-      display: flex;
-      gap: var(--space-md);
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
+    .nav-link:hover, .nav-link.active { color: var(--brand); }
     .btn-primary {
       display: inline-flex;
       align-items: center;
-      gap: var(--space-sm);
+      gap: 8px;
       background: var(--brand);
       color: #fff;
       text-decoration: none;
-      padding: 14px 32px;
+      padding: 10px 20px;
       border-radius: var(--radius);
       font-weight: 600;
-      font-size: 15px;
+      font-size: 14px;
       transition: background 0.2s;
     }
-
     .btn-primary:hover { background: var(--brand-light); }
-
     .btn-secondary {
       display: inline-flex;
       align-items: center;
-      gap: var(--space-sm);
-      background: transparent;
-      color: var(--brand);
+      gap: 8px;
+      background: var(--canvas-inert);
+      color: var(--ink);
       text-decoration: none;
-      padding: 14px 32px;
+      padding: 10px 20px;
       border-radius: var(--radius);
       font-weight: 600;
-      font-size: 15px;
-      border: 1px solid var(--brand);
+      font-size: 14px;
+      border: 1px solid var(--border);
       transition: background 0.2s;
     }
+    .btn-secondary:hover { background: var(--border); }
 
-    .btn-secondary:hover { background: #F8F0F8; }
-
-    /* --- Section base --- */
-    section { padding: var(--space-xxl) 0; }
-
-    section + section { border-top: 1px solid var(--border); }
-
-    .section-label {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--brand);
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      margin-bottom: var(--space-sm);
-    }
-
-    .section-title {
-      font-size: 32px;
-      line-height: 1.25;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      margin-bottom: var(--space-md);
-    }
-
-    .section-title .accent {
-      font-family: var(--serif);
-      font-weight: 400;
-      font-style: italic;
-      color: var(--brand);
-    }
-
-    .section-desc {
-      color: var(--ink-muted);
-      max-width: 640px;
-      font-size: 16px;
-    }
-
-    /* --- Skills Grid --- */
-    .skills-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: var(--space-lg);
-      margin-top: var(--space-xl);
-    }
-
-    .skill-card {
-      background: var(--canvas);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: var(--space-lg);
-      transition: border-color 0.2s;
-    }
-
-    .skill-card:hover { border-color: var(--brand); }
-
-    .skill-icon {
-      width: 44px;
-      height: 44px;
-      border-radius: var(--radius);
-      background: #F6EEF6;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      margin-bottom: var(--space-md);
-      color: var(--brand);
-      font-weight: 700;
-    }
-
-    .skill-card h3 {
-      font-size: 20px;
-      font-weight: 600;
-      letter-spacing: -0.01em;
-      margin-bottom: var(--space-sm);
-    }
-
-    .skill-card p {
-      font-size: 14px;
-      color: var(--ink-muted);
-      line-height: 1.6;
-      margin-bottom: var(--space-md);
-    }
-
-    .skill-card a {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--brand);
-      text-decoration: none;
-    }
-
-    .skill-card a:hover { text-decoration: underline; }
-
-    /* --- How it works --- */
-    .steps {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: var(--space-xl);
-      margin-top: var(--space-xl);
-    }
-
-    .step {
-      counter-increment: step;
-      position: relative;
-      padding-top: 40px;
-    }
-
-    .steps { counter-reset: step; }
-
-    .step::before {
-      content: counter(step);
-      position: absolute;
-      top: 0;
-      left: 0;
-      font-family: var(--mono);
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--brand);
-      background: #F6EEF6;
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .step h4 {
-      font-size: 18px;
-      font-weight: 600;
-      margin-bottom: var(--space-sm);
-    }
-
-    .step p {
-      font-size: 14px;
-      color: var(--ink-muted);
-      line-height: 1.6;
-    }
-
-    /* --- Sample cards --- */
-    .sample-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: var(--space-lg);
-      margin-top: var(--space-xl);
-    }
-
-    .sample-card {
-      display: flex;
-      flex-direction: column;
-      background: var(--canvas);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-
-    .sample-card:hover {
-      border-color: var(--brand);
-      box-shadow: 0 4px 20px rgba(77, 14, 78, 0.08);
-    }
-
-    .sample-card-preview {
-      height: 140px;
-      background: var(--canvas-inert);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 40px;
-      color: var(--brand);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .sample-card-body {
-      padding: var(--space-lg);
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .sample-card-body .tag {
-      display: inline-block;
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: var(--brand);
-      background: #F6EEF6;
-      padding: 3px 10px;
-      border-radius: 4px;
-      margin-bottom: var(--space-sm);
-      align-self: flex-start;
-    }
-
-    .sample-card-body h3 {
-      font-size: 18px;
-      font-weight: 600;
-      letter-spacing: -0.01em;
-      margin-bottom: var(--space-sm);
-    }
-
-    .sample-card-body .arrow-hint {
-      font-size: 13px;
-      color: var(--ink-muted);
-      margin-bottom: var(--space-sm);
-    }
-
-    .sample-card-body p {
-      font-size: 14px;
-      color: var(--ink-muted);
-      line-height: 1.6;
-      margin-bottom: var(--space-md);
-      flex: 1;
-    }
-
-    .sample-card-body a {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--brand);
-      text-decoration: none;
-      align-self: flex-start;
-    }
-
-    .sample-card-body a:hover { text-decoration: underline; }
-
-    /* --- Installation --- */
-    .code-block {
-      background: var(--canvas-inert);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: var(--space-lg);
-      margin-top: var(--space-xl);
-      font-family: var(--mono);
-      font-size: 14px;
-      line-height: 1.5;
-      overflow-x: auto;
-      white-space: pre;
-      color: var(--ink);
-    }
-
-    .code-block .comment { color: #8E8E93; }
-    .code-block .cmd { color: var(--brand); }
-
-    /* --- Footer --- */
-    footer {
-      border-top: 1px solid var(--border);
-      padding: var(--space-xl) 0 var(--space-lg);
-    }
-
-    footer .container {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: var(--space-md);
-    }
-
-    footer p {
-      font-size: 13px;
-      color: var(--ink-muted);
-    }
-
-    footer .credit {
-      font-size: 12px;
-      color: var(--ink-muted);
-    }
-
-    footer .credit a {
-      color: var(--brand);
-      text-decoration: none;
-    }
-
-    footer a {
-      color: var(--ink-muted);
-      text-decoration: none;
-      font-size: 13px;
-    }
-
-    footer a:hover { color: var(--brand); }
-
-    /* --- Contact --- */
-    #contact { text-align: center; }
-
-    .contact-links {
+    /* Hero Section */
+    .hero {
+      padding: 80px 0 60px;
       text-align: center;
-      padding: 48px 24px;
+      background: linear-gradient(180deg, var(--brand-subtle) 0%, var(--canvas) 100%);
     }
-
-    .contact-btn {
-      display: inline-flex;
+    .hero h1 {
+      font-size: 44px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      color: var(--ink);
+      max-width: 860px;
+      margin: 0 auto 20px;
     }
-
-    .contact-url-display {
-      display: block;
-      margin-top: 16px;
-      font-size: 14px;
-      font-family: var(--mono);
+    .hero h1 .accent { color: var(--brand); }
+    .hero p {
+      font-size: 19px;
       color: var(--ink-muted);
-      word-break: break-all;
+      max-width: 680px;
+      margin: 0 auto 32px;
+    }
+    .hero-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+
+    /* Sections General */
+    section { padding: 64px 0; border-bottom: 1px solid var(--border); }
+    .section-title { text-align: center; margin-bottom: 48px; }
+    .section-title h2 { font-size: 32px; font-weight: 800; letter-spacing: -0.02em; color: var(--ink); }
+    .section-title p { font-size: 16px; color: var(--ink-muted); margin-top: 8px; }
+
+    /* Skills Grid */
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; }
+    .card {
+      background: var(--canvas);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(77, 14, 78, 0.06); }
+    .card-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      background: var(--brand-subtle);
+      color: var(--brand);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+    .card h3 { font-size: 20px; font-weight: 700; margin-bottom: 12px; }
+    .card p { font-size: 15px; color: var(--ink-muted); line-height: 1.5; margin-bottom: 16px; }
+    .card-link { color: var(--brand); font-weight: 600; text-decoration: none; font-size: 14px; }
+    .card-link:hover { text-decoration: underline; }
+
+    /* Steps Box */
+    .steps-wrapper {
+      max-width: 800px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .step-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+      background: var(--canvas);
+      border: 1px solid var(--border);
+      padding: 24px;
+      border-radius: var(--radius);
+    }
+    .step-badge {
+      background: var(--brand);
+      color: #fff;
+      font-weight: 800;
+      font-size: 14px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      flex-shrink: 0;
+    }
+    .step-text h4 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+    .step-text p { font-size: 15px; color: var(--ink-muted); margin-bottom: 8px; }
+    .code-box {
+      background: var(--canvas-inert);
+      border: 1px solid var(--border);
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-family: var(--mono);
+      font-size: 14px;
+      color: var(--brand);
+      display: inline-block;
     }
 
-    /* --- Responsive --- */
-    @media (max-width: 768px) {
-      .hero h1 { font-size: 34px; }
-      .section-title { font-size: 26px; }
-      .skills-grid { grid-template-columns: 1fr; }
-      .sample-grid { grid-template-columns: 1fr; }
-      .steps { grid-template-columns: 1fr; gap: var(--space-lg); }
-      .hero { padding: 80px 0 var(--space-xl); }
-      section { padding: var(--space-xl) 0; }
-      .nav-links li:not(.nav-cta-li) { display: none; }
-    }
+    /* Misc Section */
+    .misc-section { background: #FAF8FA; border-top: 2px dashed var(--brand); padding: 48px 0; }
+    .misc-tag { background: #E5D5E5; color: var(--brand); padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 700; text-transform: uppercase; }
+    details { background: var(--canvas); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 24px; margin-bottom: 16px; }
+    summary { font-weight: 700; cursor: pointer; color: var(--brand); font-size: 16px; }
+    .misc-content { margin-top: 16px; font-size: 14px; color: var(--ink-muted); }
+
+    /* Footer */
+    footer { padding: 48px 0; background: var(--canvas-inert); text-align: center; }
+    footer p { font-size: 14px; color: var(--ink-muted); }
+    footer a { color: var(--brand); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
 
-<nav>
-  <div class="container">
-    <a href="." class="logo"><img src="favicon.svg" alt="actioNN Logo" /> actioNN</a>
-    <ul class="nav-links">
-      <li><a href="#skills">Skills</a></li>
-      <li><a href="#try-it">Try it</a></li>
-      <li><a href="#how-it-works">How it works</a></li>
-      <li><a href="#install">Install</a></li>
-      <li><a href="https://cognnitive.com/contact?ref=actioNN" target="_blank" rel="noopener noreferrer">Contact</a></li>
-      <li class="nav-cta-li"><a href="documentation/" class="nav-cta">Documentation</a></li>
-    </ul>
-  </div>
-</nav>
-
-<main>
-<!-- Hero -->
-<section class="hero">
-  <div class="container">
-    <h1>AI Agent Skills, <span class="accent">Engineered</span> for OpenCode</h1>
-    <p>cogNNitive is a modular skills ecosystem that powers your AI agent with specialized capabilities: document transformation, model design, workflow orchestration, site generation, and visual design.</p>
-    <div class="hero-actions">
-      <a href="#skills" class="btn-primary">Explore Skills &rarr;</a>
-      <a href="https://github.com/cogNNitive/actioNN" class="btn-secondary" target="_blank">View on GitHub</a>
-    </div>
-  </div>
-</section>
-
-<!-- Skills -->
-<section id="skills">
-  <div class="container">
-    <span class="section-label">Ecosystem</span>
-    <h2 class="section-title">Skills that <span class="accent">transform</span> your agent</h2>
-    <p class="section-desc">Each skill is an independent module with precise instructions so the agent acts with purpose and domain knowledge.</p>
-
-    <div class="skills-grid">
-      <div class="skill-card">
-        <div class="skill-icon">T</div>
-        <h3>traNNsform</h3>
-        <p>Transform any document into clean, structured Markdown. Ingests PDFs, DOCX, XLSX, and more using AI-powered normalization. Built-in CLI pipeline for batch processing and template-based output.</p>
-        <a href="documentation/#/skills/trannsform">View documentation &rarr;</a>
-      </div>
-
-      <div class="skill-card">
-        <div class="skill-icon">I</div>
-        <h3>iNNfo</h3>
-        <p>Design and validate structured models with the iNNfo specification framework. Create business models, procedures, and templates with built-in schema validation and MCP tooling.</p>
-        <a href="documentation/">View documentation &rarr;</a>
-      </div>
-
-      <div class="skill-card">
-        <div class="skill-icon">O</div>
-        <h3>Workflow Orchestration</h3>
-        <p>Chain multiple skills into multi-step procedures integrated directly in traNNsform. Define and execute transformation pipelines compliant with procedures_V_0-2-0_NN.md.</p>
-        <a href="documentation/">View documentation &rarr;</a>
-      </div>
-
-      <div class="skill-card">
-        <div class="skill-icon">S</div>
-        <h3>Site Generator</h3>
-        <p>Build production-ready websites on demand. Generate HTML pages, add analytics, and create contact forms with your design tokens baked in — all from a single prompt.</p>
-        <a href="documentation/">View documentation &rarr;</a>
-      </div>
-
-      <div class="skill-card">
-        <div class="skill-icon">D</div>
-        <h3>Design Presets</h3>
-        <p>Complete visual design system with the Morado Nazareno palette, systematic typography, and 8px grid. Reference for building commercial layouts and technical documentation.</p>
-        <a href="documentation/#/skills/web-design-guide">View documentation &rarr;</a>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- How it works -->
-<section id="how-it-works">
-  <div class="container">
-    <span class="section-label">Architecture</span>
-    <h2 class="section-title">How it <span class="accent">works</span></h2>
-    <p class="section-desc">Skills are loaded on demand by the OpenCode agent. Each skill defines its own domain, language, and behavior rules.</p>
-
-    <div class="steps">
-      <div class="step">
-        <h4>Automatic scan</h4>
-        <p>At session start, the Skills Manager detects all available skills in the repository and checks their installation status.</p>
-      </div>
-      <div class="step">
-        <h4>On-demand loading</h4>
-        <p>When a task matches a skill, the agent loads its instructions and executes the specialized workflow.</p>
-      </div>
-      <div class="step">
-        <h4>Modular by design</h4>
-        <p>Each skill is self-contained with its own domain rules. Skills can be installed, updated, and removed independently.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- Try it yourself -->
-<section id="try-it">
-  <div class="container">
-    <span class="section-label">Try it yourself</span>
-    <h2 class="section-title">Ready-to-run <span class="accent">samples</span></h2>
-    <p class="section-desc">Download the input, run the prompt in your AI agent, and get the transformed result. Each sample is a complete end-to-end workflow.</p>
-
-    <div class="sample-grid">
-      <div class="sample-card">
-        <div class="sample-card-preview">&#x1F4D1;&#x279C;&#x1F3AC;</div>
-        <div class="sample-card-body">
-          <span class="tag">traNNsform</span>
-          <h3>Paper to YouTube Script</h3>
-          <div class="arrow-hint">Scientific PDF &rarr; Timestamped script</div>
-          <p>Take a mathematical epidemiology paper on zombie outbreaks and turn it into a ready-to-record YouTube script with model breakdown, key findings, and survival takeaways.</p>
-          <a href="samples/paper-to-youtube/">Try this sample &rarr;</a>
-        </div>
-      </div>
-
-      <div class="sample-card">
-        <div class="sample-card-preview">&#x1F39E;&#xFE0F;&#x279C;&#x1F4CB;</div>
-        <div class="sample-card-body">
-          <span class="tag">traNNsform</span>
-          <h3>Meeting Notes to Executive Summary</h3>
-          <div class="arrow-hint">Video transcript &rarr; Structured summary</div>
-          <p>Turn a YouTube video transcript into a clean executive summary with decisions, action items, blockers, and next-meeting agenda. Uses the "Better Off Ted" scene.</p>
-          <a href="samples/meeting-to-summary/">Try this sample &rarr;</a>
-        </div>
-      </div>
-
-      <div class="sample-card">
-        <div class="sample-card-preview">&#x1F4D1;&#x279C;&#x1F4CA;</div>
-        <div class="sample-card-body">
-          <span class="tag">traNNsform + iNNfo</span>
-          <h3>PDF to iNNfo Dashboard</h3>
-          <div class="arrow-hint">Wikipedia article &rarr; Interactive Charts.js dashboard</div>
-          <p>Transform a Wikipedia article PDF into an iNNfo model with a custom specialization, then export an interactive dashboard. Chains traNNsform and iNNfo in a 5-stage pipeline.</p>
-          <a href="samples/pdf-to-innfo-dashboard/">Try this sample &rarr;</a>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- Installation -->
-<section id="install">
-  <div class="container">
-    <span class="section-label">Getting started</span>
-    <h2 class="section-title">Install in <span class="accent">seconds</span></h2>
-    <p class="section-desc">Paste this one line into the OpenCode Desktop chat. It's the same entry point every time — first setup or returning use. It handles everything: skill installation, MCP registration, and workflow discovery.</p>
-
-    <div class="code-block" style="display:flex;gap:var(--space-md);align-items:center;justify-content:center;flex-wrap:wrap;text-align:center;font-size:18px;font-weight:700;color:var(--brand);background:var(--canvas-inert);border:2px solid var(--brand);padding:var(--space-xl);">
-      <span id="bootstrap-cmd">I want to use https://cognnitive.com/use</span>
-      <button type="button" class="copy-cmd-btn" data-copy="I want to use https://cognnitive.com/use" style="font-size:13px;font-weight:600;color:#fff;background:var(--brand);border:none;border-radius:var(--radius);padding:8px 14px;cursor:pointer;">Copy command</button>
-    </div>
-    <p style="text-align:center;font-size:14px;color:var(--ink-muted);margin-top:var(--space-sm);">Don't have OpenCode Desktop yet? <a href="https://opencode.ai" target="_blank" rel="noopener noreferrer" style="color:var(--brand);">Download it here</a>, then paste the line above into its chat.</p>
-  </div>
-
-  <script>
-    document.querySelectorAll('.copy-cmd-btn').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        navigator.clipboard.writeText(btn.dataset.copy).then(function () {
-          var original = btn.textContent;
-          btn.textContent = 'Copied!';
-          setTimeout(function () { btn.textContent = original; }, 1500);
-        });
-      });
-    });
-  </script>
-</section>
-
-<!-- Contact -->
-<section id="contact">
-  <div class="container">
-    <span class="section-label">Contact</span>
-    <h2 class="section-title">Get in <span class="accent">Touch</span></h2>
-    <p class="section-desc">We'd love to hear from you. Questions, ideas, or feedback — reach out anytime.</p>
-    <div class="contact-links">
-      <a href="https://cognnitive.com/contact?ref=actioNN" target="_blank" rel="noopener noreferrer" class="btn-primary contact-btn">
-        Contact Us
+  <!-- Unified Header -->
+  <header class="header">
+    <div class="container header-inner">
+      <a href="https://cognnitive.com" class="logo">
+        <img src="favicon.svg" alt="actioNN Logo" />
+        <span>actioNN</span>
       </a>
-      <span class="contact-url-display">https://cognnitive.com/contact?ref=actioNN</span>
+      <nav class="nav">
+        <a href="https://cognnitive.com" class="nav-link">cogNNitive</a>
+        <a href="https://innfo.cognnitive.com" class="nav-link">iNNfo</a>
+        <a href="https://actionn.cognnitive.com" class="nav-link active">actioNN</a>
+        <a href="documentation" class="nav-link">Docs</a>
+      </nav>
+      <div class="header-actions">
+        <a href="https://innfo.cognnitive.com/app/" class="btn-primary">Open App</a>
+      </div>
     </div>
-  </div>
-</section>
-</main>
+  </header>
 
-<!-- Footer -->
-<footer>
-  <div class="container">
-    <p>&copy; 2026 cogNNitive. Open source under MIT license.</p>
-    <p class="credit">Creado con <a href="https://actionn.cognnitive.com/">cogNNitive web design skill</a></p>
-    <a href="documentation/">Documentation</a>
-  </div>
-</footer>
+  <main>
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="container">
+        <h1>Modular skills that give your <span class="accent">OpenCode agent</span> specialized powers.</h1>
+        <p>Teach your AI agent domain capabilities: model evaluation, skills management, document transformation, and web design.</p>
+        <div class="hero-actions">
+          <a href="https://innfo.cognnitive.com/app/" class="btn-primary">Open iNNfo Modeler App &rarr;</a>
+          <a href="documentation" class="btn-secondary">Explore Skills Documentation</a>
+        </div>
+      </div>
+    </section>
 
-<!--
-  Generator: https://actionn.cognnitive.com/nn-design-presets
-  Markdown source: /web/index.md
-  AI index: /ai-index.yaml
-  LLM entry: /llms.txt
--->
+    <!-- Featured Skills -->
+    <section>
+      <div class="container">
+        <div class="section-title">
+          <h2>Featured Skills</h2>
+          <p>Autonomous modules that power your AI agent with specialized capabilities.</p>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-icon">🎯</div>
+            <h3>Model Router</h3>
+            <p>Evaluates whether the AI model you are using is the right fit for each task. Recommends the optimal model based on cost and capability.</p>
+            <a href="documentation/#/skills/opencode-model-router" class="card-link">View Documentation &rarr;</a>
+          </div>
+          <div class="card">
+            <div class="card-icon">🛠️</div>
+            <h3>Skills Manager</h3>
+            <p>Meta-skill that manages all skills in your repository. Scans, checks installation integrity, and manages skill lifecycles.</p>
+            <a href="documentation/#/skills/skills-manager" class="card-link">View Documentation &rarr;</a>
+          </div>
+          <div class="card">
+            <div class="card-icon">🔄</div>
+            <h3>traNNsform</h3>
+            <p>Document ingestion and transformation pipeline. Converts PDFs, DOCX, and spreadsheets into structured Markdown.</p>
+            <a href="documentation/#/skills/trannsform" class="card-link">View Documentation &rarr;</a>
+          </div>
+          <div class="card">
+            <div class="card-icon">🎨</div>
+            <h3>Web Design Guide</h3>
+            <p>Complete design system with Morado Nazareno palette and presets for building responsive sites and Docsify documentation.</p>
+            <a href="documentation/#/skills/web-design-guide" class="card-link">View Documentation &rarr;</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- How to Use in OpenCode -->
+    <section style="background: var(--canvas-inert);">
+      <div class="container">
+        <div class="section-title">
+          <h2>How to Install & Use</h2>
+          <p>Get all actioNN skills loaded into your OpenCode agent in 1 simple step.</p>
+        </div>
+        <div class="steps-wrapper">
+          <div class="step-card">
+            <span class="step-badge">Step 1</span>
+            <div class="step-text">
+              <h4>Tell Your OpenCode Agent</h4>
+              <p>Say the single bootstrap phrase in OpenCode Desktop chat:</p>
+              <div class="code-box">I want to use https://cognnitive.com/use</div>
+            </div>
+          </div>
+          <div class="step-card">
+            <span class="step-badge">Step 2</span>
+            <div class="step-text">
+              <h4>Skills Installed Automatically</h4>
+              <p>OpenCode fetches the manifest, downloads all skills from GitHub, and presents an interactive workflow menu.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Misc Section (Temporary Technical Review) -->
+    <section class="misc-section">
+      <div class="container">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+          <span class="misc-tag">Misc Review</span>
+          <h3>Removed Technical Details (For User Review)</h3>
+        </div>
+        <p style="margin-bottom: 24px; font-size: 14px; color: var(--ink-muted);">
+          Technical flags, Junction specifications, and YAML frontmatter schemas were removed from this landing page to keep it clear and accessible. They are preserved here for review and in full under <a href="documentation">Documentation (Docsify)</a>.
+        </p>
+
+        <details>
+          <summary>Windows Junction & Installation Technical Details</summary>
+          <div class="misc-content">
+            <p>Skills are linked live via Windows NTFS junctions in <code>~/.agents/skills/</code>. Allows instant reflection of updates without re-copying.</p>
+          </div>
+        </details>
+
+        <details>
+          <summary>YAML Frontmatter & Trigger Specification</summary>
+          <div class="misc-content">
+            <p>Each skill is defined by <code>SKILL.md</code> containing declarative frontmatter fields: <code>name</code>, <code>description</code>, <code>triggers</code>, and <code>rules</code>.</p>
+          </div>
+        </details>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <p>&copy; 2026 actioNN / cogNNitive. Open Source under MIT License. Built for <a href="https://opencode.ai">OpenCode</a>.</p>
+    </div>
+  </footer>
+
 </body>
 </html>
