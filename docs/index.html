@@ -169,6 +169,18 @@
     .card-link { color: var(--brand); font-weight: 600; text-decoration: none; font-size: 14px; }
     .card-link:hover { text-decoration: underline; }
 
+    /* Diagram Card */
+    .diagram-card {
+      background: var(--canvas-inert);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      max-width: 960px;
+      margin: 0 auto;
+      overflow-x: auto;
+    }
+    .mermaid { display: flex; justify-content: center; }
+
     /* Steps Box */
     .steps-wrapper {
       max-width: 800px;
@@ -208,19 +220,18 @@
       display: inline-block;
     }
 
-    /* Misc Section */
-    .misc-section { background: #FAF8FA; border-top: 2px dashed var(--brand); padding: 48px 0; }
-    .misc-tag { background: #E5D5E5; color: var(--brand); padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 700; text-transform: uppercase; }
-    details { background: var(--canvas); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 24px; margin-bottom: 16px; }
-    summary { font-weight: 700; cursor: pointer; color: var(--brand); font-size: 16px; }
-    .misc-content { margin-top: 16px; font-size: 14px; color: var(--ink-muted); }
-
     /* Footer */
     footer { padding: 48px 0; background: var(--canvas-inert); text-align: center; }
     footer p { font-size: 14px; color: var(--ink-muted); }
     footer a { color: var(--brand); text-decoration: none; }
     footer a:hover { text-decoration: underline; }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      mermaid.initialize({ startOnLoad: true, theme: "neutral" });
+    });
+  </script>
 </head>
 <body>
 
@@ -292,8 +303,44 @@
       </div>
     </section>
 
-    <!-- How to Use in OpenCode -->
+    <!-- How Skills Cooperate Diagram -->
     <section style="background: var(--canvas-inert);">
+      <div class="container">
+        <div class="section-title">
+          <h2>How Skills & Tools Cooperate</h2>
+          <p>Visual interaction between OpenCode, actioNN skills, MCP tools, and iNNfo engine.</p>
+        </div>
+        <div class="diagram-card">
+          <pre class="mermaid">
+flowchart LR
+    subgraph UserSpace["User Workspace"]
+        A["👤 User"] <-->|Prompts & Commands| B["💻 OpenCode Desktop"]
+    end
+
+    subgraph cogNNitiveEcosystem["cogNNitive Ecosystem"]
+        B <-->|Loads Skills| C["⚡ actioNN Skills"]
+        C <-->|Invokes MCP Tools| D["⚙️ innfo-mcp Server"]
+        D <-->|Parses & Validates| E["📘 iNNfo Core Engine"]
+    end
+
+    subgraph VisualApps["Visual Interfaces"]
+        E <-->|Renders & Edits| F["🛠️ iNNfo Modeler App"]
+    end
+
+    classDef user fill:#F6EEF6,stroke:#4D0E4E,stroke-width:2px,color:#4D0E4E;
+    classDef eco fill:#FAFAFC,stroke:#6A1B6B,stroke-width:2px,color:#111112;
+    classDef app fill:#4D0E4E,stroke:#4D0E4E,stroke-width:2px,color:#FFFFFF;
+
+    class A,B user;
+    class C,D,E eco;
+    class F app;
+          </pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- How to Use in OpenCode -->
+    <section>
       <div class="container">
         <div class="section-title">
           <h2>How to Install & Use</h2>

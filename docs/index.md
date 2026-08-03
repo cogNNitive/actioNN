@@ -21,8 +21,28 @@ Teach your AI agent domain capabilities: model evaluation, skills management, do
 
 ---
 
+## How Skills & Tools Cooperate
+
+```mermaid
+flowchart LR
+    subgraph UserSpace["User Workspace"]
+        A["👤 User"] <-->|Prompts & Commands| B["💻 OpenCode Desktop"]
+    end
+
+    subgraph cogNNitiveEcosystem["cogNNitive Ecosystem"]
+        B <-->|Loads Skills| C["⚡ actioNN Skills"]
+        C <-->|Invokes MCP Tools| D["⚙️ innfo-mcp Server"]
+        D <-->|Parses & Validates| E["📘 iNNfo Core Engine"]
+    end
+
+    subgraph VisualApps["Visual Interfaces"]
+        E <-->|Renders & Edits| F["🛠️ iNNfo Modeler App"]
+    end
+```
+
+---
+
 ## How to Install & Use (OpenCode)
 
 1. **Tell Your OpenCode Agent**: Say the single bootstrap phrase in OpenCode Desktop chat: `I want to use https://cognnitive.com/use`
 2. **Skills Installed Automatically**: OpenCode fetches the manifest, downloads all skills from GitHub, and presents an interactive workflow menu.
-
