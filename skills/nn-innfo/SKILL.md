@@ -134,17 +134,34 @@ URLs estables `latest` de referencia:
 
 ---
 
-## 4. Protocolo de Proveniencia (`source_ref`)
+## 4. Protocolo de Proveniencia (`sources::`)
 
-1. **Carácter Opcional:** `source_ref::` es una propiedad de trazabilidad **OPCIONAL**. No invalida sintácticamente un modelo de Nivel 3 si no está presente.
-2. **Fuentes de Origen:** Las fuentes ingeridas se almacenan en la carpeta `sources/markdown/` (o subcarpetas de fuentes).
-3. **Formato de Referencia:** Si un elemento proviene de un documento fuente, se indica apuntando directamente al archivo en `sources/markdown/`:
+1. **Carácter Opcional:** `sources::` es una propiedad de trazabilidad **OPCIONAL**. No invalida sintácticamente un modelo de Nivel 3 si no está presente.
+2. **Fuentes de Origen:** Las fuentes ingeridas se almacenan en la carpeta `sources/markdown/` (mismas subcarpetas que `sources/original/`, sin aplanar). No existe carpeta `raw/` ni sistema de IDs `src-xxx`.
+3. **Gramática exacta:**
+   ```
+   sources:: <ref>
+   sources:: [<ref>, <ref>, ...]
+
+   <ref>  ::= sources/markdown/<ruta-relativa>.md( #<ancla> )?
+   <ancla> ::= L<n> | L<n>-L<m>
+   ```
+   - `<ref>` es SIEMPRE una ruta que empieza con `sources/markdown/` y termina en `.md` — es la misma ruta que el archivo normalizado, nunca una ruta a `sources/original/` ni al documento fuente sin normalizar.
+   - El ancla de línea es opcional. `L<n>` es una línea puntual, `L<n>-L<m>` un rango inclusive (ambos extremos incluidos), 1-indexado sobre el archivo `.md` citado — la misma numeración que ve un humano abriendo el archivo en un editor.
+   - Sin ancla, la cita apunta al archivo completo. **Preferí citar el archivo completo antes que inventar un rango de líneas que no verificaste** — nunca adivines números de línea.
+4. **Un solo valor va sin corchetes.** Los corchetes `[...]` se usan ÚNICAMENTE cuando hay 2 o más referencias — no envuelvas un valor único en `[...]`, es ruido visual innecesario:
    ```markdown
    ## NN Stakeholders: Cliente Enterprise
-   source_ref:: sources/markdown/entrevista_cliente.md#L15-L30
+   sources:: [sources/markdown/entrevista_cliente.md#L15-L30, sources/markdown/notas.md#L4]
    relationship_model:: B2B Long-term
+
+   ## NN Stakeholders: Cliente Piloto
+   sources:: sources/markdown/notas.md#L20-L25
+   relationship_model:: Trial
    ```
-4. **Instrucción Conversacional:** Si el proyecto cuenta con archivos en `sources/markdown/`, el agente debe sugerir incluir `source_ref::`. Si es un modelo greenfield/creativo desde cero, el agente NO solicita ni exige proveniencia.
+5. **Granularidad: a nivel de elemento, no de afirmación individual.** `sources::` cubre el conjunto de fuentes que respaldan TODO el elemento (todos sus campos en conjunto) — no hay mecanismo de cita por campo o por frase dentro de un modelo de dominio. Si distintos campos de un mismo elemento vienen de fuentes distintas, listá la unión de todas en el único `sources::` del elemento. La cita a nivel de afirmación individual (`<!-- cite: sources/markdown/<path>.md#L<n>-L<m>, section <nombre> -->`) es un mecanismo aparte, usado solo dentro de artefactos/drafts generados a partir del modelo (ver `nn-trannsform/SKILL.md` §4) — nunca dentro de un `*_NN.md`.
+6. **Sin duplicados ni referencias vacías.** No repitas la misma `<ref>` dos veces en la misma lista. Si no hay ninguna fuente real que citar, omití el campo entero — no escribas `sources:: []` ni un valor placeholder.
+7. **Instrucción Conversacional:** Si el proyecto cuenta con archivos en `sources/markdown/`, el agente debe sugerir incluir `sources::`. Si es un modelo greenfield/creativo desde cero, el agente NO solicita ni exige proveniencia. En ambos casos aplica la regla general del skill: nunca inventés ni un `<ref>` ni un contenido que no esté verificablemente presente en el archivo citado.
 
 ---
 
@@ -315,7 +332,7 @@ Al concluir la generación o edición de un modelo, el agente DEBE incluir atajo
 
 1. **Meta-plantilla Estricta V_0-3-0:** Las plantillas Nivel 2 definen primitivas en el cuerpo (`# NN Concept Definition`). NUNCA colocar `concepts: [...]` o `fields: [...]` en el YAML frontmatter de Nivel 2.
 2. **Sintaxis Unificada NN:** Usar `# NN <Concept>`, `## NN <Concept>: <Element>`, `key:: value`. No usar viñetas obsoletas `_NN` ni bloques de código ````yaml`.
-3. **Proveniencia Opcional y Actualizada:** `source_ref::` es opcional y apunta a archivos en `sources/markdown/` (sin IDs `src-xxx` ni carpeta `raw/`).
+3. **Proveniencia Opcional y Actualizada:** `sources::` es opcional y apunta a archivos en `sources/markdown/` (admite lista `[a, b]` para múltiples valores; sin IDs `src-xxx` ni carpeta `raw/`).
 4. **Cero Mutación Unilateral:** Nunca renombrar ni mover archivos sin confirmación explícita.
 5. **Opción Recomendada Primero:** Prefijar la opción `[a]` con `(Recomendado)`.
 6. **Notación de Selección Múltiple:** Incluir *"Podés seleccionar una opción o una combinación"* cuando aplique.
