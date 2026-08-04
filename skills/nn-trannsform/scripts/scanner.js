@@ -13,18 +13,19 @@ const TRANNNSFORM_VERSION = (() => {
 
 // Supported extensions by category
 const EXT_OK = ['.txt', '.md', '.csv', '.json', '.html', '.htm'];
-const EXT_PROMPT = ['.docx', '.pdf', '.xlsx'];
+const EXT_PROMPT = ['.docx', '.pdf', '.xlsx', '.xls'];
 const EXT_NO = ['.mp3', '.wav', '.png', '.jpg', '.jpeg', '.gif'];
 
 const EXT_LABELS = {
   '.txt': 'txt', '.md': 'md', '.csv': 'csv', '.json': 'json', '.html': 'html', '.htm': 'htm',
-  '.docx': 'docx', '.pdf': 'pdf', '.xlsx': 'xlsx'
+  '.docx': 'docx', '.pdf': 'pdf', '.xlsx': 'xlsx', '.xls': 'xls'
 };
 
 const EXT_DEPS = {
   '.docx': { pkg: 'mammoth', label: 'mammoth' },
   '.pdf':  { pkg: 'pdf-parse', label: 'pdf-parse' },
-  '.xlsx': { pkg: 'xlsx', label: 'xlsx' }
+  '.xlsx': { pkg: 'xlsx', label: 'xlsx' },
+  '.xls':  { pkg: 'xlsx', label: 'xlsx' }
 };
 
 /**
@@ -261,6 +262,7 @@ const PROMPT_CONVERTERS = {
   '.docx': convertDocx,
   '.pdf': convertPdf,
   '.xlsx': convertXlsx,
+  '.xls': convertXlsx,
 };
 
 async function ensureDependency(ext, options) {
