@@ -4,7 +4,7 @@ Agent skill for document ingestion, normalization, and template-based transforma
 
 ## How it works
 
-The skill ships with a Node.js CLI tool (`scripts/index.js`) that handles file operations — scanning directories, converting binary formats (docx, pdf, html) to Markdown, downloading web resources, and maintaining an ingestion manifest. The actual content transformation and multi-step procedure orchestration is executed using the agent's LLM and `procedures_V_0-3-0_NN.md` specifications.
+The skill ships with a Node.js CLI tool (`scripts/index.js`) that handles file operations — scanning directories, converting binary formats (docx, pdf, xlsx, html) to Markdown, downloading web resources, and maintaining an ingestion manifest. The actual content transformation and multi-step procedure orchestration is executed using the agent's LLM and `procedures_V_0-3-0_NN.md` specifications.
 
 The workflow is:
 
@@ -39,9 +39,10 @@ nn-trannsform/
   README.md                 You are here
   scripts/
     index.js                CLI entry point — bootstrap, scan, apply transformations, web import
-    scanner.js              Format detection, file conversion (txt, md, csv, json, html, docx, pdf)
+    scanner.js              Format detection, file conversion (txt, md, csv, json, html, docx, pdf, xlsx)
+    extract.js              Quick text extraction (no ingestion) — prints a single file's plain text to stdout
     webImport.js            Downloads a URL straight into sources/original/ + HTML metadata extraction
-    transformer.js          Template listing and transformation preconditions (no automated fallback — the agent transforms directly)
+    transformer.js          Template listing and fallback heuristic transformation
     provenance.js           Builds/refreshes the provenance model + semantic index.md
     config.js               Persistent config (last project path, default directories)
   examples/
@@ -66,7 +67,7 @@ When the agent executes `node scripts/index.js` and encounters a `MODULE_NOT_FOU
 | html/htm | ✅ Read directly | zero-dep tag stripping |
 | pdf    | ⚠️ Model-dependent | pdf-parse |
 | docx   | ❌ Not available | mammoth |
-| xlsx   | 🚫 Unsupported | — |
+| xlsx   | ❌ Not available | xlsx |
 
 The agent presents a decision matrix to the user for non-plain-text formats, letting them choose between agent-native reading (may cost extra tokens) or local Node.js conversion.
 

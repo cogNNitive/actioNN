@@ -52,6 +52,7 @@ function run() {
     assertEqual(scanner.EXT_LABELS['.html'], 'html', 'EXT_LABELS .html');
     assertEqual(scanner.EXT_LABELS['.docx'], 'docx', 'EXT_LABELS .docx');
     assertEqual(scanner.EXT_LABELS['.pdf'], 'pdf', 'EXT_LABELS .pdf');
+    assertEqual(scanner.EXT_LABELS['.xlsx'], 'xlsx', 'EXT_LABELS .xlsx');
 
     // Test 2: detectFormats returns empty for non-existent dir
     const noDir = scanner.detectFormats(path.join(TEST_TEMP, 'nonexistent'));

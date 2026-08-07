@@ -236,38 +236,128 @@ function refreshExistingModel(existing, sources) {
   return frontmatter + '\n' + notice + '\n\n' + rebuilt.join('\n') + '\n';
 }
 
+const INDEX_SKIP_DIRS = new Set(['backups', 'archive', 'specs', '.spec-cache', 'node_modules', '.git']);
+
 function listWorkspaceModels(projectDir) {
   const found = [];
-  const scan = (dir, prefix) => {
+  const walk = (dir, prefix) => {
     if (!fs.existsSync(dir)) return;
-    for (const f of fs.readdirSync(dir)) {
-      if (f.endsWith('_NN.md')) found.push(prefix + f);
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      const name = entry.name;
+      if (name.startsWith('.') || INDEX_SKIP_DIRS.has(name)) continue;
+      if (entry.isDirectory()) {
+        walk(path.join(dir, name), prefix + name + '/');
+      } else if (entry.isFile() && name.endsWith('_NN.md')) {
+        found.push(prefix + name);
+      }
     }
   };
-  scan(projectDir, './');
-  scan(path.join(projectDir, 'models'), './models/');
+  walk(projectDir, './');
   return found.sort();
 }
 
-function writeWorkspaceIndex(projectDir) {
-  const models = listWorkspaceModels(projectDir);
-  let out = '# NN index\n\n';
-  if (models.length === 0) {
-    out += '<!-- No models yet. -->\n';
-  } else {
-    for (const m of models) {
-      const label = path
-        .basename(m)
-        .replace(/_V_\d+-\d+-\d+_[A-Za-z0-9-]+_NN\.md$/, '')
-        .replace(/_NN\.md$/, '')
-        .replace(/_/g, ' ');
-      const href = m.split('/').map((seg, i, arr) =>
-        i === arr.length - 1 ? encodeURIComponent(seg) : seg
-      ).join('/');
-      out += `* [${label}](${href})\n`;
+/**
+ * Parse `* [label](target)` and `* [[target]]` link lines out of a workspace
+ * index.md. Returns `{ type, label, target }` entries. Non-link prose is not
+ * returned (the file is a generated `# NN index`, not free-form content).
+ */
+function parseIndexLinks(content) {
+  const links = [];
+  const re = /^\*\s*(?:\[([^\]]*)\]\(([^)]*)\)|\[\[([^\]]+)\]\])\s*$/gm;
+  let m;
+  while ((m = re.exec(content)) !== null) {
+    if (m[1] !== undefined) {
+      links.push({ type: 'md', label: m[1], target: m[2] });
+    } else {
+      links.push({ type: 'wiki', label: null, target: m[3] });
     }
   }
-  fs.writeFileSync(path.join(projectDir, 'index.md'), out, 'utf8');
+  return links;
+}
+
+function normalizeIndexTarget(projectDir, target) {
+  let t = String(target).trim();
+  try {
+    t = decodeURIComponent(t);
+  } catch (err) {
+    // keep the raw target when it contains malformed percent-escapes
+  }
+  t = t.replace(/\\/g, '/').replace(/^\.\//, '');
+  return { key: t.toLowerCase(), resolved: path.resolve(projectDir, t) };
+}
+
+function deriveIndexLabel(relPath) {
+  return path
+    .basename(relPath)
+    .replace(/_V_\d+-\d+-\d+_[A-Za-z0-9-]+_NN\.md$/, '')
+    .replace(/_NN\.md$/, '')
+    .replace(/_/g, ' ');
+}
+
+function indexHref(relPath) {
+  return relPath.split('/').map((seg, i, arr) =>
+    i === arr.length - 1 ? encodeURIComponent(seg) : seg
+  ).join('/');
+}
+
+function writeWorkspaceIndex(projectDir) {
+  const indexPath = path.join(projectDir, 'index.md');
+  const existed = fs.existsSync(indexPath);
+
+  const fresh = listWorkspaceModels(projectDir);
+  const preserved = [];
+  const dropped = [];
+
+  if (existed) {
+    const seen = new Set();
+    for (const link of parseIndexLinks(fs.readFileSync(indexPath, 'utf8'))) {
+      if (!link.target.endsWith('.md')) continue;
+      const { key, resolved } = normalizeIndexTarget(projectDir, link.target);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      if (fs.existsSync(resolved)) {
+        preserved.push({ ...link, key });
+      } else {
+        dropped.push(link);
+      }
+    }
+  }
+
+  const merged = [];
+  const used = new Set();
+  for (const p of preserved) {
+    merged.push(p);
+    used.add(p.key);
+  }
+  let added = 0;
+  for (const m of fresh) {
+    const { key } = normalizeIndexTarget(projectDir, m);
+    if (used.has(key)) continue;
+    used.add(key);
+    merged.push({ type: 'md', label: deriveIndexLabel(m), target: indexHref(m), key });
+    added++;
+  }
+
+  let out = '# NN index\n\n';
+  if (merged.length === 0) {
+    out += '<!-- No models yet. -->\n';
+  } else {
+    for (const item of merged) {
+      if (item.type === 'wiki') {
+        out += `* [[${item.target}]]\n`;
+      } else {
+        out += `* [${item.label}](${item.target})\n`;
+      }
+    }
+  }
+  fs.writeFileSync(indexPath, out, 'utf8');
+
+  if (existed) {
+    console.log(`Workspace index.md regenerated (preserved ${preserved.length} existing entrie(s), dropped ${dropped.length} dangling, added ${added} new)`);
+  } else {
+    console.log('Workspace index.md created');
+  }
 }
 
 /**

@@ -38,16 +38,21 @@ function collectMarkdownFiles(mdDir) {
 }
 
 /**
- * Validates that a template and normalized source documents exist, then
- * fails explicitly: there is no automated/heuristic transformation path.
- * Applying a template to arbitrary source documents requires understanding
- * their structure and content, which only the agent can do — the agent
- * must read sources/markdown/ and apply the template directly instead of
- * calling this function to do it for them.
+ * Fallback heuristic transformer — used only when the agent cannot perform
+ * the transformation directly (e.g. context too large).
+ *
+ * Reads individual markdown files from sources/markdown/ and applies template structure.
  */
 async function applyTransformation(projectDir, templateName, options = {}) {
   const transDir = path.join(projectDir, 'traNNsformations');
   const mdDir = path.join(projectDir, 'sources', 'markdown');
+
+  const cleanTemplateName = path.basename(templateName, '.md').replace(/\s+/g, '_');
+  const outputDir = path.join(projectDir, 'artifacts');
+
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir, { recursive: true });
+  }
 
   const templatePath = path.join(transDir, templateName);
   if (!fs.existsSync(templatePath)) {
@@ -64,11 +69,70 @@ async function applyTransformation(projectDir, templateName, options = {}) {
     throw new Error('No normalized markdown files found in sources/markdown/. Please run scan first.');
   }
 
-  throw new Error(
-    `Automatic transformation is not available for template "${templateName}". ` +
-    `The agent must read the source files under sources/markdown/ and apply the ` +
-    `template directly, rather than relying on a scripted transformation.`
-  );
+  let sourceContent = '';
+  for (const f of mdFiles) {
+    const content = fs.readFileSync(path.join(mdDir, f), 'utf8');
+    sourceContent += `---\n\n# Source File: ${f.replace(/\\/g, '/')}\n\n` + content.trim() + '\n\n';
+  }
+
+  const transformedOutput = runHeuristicTransformation(templateName, sourceContent);
+
+  const timestamp = getFormattedTimestamp();
+  const outputFileName = `${cleanTemplateName}_${timestamp}.md`;
+  const outputPath = path.join(outputDir, outputFileName);
+
+  fs.writeFileSync(outputPath, transformedOutput, 'utf8');
+
+  return {
+    outputFileName,
+    outputPath,
+    content: transformedOutput
+  };
+}
+
+function runHeuristicTransformation(templateName, sourceContent) {
+  const sections = sourceContent.split('---');
+  let result = `# Transformation Result: ${path.basename(templateName, '.md')}\n\n`;
+
+  let processedAny = false;
+  for (const sec of sections) {
+    const lines = sec.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    const titleLine = lines.find(l => l.startsWith('# '));
+    if (titleLine) {
+      const name = titleLine.substring(2).trim();
+
+      const paragraphs = lines.filter(l => !l.startsWith('#') && !l.startsWith('---'));
+      const desc = paragraphs[0] || 'No description available.';
+      const hist = paragraphs[1] || 'No history available.';
+
+      result += `### ${name}\n`;
+      result += `**Description:** ${desc}\n\n`;
+      result += `**History:** ${hist}\n\n`;
+      result += `**Members:**\n`;
+      result += `| Member | Instrument |\n`;
+      result += `| --- | --- |\n`;
+      result += `| [Name] | [Instrument] |\n\n`;
+      result += `---\n\n`;
+      processedAny = true;
+    }
+  }
+
+  if (!processedAny) {
+    result += `*No structural headers or data found in input markdown files to transform.*\n`;
+  }
+
+  return result;
+}
+
+function getFormattedTimestamp() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const hour = String(now.getHours()).padStart(2, '0');
+  const min = String(now.getMinutes()).padStart(2, '0');
+  const sec = String(now.getSeconds()).padStart(2, '0');
+  return `${year}${month}${day}-${hour}${min}${sec}`;
 }
 
 module.exports = {

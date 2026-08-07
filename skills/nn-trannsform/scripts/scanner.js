@@ -13,17 +13,19 @@ const TRANNNSFORM_VERSION = (() => {
 
 // Supported extensions by category
 const EXT_OK = ['.txt', '.md', '.csv', '.json', '.html', '.htm'];
-const EXT_PROMPT = ['.docx', '.pdf'];
-const EXT_NO = ['.mp3', '.wav', '.png', '.jpg', '.jpeg', '.gif', '.xlsx', '.xls'];
+const EXT_PROMPT = ['.docx', '.pdf', '.xlsx', '.xls'];
+const EXT_NO = ['.mp3', '.wav', '.png', '.jpg', '.jpeg', '.gif'];
 
 const EXT_LABELS = {
   '.txt': 'txt', '.md': 'md', '.csv': 'csv', '.json': 'json', '.html': 'html', '.htm': 'htm',
-  '.docx': 'docx', '.pdf': 'pdf'
+  '.docx': 'docx', '.pdf': 'pdf', '.xlsx': 'xlsx', '.xls': 'xls'
 };
 
 const EXT_DEPS = {
   '.docx': { pkg: 'mammoth', label: 'mammoth' },
-  '.pdf':  { pkg: 'pdf-parse', label: 'pdf-parse' }
+  '.pdf':  { pkg: 'pdf-parse', label: 'pdf-parse' },
+  '.xlsx': { pkg: 'xlsx', label: 'xlsx' },
+  '.xls':  { pkg: 'xlsx', label: 'xlsx' }
 };
 
 /**
@@ -225,9 +227,42 @@ async function convertPdf(filePath, baseName) {
   }
 }
 
+function convertXlsx(filePath, baseName) {
+  const XLSX = require('xlsx');
+  const workbook = XLSX.readFile(filePath);
+  let body = `# ${baseName}\n\n`;
+  for (const sheetName of workbook.SheetNames) {
+    const sheet = workbook.Sheets[sheetName];
+    const json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+    body += `## Sheet: ${sheetName}\n\n`;
+    if (json.length > 0) {
+      const headers = Object.keys(json[0]);
+      body += `| ${headers.join(' | ')} |\n`;
+      body += `| ${headers.map(() => '---').join(' | ')} |\n`;
+      for (const row of json) {
+        body += `| ${headers.map((h) => String(row[h] ?? '')).join(' | ')} |\n`;
+      }
+    } else {
+      const range = XLSX.utils.decode_range(sheet['!ref'] || 'A1:A1');
+      for (let r = range.s.r; r <= range.e.r; r++) {
+        const cells = [];
+        for (let c = range.s.c; c <= range.e.c; c++) {
+          const addr = XLSX.utils.encode_cell({ r, c });
+          cells.push(String(sheet[addr]?.v ?? ''));
+        }
+        body += `| ${cells.join(' | ')} |\n`;
+      }
+    }
+    body += '\n';
+  }
+  return { body };
+}
+
 const PROMPT_CONVERTERS = {
   '.docx': convertDocx,
   '.pdf': convertPdf,
+  '.xlsx': convertXlsx,
+  '.xls': convertXlsx,
 };
 
 async function ensureDependency(ext, options) {
@@ -432,6 +467,12 @@ module.exports = {
   computeFileHash,
   generateSourceFrontmatter,
   walkOriginal,
+  convertPdf,
+  convertDocx,
+  convertXlsx,
+  convertOkFormat,
+  stripFrontmatter,
+  htmlToPlainText,
   EXT_LABELS,
   EXT_DEPS
 };

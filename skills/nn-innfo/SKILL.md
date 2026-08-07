@@ -7,7 +7,7 @@ metadata:
   mcp: "innfo-mcp"
 license: MIT
 description: |
-  MANDATORY trigger: MUST activate this skill whenever the user is creating, editing, validating, scaffolding, or discussing any iNNfo model, template, specialization, sample, or specification file. Includes the conversational Model Creation Wizard and Architecture Coach.
+  MANDATORY trigger: MUST activate this skill whenever the user types "NN", "nn", or is creating, editing, validating, scaffolding, or discussing any iNNfo model, template, specialization, sample, or specification file. Includes the conversational Model Creation Wizard and Architecture Coach.
   This includes but is not limited to:
   - Creating a new model step-by-step using templates (Business, Procedures, Organization, Blank)
   - Creating or editing any file matching *_NN.md
@@ -109,7 +109,7 @@ as its very first output — before any questions, analysis, or tool calls. Sess
 
 ## 1. MCP Operating Model
 
-El servidor `innfo-mcp` expone 6 herramientas deterministas basadas en `@cognnitive/innfo-core`.
+El servidor `innfo-mcp` expone 8 herramientas deterministas basadas en `@cognnitive/innfo-core`.
 
 | Herramienta | Propósito |
 |---|---|
@@ -117,8 +117,10 @@ El servidor `innfo-mcp` expone 6 herramientas deterministas basadas en `@cognnit
 | `read_model` | Parsea un modelo a AST / JSON estructurado. |
 | `get_spec` | Resuelve dinámicamente la especificación Nivel 1. |
 | `get_template` | Resuelve dinámicamente la plantilla Nivel 2 y sus primitivas. |
-| `validate_model` | Ejecuta la validación sintáctica y de esquema determinista. |
-| `apply_change` | Ejecuta mutaciones deterministas (agregar campo, renombrar, etc.). |
+| `validate_model` | Ejecuta la validación sintáctica y de esquema determinista (con diagnostico `(searched: ...)` cuando la cadena de padres no resuelve). |
+| `validate_model_url` | Valida un modelo desde una URL sin escribirlo en disco. |
+| `validate_template` | Valida una plantilla Nivel 2 contra su especificación Nivel 1 madre. |
+| `apply_change` | Ejecuta mutaciones deterministas (agregar campo, renombrar, `bump_version`, etc.). |
 
 **Regla de Oro:** La URL de la especificación/plantilla siempre proviene de `parent_spec.url` o del usuario. Nunca hardcodear ni inventar URLs.
 
@@ -137,6 +139,8 @@ URLs estables `latest` de referencia:
 1. `parent_spec.url` de un modelo Nivel 3 debe ser una URL **ESTABLE (http/https)** que apunte a la plantilla Nivel 2, o un **path relativo al workspace** (ej. `specs/MiPlantilla_V_0-1-0_spec_NN.md`).
 2. **PROHIBIDO usar paths absolutos de Windows** (ej. `C:/Users/.../MiPlantilla_spec_NN.md`): rompen la resolución en el Modeler (fetch sobre ruta local) y en el MCP. El resolver local busca la plantilla en `specs/`, `.specs/` y `.spec-cache/` del workspace; la forma canónica es la URL http estable.
 3. Después de fijar `parent_spec.url`, verificar SIEMPRE la resolución (ver §5, pre-chequeo de cadena de padres) antes de dar por listo el modelo.
+4. **Los paths relativos se resuelven contra la raíz del servidor MCP** (la variable de entorno `INNFO_MODELS_DIR` o el cwd del proceso al iniciar el server), NO contra la carpeta del archivo del modelo. Por lo tanto, para validar un workspace con paths relativos, la raíz del MCP DEBE ser la raíz del workspace; los overrides `root:` solo aplican donde la herramienta los acepta (`validate_model` con `root`, `get_spec`/`get_template` con `url`).
+5. **El resolver AUTO-CACHEA cada padre resuelto** (local o remoto) en `<workspace>/.spec-cache/`. NO copiar plantillas manualmente a esa carpeta: si una resolución falla, la corrección es arreglar la raíz del MCP o la URL, no copiar archivos. `.spec-cache` es un cache derivado que el resolver regenera solo.
 
 ---
 
@@ -144,8 +148,9 @@ URLs estables `latest` de referencia:
 
 1. **Carácter Opcional:** `sources::` es una propiedad de trazabilidad **OPCIONAL**. No invalida sintácticamente un modelo de Nivel 3 si no está presente.
 2. **Fuentes de Origen:** Las fuentes ingeridas se almacenan en la carpeta `sources/markdown/` (mismas subcarpetas que `sources/original/`, sin aplanar). No existe carpeta `raw/` ni sistema de IDs `src-xxx`.
-3. **Gramática exacta (Sintaxis Estricta de Lista):**
+3. **Gramática exacta:**
    ```
+   sources:: <ref>
    sources:: [<ref>, <ref>, ...]
 
    <ref>  ::= sources/markdown/<ruta-relativa>.md( #<ancla> )?
@@ -154,14 +159,14 @@ URLs estables `latest` de referencia:
    - `<ref>` es SIEMPRE una ruta que empieza con `sources/markdown/` y termina en `.md` — es la misma ruta que el archivo normalizado, nunca una ruta a `sources/original/` ni al documento fuente sin normalizar.
    - El ancla de línea es opcional. `L<n>` es una línea puntual, `L<n>-L<m>` un rango inclusive (ambos extremos incluidos), 1-indexado sobre el archivo `.md` citado — la misma numeración que ve un humano abriendo el archivo en un editor.
    - Sin ancla, la cita apunta al archivo completo. **Preferí citar el archivo completo antes que inventar un rango de líneas que no verificaste** — nunca adivines números de línea.
-4. **Formato obligatorio de lista `[...]`.** El valor de `sources::` debe estar **SIEMPRE delimitado por corchetes `[...]`**, incluso cuando contenga una sola referencia. No se permite la sintaxis escalar ni alias:
+4. **Un solo valor va sin corchetes.** Los corchetes `[...]` se usan ÚNICAMENTE cuando hay 2 o más referencias — no envuelvas un valor único en `[...]`, es ruido visual innecesario:
    ```markdown
    ## NN Stakeholders: Cliente Enterprise
    sources:: [sources/markdown/entrevista_cliente.md#L15-L30, sources/markdown/notas.md#L4]
    relationship_model:: B2B Long-term
 
    ## NN Stakeholders: Cliente Piloto
-   sources:: [sources/markdown/notas.md#L20-L25]
+   sources:: sources/markdown/notas.md#L20-L25
    relationship_model:: Trial
    ```
 5. **Granularidad: a nivel de elemento, no de afirmación individual.** `sources::` cubre el conjunto de fuentes que respaldan TODO el elemento (todos sus campos en conjunto) — no hay mecanismo de cita por campo o por frase dentro de un modelo de dominio. Si distintos campos de un mismo elemento vienen de fuentes distintas, listá la unión de todas en el único `sources::` del elemento. La cita a nivel de afirmación individual (`<!-- cite: sources/markdown/<path>.md#L<n>-L<m>, section <nombre> -->`) es un mecanismo aparte, usado solo dentro de artefactos/drafts generados a partir del modelo (ver `nn-trannsform/SKILL.md` §4) — nunca dentro de un `*_NN.md`.
@@ -179,8 +184,25 @@ URLs estables `latest` de referencia:
 5. **Pre-chequeo de cadena de padres (OBLIGATORIO antes de reportar listo):** resolver la cadena de padres con `innfo-mcp_get_template({ model_id })` (o `{ url }`) ANTES de declarar el modelo como listo. Si la plantilla NO se resuelve (`Template could not be resolved` / `PARENT_RESOLUTION_FAILED`):
    - NO reportar el modelo como listo.
    - Avisar que el template quedó sin resolver, mostrando el `parent_spec.url` problemático.
+   - Leer el nuevo diagnóstico accionable `(searched: ...)` que devuelven `validate_model` / `get_template`: lista los directorios donde el resolver buscó el padre. Si los directorios buscados se ven mal (por ej. no apuntan a la raíz del workspace), el problema es la **raíz del MCP** (`INNFO_MODELS_DIR` o cwd del server), no el modelo: corregir la raíz/URL y revalidar (ver §2, regla 4).
    - Ofrecer corregirlo: URL estable http/https o path relativo al workspace (nunca path absoluto de Windows — ver §2).
 6. Al finalizar, mostrar el **Checklist de Expectativa Visual (§12)** y la sección de **Atajos de Navegación Contextual (§13)**.
+
+#### Version bump atómico
+
+Para subir la versión de un modelo Nivel 3, usar la operación `bump_version` del MCP — NO editar el frontmatter a mano:
+
+```
+innfo-mcp_apply_change({
+  id: "<model_id>",
+  op: "bump_version",
+  args: { version: "V_0-5-0" } | { bump: "patch" | "minor" | "major" }
+})
+```
+
+- Actualiza `model_version` en el frontmatter y **renombra el archivo del modelo atómicamente** (validate-before-write: si el resultado no valida, no escribe).
+- `bump_version` SOLO toca el archivo del modelo y su frontmatter — NO toca la plantilla ni el `index.md`.
+- **Checklist manual restante después del bump:** (1) renombrar la plantilla Nivel 2 si su versión también subió, (2) sincronizar `.spec-cache/` si el resolver cachea el padre por nombre/versión (dejar que el resolver lo regenerue — no copiar a mano, ver §2 regla 5), (3) actualizar el enlace en el `index.md` del workspace si cambió el nombre físico del archivo (ver §10).
 
 ---
 

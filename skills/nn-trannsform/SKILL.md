@@ -1,9 +1,10 @@
 ---
 name: nn-trannsform
-description: "Bootstrap projects, scan raw documents, normalize them to Markdown with mandatory provenance frontmatter, apply V_0-3-0 template-based transformations, and execute multi-step transformation procedures compliant with procedures_V_0-3-0_NN.md. Includes document ingestion, format conversion (txt, md, csv, json, docx, pdf), procedure orchestration, and export generation. Triggers: trannsform, transform, workflow, pipeline, procedure, normalize, scan documents, document ingestion, document transformation, document processing, markdown conversion, project bootstrap"
-version: "2.0"
+description: "Bootstrap projects, scan raw documents, normalize them to Markdown with mandatory provenance frontmatter, apply V_0-3-0 template-based transformations, and execute multi-step transformation procedures compliant with procedures_V_0-3-0_NN.md. Includes document ingestion, format conversion (txt, md, csv, json, docx, pdf, xlsx), procedure orchestration, and export generation. Triggers: trannsform, transform, workflow, pipeline, procedure, normalize, scan documents, document ingestion, document transformation, document processing, markdown conversion, project bootstrap"
+empty_sections_mode: "ask-per-section"
 license: MIT
 metadata:
+  version: "2.0"
   source_type: "integrated"
   source: "https://github.com/cogNNitive/actioNN/tree/main/skills/nn-trannsform"
   installed_at: "2026-08-02"
@@ -134,7 +135,7 @@ Present the diagnostic panel:
 ║ csv/json   ║ ✅ Direct read       ║ —                        ║
 ║ pdf        ║ ⚠️  Model-dependent  ║ pdf-parse (npm)          ║
 ║ docx       ║ ❌ Not available     ║ mammoth (npm)            ║
-║ xlsx       ║ 🚫 Unsupported       ║ —                        ║
+║ xlsx       ║ ❌ Not available     ║ xlsx (npm)               ║
 ╚════════════╩══════════════════════╩══════════════════════════╝
 ```
 
@@ -149,6 +150,16 @@ Format: PDF (1 file)
 Which route do you prefer for PDF?
 (Nota: Podés seleccionar una opción o una combinación)
 ```
+
+#### Quick text extraction (no ingestion)
+
+When the agent model cannot read a binary directly (pdf/docx/xlsx) and a full ingestion is not needed, extract the text without running a scan:
+
+```
+node C:\Users\lucas\.agents\skills\nn-trannsform\scripts\extract.js "<file>"
+```
+
+Prints only the extracted plain text to stdout (no frontmatter, no heading noise). The format is detected from the file extension (or forced with `--format pdf|docx|xlsx|txt|md|csv|json|html`). The script lives inside the skill folder, so `pdf-parse`/`mammoth`/`xlsx` resolve against the skill's own `node_modules` — no `NODE_PATH` needed.
 
 ---
 
@@ -181,7 +192,7 @@ sources:: [sources/markdown/interview_transcript.md#L45-L60, sources/markdown/no
 relationship_model:: B2B Long-term
 ```
 
-The value of `sources::` MUST ALWAYS be written as a list enclosed in brackets `[...]` (e.g. `sources:: [sources/markdown/interview_transcript.md#L45-L60]`), even when referencing a single source file. Scalar syntax and aliases are forbidden. There is no `src-NNN`/`source_id` system anywhere in this pipeline.
+A single value may be written without brackets: `sources:: sources/markdown/interview_transcript.md#L45-L60`. There is no `src-NNN`/`source_id` system anywhere in this pipeline.
 
 #### 3c. Version & Citation Selection
 
