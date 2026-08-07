@@ -8,6 +8,5 @@ skills/*/node_modules/
 scripts/bin/
 
 # Local tooling artifacts
-.atl/
 .playwright-mcp/
 

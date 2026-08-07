@@ -1,7 +1,7 @@
 ---
 name: nn-innfo
 version: "V_0-3-0"
-last_updated: 2026-08-02
+last_updated: 2026-08-07
 metadata:
   source_type: "original"
   mcp: "innfo-mcp"
@@ -72,7 +72,7 @@ When the user asks to "create a new model", "start a model from scratch", or sel
    - **[b] Generación Completa:** El agente DEBE solicitar al usuario que describa textualmente el procedimiento, proceso o entidad que desea modelar. Una vez recibida la descripción, se genera el borrador completo en un solo archivo para posterior auditoría.
 
 3. **Model Naming & Scaffolding**:
-   Prompt for `{ModelName}` and create `{ModelName}_V_1-0-0_{Template}_NN.md` with workspace structure (`models/`, `sources/markdown/`, `procedures/`, `artifacts/`, `index.md`).
+   Prompt for `{ModelName}` and create `{ModelName}_V_0-1-0_{Template}_NN.md` with workspace structure (`models/`, `sources/markdown/`, `procedures/`, `artifacts/`, `index.md`).
 
 4. **Validation & Visual Checklist**:
    Validate via `innfo-mcp_validate_model` and output the Visual Expectation Checklist (§12).
@@ -132,15 +132,20 @@ URLs estables `latest` de referencia:
 - **Procedures (Nivel 2):** `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level2/procedures/procedures_NN.md`
 - **Organization (Nivel 2):** `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level2/organization/organization_NN.md`
 
+### Regla de `parent_spec.url` en Modelos Nivel 3
+
+1. `parent_spec.url` de un modelo Nivel 3 debe ser una URL **ESTABLE (http/https)** que apunte a la plantilla Nivel 2, o un **path relativo al workspace** (ej. `specs/MiPlantilla_V_0-1-0_spec_NN.md`).
+2. **PROHIBIDO usar paths absolutos de Windows** (ej. `C:/Users/.../MiPlantilla_spec_NN.md`): rompen la resolución en el Modeler (fetch sobre ruta local) y en el MCP. El resolver local busca la plantilla en `specs/`, `.specs/` y `.spec-cache/` del workspace; la forma canónica es la URL http estable.
+3. Después de fijar `parent_spec.url`, verificar SIEMPRE la resolución (ver §5, pre-chequeo de cadena de padres) antes de dar por listo el modelo.
+
 ---
 
 ## 4. Protocolo de Proveniencia (`sources::`)
 
 1. **Carácter Opcional:** `sources::` es una propiedad de trazabilidad **OPCIONAL**. No invalida sintácticamente un modelo de Nivel 3 si no está presente.
 2. **Fuentes de Origen:** Las fuentes ingeridas se almacenan en la carpeta `sources/markdown/` (mismas subcarpetas que `sources/original/`, sin aplanar). No existe carpeta `raw/` ni sistema de IDs `src-xxx`.
-3. **Gramática exacta:**
+3. **Gramática exacta (Sintaxis Estricta de Lista):**
    ```
-   sources:: <ref>
    sources:: [<ref>, <ref>, ...]
 
    <ref>  ::= sources/markdown/<ruta-relativa>.md( #<ancla> )?
@@ -149,14 +154,14 @@ URLs estables `latest` de referencia:
    - `<ref>` es SIEMPRE una ruta que empieza con `sources/markdown/` y termina en `.md` — es la misma ruta que el archivo normalizado, nunca una ruta a `sources/original/` ni al documento fuente sin normalizar.
    - El ancla de línea es opcional. `L<n>` es una línea puntual, `L<n>-L<m>` un rango inclusive (ambos extremos incluidos), 1-indexado sobre el archivo `.md` citado — la misma numeración que ve un humano abriendo el archivo en un editor.
    - Sin ancla, la cita apunta al archivo completo. **Preferí citar el archivo completo antes que inventar un rango de líneas que no verificaste** — nunca adivines números de línea.
-4. **Un solo valor va sin corchetes.** Los corchetes `[...]` se usan ÚNICAMENTE cuando hay 2 o más referencias — no envuelvas un valor único en `[...]`, es ruido visual innecesario:
+4. **Formato obligatorio de lista `[...]`.** El valor de `sources::` debe estar **SIEMPRE delimitado por corchetes `[...]`**, incluso cuando contenga una sola referencia. No se permite la sintaxis escalar ni alias:
    ```markdown
    ## NN Stakeholders: Cliente Enterprise
    sources:: [sources/markdown/entrevista_cliente.md#L15-L30, sources/markdown/notas.md#L4]
    relationship_model:: B2B Long-term
 
    ## NN Stakeholders: Cliente Piloto
-   sources:: sources/markdown/notas.md#L20-L25
+   sources:: [sources/markdown/notas.md#L20-L25]
    relationship_model:: Trial
    ```
 5. **Granularidad: a nivel de elemento, no de afirmación individual.** `sources::` cubre el conjunto de fuentes que respaldan TODO el elemento (todos sus campos en conjunto) — no hay mecanismo de cita por campo o por frase dentro de un modelo de dominio. Si distintos campos de un mismo elemento vienen de fuentes distintas, listá la unión de todas en el único `sources::` del elemento. La cita a nivel de afirmación individual (`<!-- cite: sources/markdown/<path>.md#L<n>-L<m>, section <nombre> -->`) es un mecanismo aparte, usado solo dentro de artefactos/drafts generados a partir del modelo (ver `nn-trannsform/SKILL.md` §4) — nunca dentro de un `*_NN.md`.
@@ -171,7 +176,11 @@ URLs estables `latest` de referencia:
 2. Presentar los conceptos al usuario usando el formato con `[a] (Recomendado)`.
 3. Redactar el cuerpo usando la sintaxis unificada `# NN <Concept>`, `## NN <Concept>: <Element>`, `key:: value`.
 4. Validar el modelo con `innfo-mcp_validate_model({ content })`.
-5. Al finalizar, mostrar el **Checklist de Expectativa Visual (§12)** y la sección de **Atajos de Navegación Contextual (§13)**.
+5. **Pre-chequeo de cadena de padres (OBLIGATORIO antes de reportar listo):** resolver la cadena de padres con `innfo-mcp_get_template({ model_id })` (o `{ url }`) ANTES de declarar el modelo como listo. Si la plantilla NO se resuelve (`Template could not be resolved` / `PARENT_RESOLUTION_FAILED`):
+   - NO reportar el modelo como listo.
+   - Avisar que el template quedó sin resolver, mostrando el `parent_spec.url` problemático.
+   - Ofrecer corregirlo: URL estable http/https o path relativo al workspace (nunca path absoluto de Windows — ver §2).
+6. Al finalizar, mostrar el **Checklist de Expectativa Visual (§12)** y la sección de **Atajos de Navegación Contextual (§13)**.
 
 ---
 
@@ -251,6 +260,7 @@ Cuando un modelo requiere conceptos o campos personalizados fuera de la plantill
 1. **NUNCA modificar** especificaciones publicadas en `specs/`.
 2. Crear un archivo de plantilla de especialización `<Modelo>_<Plantilla>_V_x-y-z_spec_NN.md` con `level: 2`.
 3. Apuntar la propiedad `parent_spec.url` del modelo Nivel 3 hacia el archivo de especialización.
+4. **El `index.md` del workspace lista SOLO modelos Nivel 3.** Un archivo `_spec_NN.md` (plantilla Nivel 2 / especialización) NO debe listarse como modelo en `index.md`: se resuelve como plantilla vía `parent_spec.url` y se renderiza como nodo `spec:`, nunca como modelo del árbol de navegación.
 
 ---
 
@@ -275,14 +285,14 @@ Cuando el proyecto escala a múltiples sub-modelos, presentar las **4 Alternativ
 💡 Selección de Arquitectura de Escalado (1 a N Modelos):
 
   [a] (Recomendado) Opción 4: Híbrido Maestro Agregador con referencias `file_ref::`
-      - Archivos: `models/Master_V_1-0-0_NN.md` y `models/subsystems/`
-      - Código iNNfo: El modelo principal referencia subsistemas mediante `file_ref:: ./subsystems/auth_V_1-0-0_NN.md`
+      - Archivos: `models/Master_V_0-1-0_NN.md` y `models/subsystems/`
+      - Código iNNfo: El modelo principal referencia subsistemas mediante `file_ref:: ./subsystems/auth_V_0-1-0_NN.md`
 
   [b] Opción 1: Modelo Monolítico Único
-      - Archivo: `models/System_V_1-0-0_NN.md`
+      - Archivo: `models/System_V_0-1-0_NN.md`
 
   [c] Opción 2: Modelos Independientes en la misma carpeta
-      - Archivos: `models/DomainA_V_1-0-0_NN.md`, `models/DomainB_V_1-0-0_NN.md`
+      - Archivos: `models/DomainA_V_0-1-0_NN.md`, `models/DomainB_V_0-1-0_NN.md`
 
   [d] Opción 3: Híbrido Multi-Carpeta por Proyecto
       - Archivos: `projects/domainA/models/index.md`, `projects/domainB/models/index.md`

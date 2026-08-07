@@ -6,9 +6,6 @@ name: Canonical entry contract
 #                      (stays RED until the gateway repo publishes /use — that's the deploy signal)
 
 on:
-  push:
-    branches: [main]
-  pull_request:
   workflow_dispatch:
 
 jobs:
