@@ -54,24 +54,18 @@ When the user requests a final version from a draft, the system MUST present 3 o
 
 ### Requirement: Citation Format Selection
 
-After [a] or [b], the system MUST present 7 choices.
+After [a] or [b], the system MUST present 2 choices.
 
 | Code | Format | Notes |
 |------|--------|-------|
 | [a] | Sencillo (Recommended) | Keeps `— Source: filename, section` verbatim |
 | [b] | APA | 7th edition in-text |
-| [c] | MLA | 9th edition parenthetical |
-| [d] | Chicago | Notes-bibliography or author-date |
-| [e] | IEEE | Numbered references |
-| [f] | Vancouver | Numeric citation style |
-| [g] | BibTeX | Exports `.bib` with one `@` entry per `src-NNN` |
 | [x] | Back | Return to previous question |
 
 #### Scenarios
 
 - GIVEN user selects [a] Sencillo → THEN citations render as `— Source: <filename>, section <section-name>`
 - GIVEN user selects [b] APA → THEN citations follow APA 7th style adapted per source type (report, interview, webpage) by agent LLM
-- GIVEN user selects [g] BibTeX → THEN a `.bib` file SHALL be created alongside the final document
 
 ### Requirement: Draft vs Final Behavior
 

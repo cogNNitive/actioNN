@@ -1,7 +1,6 @@
 ---
 name: nn-trannsform
-description: "Bootstrap projects, scan raw documents, normalize them to Markdown with mandatory provenance frontmatter, apply V_0-3-0 template-based transformations, and execute multi-step transformation procedures compliant with procedures_V_0-3-0_NN.md. Includes document ingestion, format conversion (txt, md, csv, json, docx, pdf, xlsx), procedure orchestration, and export generation. Triggers: trannsform, transform, workflow, pipeline, procedure, normalize, scan documents, document ingestion, document transformation, document processing, markdown conversion, project bootstrap"
-empty_sections_mode: "ask-per-section"
+description: "Bootstrap projects, scan raw documents, normalize them to Markdown with mandatory provenance frontmatter, apply V_0-3-0 template-based transformations, and execute multi-step transformation procedures compliant with procedures_V_0-3-0_NN.md. Includes document ingestion, format conversion (txt, md, csv, json, docx, pdf), procedure orchestration, and export generation. Triggers: trannsform, transform, workflow, pipeline, procedure, normalize, scan documents, document ingestion, document transformation, document processing, markdown conversion, project bootstrap"
 version: "2.0"
 license: MIT
 metadata:
@@ -135,7 +134,7 @@ Present the diagnostic panel:
 ║ csv/json   ║ ✅ Direct read       ║ —                        ║
 ║ pdf        ║ ⚠️  Model-dependent  ║ pdf-parse (npm)          ║
 ║ docx       ║ ❌ Not available     ║ mammoth (npm)            ║
-║ xlsx       ║ ❌ Not available     ║ xlsx (npm)               ║
+║ xlsx       ║ 🚫 Unsupported       ║ —                        ║
 ╚════════════╩══════════════════════╩══════════════════════════╝
 ```
 
@@ -182,7 +181,7 @@ sources:: [sources/markdown/interview_transcript.md#L45-L60, sources/markdown/no
 relationship_model:: B2B Long-term
 ```
 
-A single value may be written without brackets: `sources:: sources/markdown/interview_transcript.md#L45-L60`. There is no `src-NNN`/`source_id` system anywhere in this pipeline.
+The value of `sources::` MUST ALWAYS be written as a list enclosed in brackets `[...]` (e.g. `sources:: [sources/markdown/interview_transcript.md#L45-L60]`), even when referencing a single source file. Scalar syntax and aliases are forbidden. There is no `src-NNN`/`source_id` system anywhere in this pipeline.
 
 #### 3c. Version & Citation Selection
 
