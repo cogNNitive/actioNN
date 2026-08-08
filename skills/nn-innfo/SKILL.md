@@ -276,6 +276,19 @@ Cuando el usuario elige la opción `[d]` (Analizar coherencia), el agente asume 
 
 ---
 
+## 8d. Protocolo de Relaciones y Sintaxis WikiLink en Campos Referenciales
+
+Existen **4 formas formales de relación** en iNNfo (`hierarchy`, `evaluable_matrix`, `graph_edge`, `sequence`) y dos mecanismos de vinculación cruzada (campos `reference` y menciones contextuales):
+
+1. **Jerarquía Taxonómica (`hierarchy`)**: Se declara **únicamente** mediante el anidamiento de listas con WikiLinks en el `# NN index` (`* [[Padre]]` -> `  * [[Hijo]]`).
+2. **Campos Referenciales (`reference`)**: Cuando un campo tiene `type:: reference` en su definición de plantilla, su valor en el modelo Nivel 3 **DEBE encerrarse obligatoriamente entre corchetes WikiLink `[[...]]`** (ej. `location:: [[Salón-Comedor]]`). NUNCA escribir el valor como texto plano (`location:: Salón-Comedor`), ya que impide la detección del enlace entrante (*incoming reference*) en el editor.
+3. **Relaciones N-a-M Evaluables (`evaluable_matrix`)**: Se expresan en bloques `# NN matrices:` para relaciones complejas o puntuadas entre conceptos.
+4. **Menciones Contextuales**: Se escriben como WikiLinks `[[Elemento]]` dentro de la descripción en prosa Markdown.
+
+**Instrucción al Wizard / Co-creación**: Durante la creación o edición de un modelo, el agente DEBE orientar o consultar al usuario según cómo desee estructurar las relaciones (jerarquía en `# NN index`, campo referencial `[[...]]` o matriz N-a-M).
+
+---
+
 ## 9. Estrategia de Especializaciones
 
 Cuando un modelo requiere conceptos o campos personalizados fuera de la plantilla base:
@@ -372,3 +385,5 @@ Al concluir la generación o edición de un modelo, el agente DEBE incluir atajo
 8. **Modo Coach de Arquitectura:** En la auditoría `[d]`, explicar riesgos de negocio/funcionales y ofrecer soluciones en 1 clic.
 9. **Atajos Contextuales:** Finalizar cada respuesta ofreciendo 2-3 acciones siguientes sugeridas (Quick Actions).
 10. **Delegación Total al MCP:** Consultar tipos, esquemas y validación al servidor `innfo-mcp`; no adivinar ni duplicar la gramática.
+11. **Sintaxis WikiLink Obligatoria en Referencias:** En todo campo referencial (`type:: reference`), el valor DEBE ser formateado usando la sintaxis WikiLink (`key:: [[Elemento]]`). Queda prohibido usar texto plano sin corchetes WikiLink.
+
