@@ -49,7 +49,7 @@ function parseSourceFrontmatter(content) {
   if (!file) return null;
   return {
     file,
-    hash: get('sha256'),
+    hash: get('sha256_original') || get('sha256'),
     size: get('size_bytes'),
     normalized_at: get('normalized_at'),
     normalized_by: get('normalized_by'),
@@ -57,7 +57,7 @@ function parseSourceFrontmatter(content) {
 }
 
 /**
- * Recursively collect *.md files under sources/markdown/, preserving their
+ * Recursively collect *.md files under sources/nn/, preserving their
  * path relative to that directory (subfolders mirror sources/original/).
  * The top-level ingestion manifest (index.md) is excluded.
  */
@@ -104,7 +104,7 @@ function collectSources(mdDir) {
       source_format: ext,
       normalized_at: fmData.normalized_at,
       normalized_by: fmData.normalized_by,
-      normalized_content: `sources/markdown/${relFilePosix}`,
+      normalized_content: `sources/nn/${relFilePosix}`,
       mdFile: relFile,
     });
   }
@@ -112,7 +112,7 @@ function collectSources(mdDir) {
 }
 
 function materializeAssets(projectDir, sources) {
-  const mdDir = path.join(projectDir, 'sources', 'markdown');
+  const mdDir = path.join(projectDir, 'sources', 'nn');
   for (const src of sources) {
     const slug = slugify(src.name);
     const destDir = path.join(projectDir, 'assets', slug);
@@ -365,7 +365,7 @@ function writeWorkspaceIndex(projectDir) {
  */
 function buildProvenanceModel(projectDir, options = {}) {
   const projectName = options.projectName || path.basename(projectDir);
-  const mdDir = path.join(projectDir, 'sources', 'markdown');
+  const mdDir = path.join(projectDir, 'sources', 'nn');
   const sources = collectSources(mdDir);
 
   materializeAssets(projectDir, sources);

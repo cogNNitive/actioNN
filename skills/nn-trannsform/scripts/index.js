@@ -230,7 +230,8 @@ function bootstrapProject(srcDir, destParentDir, projectName) {
 
   const dirs = [
     path.join('sources', 'original'),
-    path.join('sources', 'markdown'),
+    path.join('sources', 'processed'),
+    path.join('sources', 'nn'),
     'models',
     'procedures',
     'artifacts',
@@ -246,8 +247,9 @@ function bootstrapProject(srcDir, destParentDir, projectName) {
 
 Transform (traNNsform) is a tool to structure and process unstructured documents:
 1. Place files in \`sources/original/\`.
-2. Scan and normalize to \`sources/markdown/\`.
-3. Track provenance with \`<Project>_V_0-1-0_cogNNitive_NN.md\`.
+2. Process and optimize to \`sources/processed/\`.
+3. Normalize to \`sources/nn/\`.
+4. Track provenance with \`<Project>_V_0-1-0_cogNNitive_NN.md\`.
 `;
     fs.writeFileSync(readmePath, readmeContent, 'utf8');
   }
@@ -300,13 +302,13 @@ async function runProjectMenu(projectDir) {
   }
 
   if (response.action === 'scan') {
-    // Scan sources/original directly, normalizing straight into sources/markdown
+    // Scan sources/original, optimizing to sources/processed and normalizing straight into sources/nn
     console.log('\nScanning sources/original directory...');
     const result = await scanner.scanAndProcess(projectDir, { autoAcceptPrompt: true });
     console.log('\n=== Ingestion Manifest Created ===');
     console.log(`Processed: ${result.processedCount} files successfully.`);
     console.log(`Skipped/Needs Review: ${result.skippedCount} files.`);
-    console.log(`Review the manifest log at: ${path.join(projectDir, 'sources', 'markdown', 'index.md')}`);
+    console.log(`Review the manifest log at: ${path.join(projectDir, 'sources', 'nn', 'index.md')}`);
 
     const prov = provenance.buildProvenanceModel(projectDir);
     console.log(`cogNNitive Provenance model ${prov.created ? 'created' : 'refreshed'} with ${prov.sourceCount} source(s): ${prov.modelPath}\n`);

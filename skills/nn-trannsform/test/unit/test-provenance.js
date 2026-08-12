@@ -48,16 +48,16 @@ function run() {
     eq(provenance.slugify('market-report.docx'), 'market-reportdocx', 'slugify strips dots');
     eq(provenance.slugify('Exec Summary'), 'exec-summary', 'slugify hyphenates spaces');
 
-    // build a project with two normalized md sources under sources/markdown/ (one nested in a subfolder,
+    // build a project with two normalized md sources under sources/nn/ (one nested in a subfolder,
     // mirroring sources/original/clientA/)
     const proj = path.join(TMP, 'Acme');
-    fs.mkdirSync(path.join(proj, 'sources', 'markdown', 'clientA'), { recursive: true });
+    fs.mkdirSync(path.join(proj, 'sources', 'nn', 'clientA'), { recursive: true });
     fs.writeFileSync(
-      path.join(proj, 'sources', 'markdown', 'clientA', 'market-report.md'),
+      path.join(proj, 'sources', 'nn', 'clientA', 'market-report.md'),
       SRC_FM('sources/original/clientA/market-report.docx', 'aaa')
     );
     fs.writeFileSync(
-      path.join(proj, 'sources', 'markdown', 'team.md'),
+      path.join(proj, 'sources', 'nn', 'team.md'),
       SRC_FM('sources/original/team.csv', 'bbb')
     );
 
@@ -71,7 +71,7 @@ function run() {
     ok(/parent_spec:\s*\n\s*name: "cogNNitive_V_0-1-0"/.test(model1), 'parent_spec points to the cogNNitive template');
     ok(/## NN Sources: market-report\.docx/.test(model1), 'source element present');
     ok(/source_format:: docx/.test(model1), 'source_format derived from extension');
-    ok(/normalized_content:: sources\/markdown\/clientA\/market-report\.md/.test(model1), 'normalized_content records the full sources/markdown/ path, subfolders preserved');
+    ok(/normalized_content:: sources\/nn\/clientA\/market-report\.md/.test(model1), 'normalized_content records the full sources/nn/ path, subfolders preserved');
     ok(!/source_id/.test(model1), 'provenance model never emits source_id');
     ok(!/src-\d{3}/.test(model1), 'provenance model never emits a src-NNN id');
 
@@ -86,10 +86,10 @@ function run() {
     // agent adds a Models element, then re-run preserves it and refreshes Sources
     const withModel = model1.replace(
       /# NN Models\n\n<!--[\s\S]*?-->\n/,
-      '# NN Models\n\n## NN Models: Acme Plan\nmodel_template:: business\nsources:: [sources/markdown/clientA/market-report.md]\n'
+      '# NN Models\n\n## NN Models: Acme Plan\nmodel_template:: business\nsources:: [sources/nn/clientA/market-report.md]\n'
     );
     fs.writeFileSync(r1.modelPath, withModel);
-    fs.rmSync(path.join(proj, 'sources', 'markdown', 'team.md')); // drop one source
+    fs.rmSync(path.join(proj, 'sources', 'nn', 'team.md')); // drop one source
 
     const r2 = provenance.buildProvenanceModel(proj, { projectName: 'Acme' });
     eq(r2.created, false, 'model refreshed (not recreated) on second run');

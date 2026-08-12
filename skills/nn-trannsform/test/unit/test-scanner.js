@@ -53,6 +53,7 @@ function run() {
     assertEqual(scanner.EXT_LABELS['.docx'], 'docx', 'EXT_LABELS .docx');
     assertEqual(scanner.EXT_LABELS['.pdf'], 'pdf', 'EXT_LABELS .pdf');
     assertEqual(scanner.EXT_LABELS['.xlsx'], 'xlsx', 'EXT_LABELS .xlsx');
+    assertEqual(scanner.EXT_LABELS['.png'], 'png', 'EXT_LABELS .png');
 
     // Test 2: detectFormats returns empty for non-existent dir
     const noDir = scanner.detectFormats(path.join(TEST_TEMP, 'nonexistent'));
@@ -70,7 +71,7 @@ function run() {
     assertEqual(detected['.txt'], 1, 'detectFormats finds .txt');
     assertEqual(detected['.csv'], 1, 'detectFormats finds .csv');
     assertEqual(detected['.md'], 1, 'detectFormats finds .md');
-    assertEqual(detected['.png'], undefined, 'detectFormats ignores .png');
+    assertEqual(detected['.png'], 1, 'detectFormats finds .png');
 
     // Test 4: getSupportedFormats returns string
     const formats = scanner.getSupportedFormats();
@@ -90,10 +91,12 @@ function run() {
     assertEqual(hash1.length, 64, 'computeFileHash returns 64-char hex');
 
     // Test 7: generateSourceFrontmatter produces the canonical flat schema (no nesting, no source_id)
-    const fm = scanner.generateSourceFrontmatter(testFile, 'sources/original/hash-test.txt');
+    const fm = scanner.generateSourceFrontmatter(testFile, testFile, 'sources/original/hash-test.txt', 'sources/processed/hash-test.txt');
     assertTrue(fm.startsWith('---\n'), 'frontmatter starts with ---');
     assertTrue(fm.includes('source_file: "sources/original/hash-test.txt"'), 'frontmatter includes flat source_file');
-    assertMatch(fm, /\nsha256: "[a-f0-9]{64}"\n/, 'frontmatter includes flat sha256 (no "sha256:" prefix inside the value)');
+    assertTrue(fm.includes('processed_file: "sources/processed/hash-test.txt"'), 'frontmatter includes flat processed_file');
+    assertMatch(fm, /\nsha256_original: "[a-f0-9]{64}"\n/, 'frontmatter includes flat sha256_original');
+    assertMatch(fm, /\nsha256_processed: "[a-f0-9]{64}"\n/, 'frontmatter includes flat sha256_processed');
     assertMatch(fm, /\nsize_bytes: \d+\n/, 'frontmatter includes flat size_bytes');
     assertMatch(fm, /\nnormalized_at: "[^"]+"\n/, 'frontmatter includes normalized_at');
     assertMatch(fm, /\nnormalized_by: "traNNsform v[^"]+"\n/, 'frontmatter includes normalized_by');
@@ -107,12 +110,12 @@ function run() {
       .filter(Boolean);
     assertEqual(
       fmKeys.join(','),
-      ['source_file', 'sha256', 'size_bytes', 'normalized_at', 'normalized_by'].join(','),
+      ['source_file', 'processed_file', 'sha256_original', 'sha256_processed', 'size_bytes', 'normalized_at', 'normalized_by'].join(','),
       'frontmatter has exactly the canonical flat keys, in order, when no web-import extras are given'
     );
 
     // Test 8: generateSourceFrontmatter merges optional web-import extras
-    const fmWeb = scanner.generateSourceFrontmatter(testFile, 'sources/original/page.html', {
+    const fmWeb = scanner.generateSourceFrontmatter(testFile, testFile, 'sources/original/page.html', 'sources/processed/page.html', {
       source_url: 'https://example.com/page',
       downloaded_at: '2026-08-02T13:30:00.000Z',
       title: 'Example Page',
@@ -140,18 +143,20 @@ function run() {
     fs.writeFileSync(path.join(originalDir, 'clientB', 'notes.txt'), 'Client B notes.', 'utf8');
 
     return scanner.scanAndProcess(projDir, { autoAcceptPrompt: true }).then((result) => {
-      const markdownDir = path.join(projDir, 'sources', 'markdown');
+      const processedDir = path.join(projDir, 'sources', 'processed');
+      const nnDir = path.join(projDir, 'sources', 'nn');
 
       assertEqual(result.totalDiscovered, 4, 'scanAndProcess discovers all files across subfolders');
       assertEqual(result.processedCount, 4, 'scanAndProcess processes all plain-text files');
 
-      assertTrue(fs.existsSync(path.join(markdownDir, 'root.txt'.replace('.txt', '.md'))), 'root-level file normalized at sources/markdown/root.md');
-      assertTrue(fs.existsSync(path.join(markdownDir, 'clientA', 'report.md')), 'clientA/report.md mirrors sources/original/clientA/');
-      assertTrue(fs.existsSync(path.join(markdownDir, 'clientA', 'nested', 'deep.md')), 'clientA/nested/deep.md mirrors nested subfolders');
-      assertTrue(fs.existsSync(path.join(markdownDir, 'clientB', 'notes.md')), 'clientB/notes.md mirrors sources/original/clientB/');
-      assertTrue(!fs.existsSync(path.join(markdownDir, 'clientA__report.md')), 'output is not flattened with __ separators');
+      assertTrue(fs.existsSync(path.join(processedDir, 'root.txt')), 'root-level file copied in sources/processed');
+      assertTrue(fs.existsSync(path.join(nnDir, 'root.md')), 'root-level file normalized at sources/nn/root.md');
+      assertTrue(fs.existsSync(path.join(nnDir, 'clientA', 'report.md')), 'clientA/report.md mirrors sources/original/clientA/');
+      assertTrue(fs.existsSync(path.join(nnDir, 'clientA', 'nested', 'deep.md')), 'clientA/nested/deep.md mirrors nested subfolders');
+      assertTrue(fs.existsSync(path.join(nnDir, 'clientB', 'notes.md')), 'clientB/notes.md mirrors sources/original/clientB/');
+      assertTrue(!fs.existsSync(path.join(nnDir, 'clientA__report.md')), 'output is not flattened with __ separators');
 
-      const nestedContent = fs.readFileSync(path.join(markdownDir, 'clientA', 'nested', 'deep.md'), 'utf8');
+      const nestedContent = fs.readFileSync(path.join(nnDir, 'clientA', 'nested', 'deep.md'), 'utf8');
       assertTrue(
         nestedContent.includes('source_file: "sources/original/clientA/nested/deep.txt"'),
         'nested file frontmatter records the full sources/original/ relative path'
