@@ -29,20 +29,17 @@ Before launching any specialized workflow, `nn-router` verifies the environment:
 
 Every agent interaction across the cogNNitive ecosystem MUST follow these strict UX and governance rules:
 
-1. **Zero Unilateral Mutation (Consent First)**:
-   - Prohibit moving, renaming, or deleting user files (e.g. moving raw PDFs to `sources/original/` or restructuring user directories) without prior explicit confirmation from the user.
-   - Always ask for confirmation before executing file movements or workspace restructures.
-
-2. **Recommended Option First**:
-   - In all decision menus or option lists presented to the user, option `[1]` or `[a]` MUST be labeled with the `(Recomendado)` or `(Recomendada)` prefix.
-
-3. **Multi-Selection Clarification**:
-   - Whenever options are not mutually exclusive, the agent MUST add the explicit notice:
-     *"Podés seleccionar una opción o una combinación (ej. A y B)"*.
+1. **Zero Unilateral Mutation:** never move, rename, or delete user files without prior explicit confirmation.
+2. **Recommended Option First:** prefix option `[a]`/`[1]` with `(Recomendado)`/`(Recomendada)`.
+3. **Multi-Selection Clarification:** when options aren't mutually exclusive, add *"Podés seleccionar una opción o una combinación (ej. A y B)"*.
 
 4. **Visual Component & Artifact Style Selection (`nn-design-presets` Activation)**:
    - Whenever generating any visual component, web interface, HTML dashboard companion, site page, or styled deliverable artifact, the agent MUST ask the user which visual design style / preset to apply before generation.
    - This prompt MUST load and activate the **`nn-design-presets`** skill to retrieve branding tokens (e.g. `morado-nazareno`).
+
+5. **Saved Procedure Discovery (Proactive Offering)**:
+   - When initiating a conversation under `nn-router`, `nn-trannsform`, or `nn-innfo`, the agent MUST check if the `procedures/` directory contains any `*_procedures_NN.md` files.
+   - If one or more procedures are found, the agent MUST offer them to the user as runnable options in the greeting or entry menu, allowing the user to select and execute a saved procedure before presenting default options.
 
 ---
 
