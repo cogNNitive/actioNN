@@ -2,11 +2,11 @@
 
 ## Technical Approach
 
-Six independent deliverables grouped into a single change. The core infrastructure move (`.atl/` â†’ `.cogNNitive/` + build-registry script) is a structural migration; the two skill refactors are surgical text deletions. All deliverables are file-system operations â€” no runtime, no tests, no type system.
+Six independent deliverables grouped into a single change. The core infrastructure move (`.atl/` → `.cogNNitive/` + build-registry script) is a structural migration; the two skill refactors are surgical text deletions. All deliverables are file-system operations — no runtime, no tests, no type system.
 
 ## Architecture Decisions
 
-### Decision: Build-registry â€” zero-dependency CLI
+### Decision: Build-registry — zero-dependency CLI
 
 **Choice**: Manual `process.argv` parsing + regex YAML. No `minimist`, no root `package.json`.
 **Alternatives**: `minimist` from `innv0-trannsform/node_modules` (fragile relative path); root `package.json` with deduped `minimist` (new root dep, unnecessary for 3 flags).
@@ -16,13 +16,13 @@ Six independent deliverables grouped into a single change. The core infrastructu
 
 **Choice**: A `crypto.createHash('md5')` of concatenated `<dirName>:<mtimeMs>` for all `skills/*/SKILL.md` files.
 **Alternatives**: Directory listing hash; stat on whole directory tree; no cache.
-**Rationale**: Cheap (no I/O beyond the stat calls already needed), accurate (catches any SKILL.md change), deterministic. MD5 is fine here â€” this is a change detector, not a security boundary.
+**Rationale**: Cheap (no I/O beyond the stat calls already needed), accurate (catches any SKILL.md change), deterministic. MD5 is fine here — this is a change detector, not a security boundary.
 
-### Decision: `nn-format` â€” clean end-of-file after deletion
+### Decision: `nn-format` — clean end-of-file after deletion
 
-**Choice**: Delete from `## Source Ingestion Pipeline` heading through line 241 (end of file). The `Validation Gate` section (lines 148â€“185) becomes the new last section. No trailing blank lines.
+**Choice**: Delete from `## Source Ingestion Pipeline` heading through line 241 (end of file). The `Validation Gate` section (lines 148–185) becomes the new last section. No trailing blank lines.
 **Alternatives**: Truncate at line 186; replace section with a placeholder comment.
-**Rationale**: The Pipeline section is the final section (lines 187â€“241). Deleting it cleanly leaves Validation Gate as the natural ending. No placeholder needed â€” the skill is self-contained.
+**Rationale**: The Pipeline section is the final section (lines 187–241). Deleting it cleanly leaves Validation Gate as the natural ending. No placeholder needed — the skill is self-contained.
 
 ### Decision: SKILL.md version bumps
 
@@ -35,31 +35,31 @@ Six independent deliverables grouped into a single change. The core infrastructu
 
 ### Decision: Installed junction backward compatibility
 
-**Choice**: No junctions/symlinks break. Directory structure of `skills/` does not change â€” only content inside `SKILL.md` files.
-**Rationale**: Junctions point to the skill directory, which still exists at the same path. Refactoring lines inside a file does not break the link. The `.atl/` â†’ `.cogNNitive/` migration also does not affect junctions â€” the repo's skill directories are untouched. **No migration needed for installed skills.**
+**Choice**: No junctions/symlinks break. Directory structure of `skills/` does not change — only content inside `SKILL.md` files.
+**Rationale**: Junctions point to the skill directory, which still exists at the same path. Refactoring lines inside a file does not break the link. The `.atl/` → `.cogNNitive/` migration also does not affect junctions — the repo's skill directories are untouched. **No migration needed for installed skills.**
 
 ## Data Flow
 
 ```
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚  node scripts/build-registry.js     â”‚
-â”‚  [--root dir] [--output dir]        â”‚
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
-           â”‚ 1. Parse CLI args (manual)
-           â”‚ 2. ReadDir skills/
-           â”‚ 3. For each <name>/SKILL.md:
-           â”‚    a. Read file
-           â”‚    b. Extract YAML frontmatter (regex between ---)
-           â”‚    c. Parse name, description, scope/triggers
-           â”‚    d. On parse error: stderr warning, skip
-           â”‚ 4. Compute fingerprint: md5(dirName:mtime + ...)
-           â”‚ 5. Write .cogNNitive/skill-registry.md (markdown table)
-           â”‚ 6. Write .cogNNitive/.skill-registry.cache.json (fingerprint)
-           â–¼
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚  .cogNNitive/skill-registry.md           â”‚  â† versioned
-â”‚  .cogNNitive/.skill-registry.cache.json  â”‚  â† .gitignored
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+┌─────────────────────────────────────┐
+│  node scripts/build-registry.js     │
+│  [--root dir] [--output dir]        │
+└──────────┬──────────────────────────┘
+           │ 1. Parse CLI args (manual)
+           │ 2. ReadDir skills/
+           │ 3. For each <name>/SKILL.md:
+           │    a. Read file
+           │    b. Extract YAML frontmatter (regex between ---)
+           │    c. Parse name, description, scope/triggers
+           │    d. On parse error: stderr warning, skip
+           │ 4. Compute fingerprint: md5(dirName:mtime + ...)
+           │ 5. Write .cogNNitive/skill-registry.md (markdown table)
+           │ 6. Write .cogNNitive/.skill-registry.cache.json (fingerprint)
+           ▼
+┌─────────────────────────────────────┐
+│  .cogNNitive/skill-registry.md           │  ← versioned
+│  .cogNNitive/.skill-registry.cache.json  │  ← .gitignored
+└─────────────────────────────────────┘
 ```
 
 ## File Changes
@@ -72,8 +72,8 @@ Six independent deliverables grouped into a single change. The core infrastructu
 | `.atl/skill-registry.md` | Delete | Moved to `.cogNNitive/` |
 | `.atl/.skill-registry.cache.json` | Delete | Moved to `.cogNNitive/` |
 | `.atl/` | Delete | Entire directory removed |
-| `.gitignore` | Modify | `.atl/` â†’ `.cogNNitive/` reference |
-| `openspec/config.yaml` | Modify | Line 34: `.atl/` â†’ `.cogNNitive/` |
+| `.gitignore` | Modify | `.atl/` → `.cogNNitive/` reference |
+| `openspec/config.yaml` | Modify | Line 34: `.atl/` → `.cogNNitive/` |
 | `AGENTS.md` | Modify | Add `.cogNNitive/` + build-registry documentation |
 | `skills/nn-format/SKILL.md` | Modify | Remove ~55 lines + fix frontmatter `description` |
 | `skills/nn-skills-manager/SKILL.md` | Modify | Remove Copy option + fix frontmatter `description` |
@@ -97,7 +97,7 @@ Six independent deliverables grouped into a single change. The core infrastructu
 -  Coordinates with the `traNNsform` skill to normalize any raw, unstructured file (PDF, DOCX, ODT, spreadsheet, image, audio, video, chat export, web page, scan, archive, etc.) into structured sources before authoring a model.
 ```
 
-Remove entire `## Source Ingestion Pipeline` section (lines 187â€“241), including all sub-sections: Purpose, When to Offer, Installation Prompt, Coordination Protocol, Provenance Chain, When NOT to Install.
+Remove entire `## Source Ingestion Pipeline` section (lines 187–241), including all sub-sections: Purpose, When to Offer, Installation Prompt, Coordination Protocol, Provenance Chain, When NOT to Install.
 
 ### nn-skills-manager frontmatter
 
@@ -164,7 +164,7 @@ node scripts/build-registry.js [--root <dir>] [--output <dir>]
 3. **Config + AGENTS.md updates**: Update `openspec/config.yaml` line 34, `.gitignore`, `AGENTS.md`. Commit.
 4. **Delete `.atl/`**: Remove old directory. Final commit.
 
-**Rollback**: `git revert` each commit in reverse order. No data migration required â€” `.cogNNitive/` and `.atl/` are both derived from `skills/` content.
+**Rollback**: `git revert` each commit in reverse order. No data migration required — `.cogNNitive/` and `.atl/` are both derived from `skills/` content.
 
 ## Testing Strategy
 
@@ -172,8 +172,8 @@ No test runner exists in this repo. Verification is manual:
 
 | Deliverable | Verification |
 |-------------|-------------|
-| build-registry script | Run `node scripts/build-registry.js` â€” confirm both `.cogNNitive/` files exist with correct content. Run again â€” confirm no crash. |
-| `.atl/` â†’ `.cogNNitive/` | Confirm `.atl/` does not exist; `.cogNNitive/` has registry files; `git status` shows no untracked `.atl` |
+| build-registry script | Run `node scripts/build-registry.js` — confirm both `.cogNNitive/` files exist with correct content. Run again — confirm no crash. |
+| `.atl/` → `.cogNNitive/` | Confirm `.atl/` does not exist; `.cogNNitive/` has registry files; `git status` shows no untracked `.atl` |
 | nn-format refactor | Confirm `## Source Ingestion Pipeline` heading and all sub-content are gone; frontmatter has no `traNNsform` reference |
 | nn-skills-manager refactor | Confirm no `[c] Copy` option, no `Copy-Item` block, description says "junction or symlink" |
 | AGENTS.md | Confirm `.cogNNitive/` section + build-registry usage instructions exist |
@@ -181,7 +181,7 @@ No test runner exists in this repo. Verification is manual:
 
 ## Open Questions
 
-None â€” all decisions are resolved by the proposal and spec.
+None — all decisions are resolved by the proposal and spec.
 
 ## Effort Estimate
 
@@ -189,10 +189,10 @@ None â€” all decisions are resolved by the proposal and spec.
 |-------------|-------------------|
 | `scripts/build-registry.js` (new) | ~90 |
 | `.cogNNitive/` files (new) | ~25 |
-| `.atl/` delete | âˆ’2 |
+| `.atl/` delete | −2 |
 | `.gitignore` modify | 2 |
 | `openspec/config.yaml` modify | 1 |
 | `AGENTS.md` modify | ~20 |
-| `nn-format/SKILL.md` modify | âˆ’55 + 4 (frontmatter) |
-| `nn-skills-manager/SKILL.md` modify | âˆ’10 + 4 (frontmatter) |
+| `nn-format/SKILL.md` modify | −55 + 4 (frontmatter) |
+| `nn-skills-manager/SKILL.md` modify | −10 + 4 (frontmatter) |
 | **Total** | **~150** |

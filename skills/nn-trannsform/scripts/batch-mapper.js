@@ -130,7 +130,8 @@ function appendElementToModel(modelPath, conceptName, elementName, sourceRef) {
   const elementBlock = [
     `\n## NN ${conceptName}: ${elementName}`,
     `sources:: ${sourceRef}`,
-    `description:: Auto-imported from image sources.`
+    ``,
+    `Auto-imported from image sources.`
   ];
 
   lines.splice(insertIdx, 0, ...elementBlock);

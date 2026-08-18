@@ -55,6 +55,13 @@ async function handleCliMode(argv) {
     try {
       importResult = await webImport.downloadToOriginal(argv['import-url'], originalDir);
       console.log(`Downloaded to: sources/original/${importResult.relPath}`);
+      provenance.recordProcedure(projectDir, {
+        command: 'node scripts/index.js',
+        args: process.argv.slice(2),
+        inputs: [argv['import-url']],
+        outputs: [`sources/original/${importResult.relPath}`],
+        timestamp: new Date().toISOString(),
+      });
     } catch (err) {
       console.error(`Error downloading URL: ${err.message}`);
       process.exit(1);
@@ -89,6 +96,14 @@ async function handleCliMode(argv) {
 
     const prov = provenance.buildProvenanceModel(projectDir);
     console.log(`cogNNitive Provenance model ${prov.created ? 'created' : 'refreshed'} with ${prov.sourceCount} source(s): ${prov.modelPath}`);
+
+    provenance.recordProcedure(projectDir, {
+      command: 'node scripts/index.js',
+      args: process.argv.slice(2),
+      inputs: ['sources/original/'],
+      outputs: ['sources/nn/'],
+      timestamp: new Date().toISOString(),
+    });
   }
 
   if (argv.provenance && !argv.scan) {
@@ -312,6 +327,14 @@ async function runProjectMenu(projectDir) {
 
     const prov = provenance.buildProvenanceModel(projectDir);
     console.log(`cogNNitive Provenance model ${prov.created ? 'created' : 'refreshed'} with ${prov.sourceCount} source(s): ${prov.modelPath}\n`);
+
+    provenance.recordProcedure(projectDir, {
+      command: 'node scripts/index.js',
+      args: ['--scan', '--src', projectDir],
+      inputs: ['sources/original/'],
+      outputs: ['sources/nn/'],
+      timestamp: new Date().toISOString(),
+    });
 
     return runProjectMenu(projectDir);
   }

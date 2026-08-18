@@ -69,7 +69,7 @@ Luis,28,Technician
 > Using the nn-trannsform skill, bootstrap a project with the files in the current folder as source. Project name: "test-docs".
 
 **Expected result:**
-- ✅ OpenCode creates the structure `test-docs/sources/original/`, `test-docs/sources/markdown/`, `test-docs/models/`, `test-docs/procedures/`, `test-docs/artifacts/`, `test-docs/artifacts/reports/`, `test-docs/traNNsformations/` (no `sources/raw/`)
+- ✅ OpenCode creates the structure `test-docs/sources/original/`, `test-docs/sources/nn/`, `test-docs/models/`, `test-docs/procedures/`, `test-docs/artifacts/`, `test-docs/artifacts/reports/`, `test-docs/traNNsformations/` (no `sources/raw/`)
 - ✅ Files are copied to `test-docs/sources/original/`
 - ✅ OpenCode reports no errors
 
@@ -84,12 +84,12 @@ Luis,28,Technician
 **Expected result:**
 - ✅ OpenCode executes `node scripts/index.js --scan --src test-docs`
 - ✅ Summary appears: "Discovered: X, Processed: Y, Skipped: Z"
-- ✅ `test-docs/sources/markdown/index.md` (ingestion manifest) is created
+- ✅ `test-docs/sources/nn/index.md` (ingestion manifest) is created
 - ✅ `test-docs/index.md` (semantic `# NN index`) is created
 - ✅ `test-docs/<name>_V_0-1-0_cogNNitive_NN.md` (provenance model) is created with the Sources populated
-- ✅ `test-docs/sources/markdown/report.md` is created with the txt content, with flat frontmatter (`source_file`, `sha256`, `size_bytes`, `normalized_at`, `normalized_by`)
-- ✅ `test-docs/sources/markdown/data.md` is created with the csv content
-- ✅ If the source files live in subfolders under `sources/original/`, the same subfolders appear under `sources/markdown/`
+- ✅ `test-docs/sources/nn/report.md` is created with the txt content, with flat frontmatter (`source_file`, `sha256`, `size_bytes`, `normalized_at`, `normalized_by`)
+- ✅ `test-docs/sources/nn/data.md` is created with the csv content
+- ✅ If the source files live in subfolders under `sources/original/`, the same subfolders appear under `sources/nn/`
 
 ---
 
@@ -157,7 +157,7 @@ If you have a docx or pdf file in the source folder, when running the scan:
 **Expected result:**
 - ✅ OpenCode runs `node scripts/index.js --import-url "<url>" --scan --src test-docs`
 - ✅ The downloaded file appears under `test-docs/sources/original/` (extension inferred from `Content-Type`, falling back to the URL)
-- ✅ After the scan, the corresponding file in `test-docs/sources/markdown/` includes `source_url` and `downloaded_at` in its frontmatter
+- ✅ After the scan, the corresponding file in `test-docs/sources/nn/` includes `source_url` and `downloaded_at` in its frontmatter
 - ✅ For an HTML page, `title`/`description`/`author` appear in the frontmatter when discoverable
 - ✅ For a PDF, the existing `.pdf` handling (pdf-parse) runs and, if present, `info.Title`/`info.Author` populate `title`/`author`
 

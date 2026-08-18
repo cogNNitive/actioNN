@@ -170,7 +170,7 @@ URLs estables `latest` de referencia:
    sources:: sources/nn/notas.md#L20-L25
    relationship_model:: Trial
    ```
-5. **Granularidad: a nivel de elemento, no de afirmación individual.** `sources::` cubre el conjunto de fuentes que respaldan TODO el elemento (todos sus campos en conjunto) — no hay mecanismo de cita por campo o por frase dentro de un modelo de dominio. Si distintos campos de un mismo elemento vienen de fuentes distintas, listá la unión de todas en el único `sources::` del elemento. La cita a nivel de afirmación individual (`<!-- cite: sources/markdown/<path>.md#L<n>-L<m>, section <nombre> -->`) es un mecanismo aparte, usado solo dentro de artefactos/drafts generados a partir del modelo (ver `nn-trannsform/SKILL.md` §4) — nunca dentro de un `*_NN.md`.
+5. **Granularidad: a nivel de elemento, no de afirmación individual.** `sources::` cubre el conjunto de fuentes que respaldan TODO el elemento (todos sus campos en conjunto) — no hay mecanismo de cita por campo o por frase dentro de un modelo de dominio. Si distintos campos de un mismo elemento vienen de fuentes distintas, listá la unión de todas en el único `sources::` del elemento. La cita a nivel de afirmación individual (`<!-- cite: sources/nn/<path>.md#L<n>-L<m>, section <nombre> -->`) es un mecanismo aparte, usado solo dentro de artefactos/drafts generados a partir del modelo (ver `nn-trannsform/SKILL.md` §4) — nunca dentro de un `*_NN.md`.
 6. **Sin duplicados ni referencias vacías.** No repitas la misma `<ref>` dos veces en la misma lista. Si no hay ninguna fuente real que citar, omití el campo entero — no escribas `sources:: []` ni un valor placeholder.
 7. **Instrucción Conversacional:** Si el proyecto cuenta con archivos en `sources/nn/`, el agente debe sugerir incluir `sources::`. Si es un modelo greenfield/creativo desde cero, el agente NO solicita ni exige proveniencia. En ambos casos aplica la regla general del skill: nunca inventés ni un `<ref>` ni un contenido que no esté verificablemente presente en el archivo citado.
 
@@ -387,4 +387,6 @@ Al concluir la generación o edición de un modelo, el agente DEBE incluir atajo
 9. **Atajos Contextuales:** Finalizar cada respuesta ofreciendo 2-3 acciones siguientes sugeridas (Quick Actions).
 10. **Delegación Total al MCP:** Consultar tipos, esquemas y validación al servidor `innfo-mcp`; no adivinar ni duplicar la gramática.
 11. **Sintaxis WikiLink Obligatoria en Referencias:** En todo campo referencial (`type:: reference`), el valor DEBE ser formateado usando la sintaxis WikiLink (`key:: [[Elemento]]`). Queda prohibido usar texto plano sin corchetes WikiLink.
+12. **Descripción de Elementos en Prosa:** La descripción/explicación de un elemento en un modelo Nivel 3 NUNCA debe escribirse como un campo de tipo `description::`. Debe ir siempre como texto libre en prosa Markdown debajo de la lista de campos `key:: value`, separada por una línea en blanco.
+
 

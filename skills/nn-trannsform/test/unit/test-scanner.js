@@ -132,7 +132,63 @@ function run() {
     assertEqual(typeof scanner.generateSourceRegistry, 'undefined', 'generateSourceRegistry no longer exists');
     assertEqual(typeof scanner.flattenOriginalToRaw, 'undefined', 'flattenOriginalToRaw no longer exists');
 
-    // Test 10: scanAndProcess mirrors sources/original/ subfolders into sources/markdown/ (no flattening)
+    // Test 9b: sanitizeMarkdownBody (Feature A)
+    assertEqual(
+      scanner.sanitizeMarkdownBody('a\n\n\n\n\nb'),
+      'a\n\nb',
+      'sanitizeMarkdownBody collapses 2+ consecutive blank lines to exactly 1'
+    );
+    assertEqual(
+      scanner.sanitizeMarkdownBody('line with trailing spaces   \nand tabs\t\t\n'),
+      'line with trailing spaces\nand tabs',
+      'sanitizeMarkdownBody trims trailing whitespace from every line'
+    );
+    assertEqual(
+      scanner.sanitizeMarkdownBody('a\r\nb\rc\r\n'),
+      'a\nb\nc',
+      'sanitizeMarkdownBody normalizes CRLF and lone CR to \\n'
+    );
+    assertEqual(
+      scanner.sanitizeMarkdownBody('\n\n\nHello\n\n\n'),
+      'Hello',
+      'sanitizeMarkdownBody trims leading/trailing blank lines from the whole body'
+    );
+
+    const fenceInput =
+      'Intro text.\n\n\n\n```python\ndef f():\n\n\n    x = 1   \n    return x\n```\n\n\n\nOutro text.';
+    const fenceOutput = scanner.sanitizeMarkdownBody(fenceInput);
+    assertTrue(
+      fenceOutput.includes('```python\ndef f():\n\n\n    x = 1   \n    return x\n```'),
+      'sanitizeMarkdownBody leaves fenced code block content byte-identical (blank lines and trailing spaces preserved)'
+    );
+    assertTrue(
+      fenceOutput.startsWith('Intro text.\n\n') && !fenceOutput.startsWith('Intro text.\n\n\n'),
+      'sanitizeMarkdownBody still collapses blank runs outside the fence'
+    );
+    assertEqual(
+      scanner.sanitizeMarkdownBody(fenceOutput),
+      fenceOutput,
+      'sanitizeMarkdownBody is idempotent: sanitize(sanitize(x)) === sanitize(x)'
+    );
+    assertEqual(
+      scanner.sanitizeMarkdownBody(scanner.sanitizeMarkdownBody('a\n\n\n\nb   \r\n\r\n\r\n')),
+      scanner.sanitizeMarkdownBody('a\n\n\n\nb   \r\n\r\n\r\n'),
+      'sanitizeMarkdownBody is idempotent on a mixed CRLF/blank-run/trailing-ws input'
+    );
+
+    // Test 9c: ensureHeading synthetic top-level heading fallback (Feature B)
+    assertEqual(
+      scanner.ensureHeading('Just plain content, no heading.', 'meeting_notes'),
+      '# Meeting Notes\n\nJust plain content, no heading.',
+      'ensureHeading inserts a synthetic top-level heading when the body has none'
+    );
+    assertEqual(
+      scanner.ensureHeading('# Already Titled\n\nBody text.', 'meeting_notes'),
+      '# Already Titled\n\nBody text.',
+      'ensureHeading leaves the body untouched when it already has a heading'
+    );
+
+    // Test 10: scanAndProcess mirrors sources/original/ subfolders into sources/nn/ (no flattening)
     const projDir = path.join(TEST_TEMP, 'mirror-project');
     const originalDir = path.join(projDir, 'sources', 'original');
     fs.mkdirSync(path.join(originalDir, 'clientA', 'nested'), { recursive: true });
@@ -163,6 +219,12 @@ function run() {
       );
 
       assertTrue(!fs.existsSync(path.join(projDir, 'sources', 'raw')), 'sources/raw/ is never created by scanAndProcess');
+
+      // Test 10b: root.txt has no heading in its raw content -> scanner auto-inserts a
+      // synthetic top-level heading so the normalized source always has a citable section.
+      const rootBody = fs.readFileSync(path.join(nnDir, 'root.md'), 'utf8').replace(/^---\n[\s\S]*?\n---\n\n?/, '');
+      assertTrue(rootBody.startsWith('# Root\n\n'), 'heading-less root.txt gets a synthetic "# Root" heading inserted by the scanner');
+      assertTrue(rootBody.includes('Root level document.'), 'original content is preserved after the synthetic heading');
 
       // Cleanup
       fs.rmSync(TEST_TEMP, { recursive: true, force: true });

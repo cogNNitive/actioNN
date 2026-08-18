@@ -133,6 +133,84 @@ function run() {
     ok(nested.includes('./models/Custom_Model_V_2-0-0_NN.md'), 'listWorkspaceModels includes top-level models/');
     ok(nested.includes('./Acme_V_0-1-0_cogNNitive_NN.md'), 'listWorkspaceModels keeps root files prefixed ./');
 
+    // --- Feature B: heading-slug citation anchors (no line-number fallback) ---
+    eq(provenance.slugifyHeading('## Market Overview!!'), 'market-overview', 'slugifyHeading strips punctuation and leading heading hashes');
+    eq(provenance.slugifyHeading('**Bold** and _italic_ and `code`'), 'bold-and-italic-and-code', 'slugifyHeading strips markdown emphasis characters');
+    eq(provenance.slugifyHeading('  Multiple   Spaces  '), 'multiple-spaces', 'slugifyHeading collapses whitespace runs and trims');
+    eq(provenance.slugifyHeading('IOE.1 Membership'), 'ioe1-membership', 'slugifyHeading removes characters outside [a-z0-9-]');
+
+    // duplicate headings get -1, -2, ... disambiguation in document order (mirrors GitHub)
+    const dupHeadings = provenance.extractHeadingSlugs(
+      '# Intro\n\ntext\n\n## Section\n\na\n\n## Section\n\nb\n\n## Section\n\nc\n'
+    );
+    eq(
+      dupHeadings.map((h) => h.slug).join(','),
+      'intro,section,section-1,section-2',
+      'extractHeadingSlugs disambiguates duplicate headings with -1, -2, ... in document order (first occurrence keeps the bare slug)'
+    );
+
+    // validateCitationAnchor against a real normalized source (market-report.md has a "# Body" heading -> slug "body")
+    const marketReportRel = 'sources/nn/clientA/market-report.md';
+    ok(
+      provenance.validateCitationAnchor(proj, `${marketReportRel}#body`).valid,
+      'validateCitationAnchor accepts a #slug that matches an actual heading in the target document'
+    );
+    eq(
+      provenance.validateCitationAnchor(proj, `${marketReportRel}#does-not-exist`).valid,
+      false,
+      'validateCitationAnchor rejects a #slug with no matching heading'
+    );
+    eq(
+      provenance.validateCitationAnchor(proj, marketReportRel).valid,
+      false,
+      'validateCitationAnchor rejects a citation with no #heading-slug fragment (no line-number fallback)'
+    );
+    eq(
+      provenance.validateCitationAnchor(proj, 'sources/nn/does-not-exist.md#body').valid,
+      false,
+      'validateCitationAnchor rejects a citation pointing at a non-existent file'
+    );
+
+    // --- Feature C: auto-captured Procedures (DataLad-style command lineage) ---
+    const scanProcedure = {
+      command: 'node scripts/index.js',
+      args: ['--scan', '--src', proj],
+      inputs: ['sources/original/'],
+      outputs: ['sources/nn/'],
+      timestamp: '2026-08-12T10:00:00.000Z',
+    };
+
+    const procRun1 = provenance.recordProcedure(proj, scanProcedure, { projectName: 'Acme' });
+    eq(procRun1.recorded, true, 'recordProcedure records a new auto-captured Procedure entry');
+
+    const modelAfterProc = fs.readFileSync(r1.modelPath, 'utf8');
+    ok(/## NN Procedures: node scripts\/index\.js --scan --src/.test(modelAfterProc), 'Procedures section gets the auto-recorded --scan entry with its exact command/flags');
+    ok(/run_at:: 2026-08-12T10:00:00\.000Z/.test(modelAfterProc), 'auto-recorded Procedure entry includes the run timestamp');
+    ok(/outputs:: \[sources\/nn\/\]/.test(modelAfterProc), 'auto-recorded Procedure entry includes its outputs');
+
+    // idempotency: re-running the exact same command/args/timestamp/outputs must not duplicate the entry
+    const procRun2 = provenance.recordProcedure(proj, scanProcedure, { projectName: 'Acme' });
+    eq(procRun2.recorded, false, 'recordProcedure does not re-record an identical command/args/timestamp/outputs');
+    eq(procRun2.key, procRun1.key, 'recordProcedure computes the same idempotency key for the same invocation');
+
+    const modelAfterDup = fs.readFileSync(r1.modelPath, 'utf8');
+    const scanEntryCount = (modelAfterDup.match(/## NN Procedures: node scripts\/index\.js --scan --src/g) || []).length;
+    eq(scanEntryCount, 1, 'no duplicate Procedures entry is created when the same command re-runs');
+
+    // manually add an agent-authored Procedure entry (non-scripted research step), then simulate
+    // running `--provenance` again (buildProvenanceModel refresh) — both must survive.
+    const withManualProc = modelAfterDup.replace(
+      '# NN Procedures\n',
+      '# NN Procedures\n\n## NN Procedures: Manual literature review\nagent:: claude\nrun_at:: 2026-08-12T09:00:00.000Z\n\nManually researched background context, not covered by a scripted command.\n'
+    );
+    fs.writeFileSync(r1.modelPath, withManualProc, 'utf8');
+
+    const r4 = provenance.buildProvenanceModel(proj, { projectName: 'Acme' });
+    const model4 = fs.readFileSync(r4.modelPath, 'utf8');
+    ok(/## NN Procedures: Manual literature review/.test(model4), 'manually agent-added Procedure entry survives a --provenance refresh (buildProvenanceModel)');
+    ok(/## NN Procedures: node scripts\/index\.js --scan --src/.test(model4), 'auto-recorded --scan Procedure entry survives a --provenance refresh (buildProvenanceModel)');
+    ok(/run_at:: 2026-08-12T10:00:00\.000Z/.test(model4), 'auto-recorded Procedure entry keeps its command and timestamp after refresh');
+
     fs.rmSync(TMP, { recursive: true, force: true });
     console.log(`\n  Provenance tests: ${passed} passed, ${failed} failed`);
   } catch (e) {

@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { execSync } = require('child_process');
+const { sanitizeMarkdownBody, ensureHeading } = require('./markdown-utils');
 
 const TRANNNSFORM_VERSION = (() => {
   try {
@@ -54,7 +55,7 @@ function escapeYamlString(value) {
  * Generate the canonical flat YAML frontmatter for a normalized source file.
  *
  * Schema (must match the iNNfo editor exactly — flat, no nesting):
- *   source_file, sha256, size_bytes, normalized_at, normalized_by
+ *   source_file, processed_file, sha256_original, sha256_processed, size_bytes, normalized_at, normalized_by
  * Optional (web-imported sources only): source_url, downloaded_at, title, description, author.
  */
 function generateSourceFrontmatter(originalFilePath, processedFilePath, relativeSourcePath, relativeProcessedPath, extra = {}) {
@@ -334,7 +335,8 @@ function processOkFile(ext, absPath, processedPath, sourceFileField, processedFi
   }
   try {
     const baseName = path.basename(displayOutPath, '.md');
-    const body = convertOkFormat(ext, absPath, baseName);
+    const rawBody = convertOkFormat(ext, absPath, baseName);
+    const body = ensureHeading(sanitizeMarkdownBody(rawBody), baseName);
 
     fs.mkdirSync(path.dirname(processedPath), { recursive: true });
     fs.copyFileSync(absPath, processedPath);
@@ -399,7 +401,8 @@ async function processPromptFile(ext, absPath, processedPath, sourceFileField, p
         { step: 'extraction', tool: EXT_DEPS[ext] ? EXT_DEPS[ext].pkg : 'built-in' }
       ]
     });
-    fs.writeFileSync(destPath, fm + result.body, 'utf8');
+    const normalizedBody = ensureHeading(sanitizeMarkdownBody(result.body), baseName);
+    fs.writeFileSync(destPath, fm + normalizedBody, 'utf8');
     if (result.partial) {
       return { format, status: '✅ Processed (Partial)', action: `Created placeholder NN model at \`sources/nn/${displayOutPath}\`. PDF parsing failed: ${result.note}`, outcome: 'processed' };
     }
@@ -431,9 +434,10 @@ async function processImageFile(ext, absPath, processedPath, sourceFileField, pr
     await resizeImageLocal(absPath, processedPath, ext);
 
     const baseName = path.basename(displayOutPath, '.md');
-    const body = `# Source Image: ${baseName}${ext}\n\n` +
+    const rawBody = `# Source Image: ${baseName}${ext}\n\n` +
       `[IMAGE: ${processedFileField}]\n\n` +
       `<!-- agent-query: Analizá la imagen original en "${processedFileField}" y extraé los elementos/conceptos correspondientes al modelo iNNfo. -->\n`;
+    const body = ensureHeading(sanitizeMarkdownBody(rawBody), baseName);
 
     fs.mkdirSync(path.dirname(destPath), { recursive: true });
     const fm = generateSourceFrontmatter(absPath, processedPath, sourceFileField, processedFileField, {
@@ -568,6 +572,8 @@ module.exports = {
   convertOkFormat,
   stripFrontmatter,
   htmlToPlainText,
+  sanitizeMarkdownBody,
+  ensureHeading,
   EXT_LABELS,
   EXT_DEPS
 };

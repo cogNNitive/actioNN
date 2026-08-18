@@ -16,6 +16,7 @@
 const fs = require('fs');
 const path = require('path');
 const minimist = require('minimist');
+const { extractHeadingSlugs } = require('./markdown-utils');
 
 function walkNNFiles(dir) {
   const results = [];
@@ -39,9 +40,15 @@ function walkNNFiles(dir) {
 
 function parseEntitiesFromNNFile(filePath) {
   const content = fs.readFileSync(filePath, 'utf8');
-  const lines = content.split('\n');
+  const lines = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
   const entities = [];
   let inEntitiesSection = false;
+
+  // Heading-slug anchors must match exactly what a citation validator would
+  // compute for this same document, so slugs are derived once for the whole
+  // file (duplicate headings disambiguated in document order) and looked up
+  // by line number.
+  const slugByLine = new Map(extractHeadingSlugs(content).map((h) => [h.lineIndex, h.slug]));
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
@@ -59,7 +66,7 @@ function parseEntitiesFromNNFile(filePath) {
       if (match) {
         entities.push({
           name: match[1].trim(),
-          lineNum: i + 1
+          slug: slugByLine.get(i) || ''
         });
       }
     }
@@ -86,14 +93,14 @@ function compileWiki(projectDir) {
   }
 
   const files = walkNNFiles(nnDir);
-  const entitiesMap = new Map(); // name -> [{ file, lineNum }]
+  const entitiesMap = new Map(); // name -> [{ file, slug }]
   const jsonReport = {};
 
   for (const relFile of files) {
     const absPath = path.join(nnDir, relFile);
     const relFilePosix = relFile.replace(/\\/g, '/');
     const entities = parseEntitiesFromNNFile(absPath);
-    
+
     // Add to JSON report
     const originalFilename = getSourceFileBasename(absPath);
     const currentList = jsonReport[originalFilename] || [];
@@ -105,7 +112,7 @@ function compileWiki(projectDir) {
       }
       entitiesMap.get(ent.name).push({
         file: `sources/nn/${relFilePosix}`,
-        lineNum: ent.lineNum
+        slug: ent.slug
       });
     }
   }
@@ -129,9 +136,9 @@ function compileWiki(projectDir) {
     const occurrences = entitiesMap.get(name);
     mdContent += `\n## NN Entities: ${name}\n`;
     if (occurrences.length === 1) {
-      mdContent += `sources:: ${occurrences[0].file}#L${occurrences[0].lineNum}\n`;
+      mdContent += `sources:: ${occurrences[0].file}#${occurrences[0].slug}\n`;
     } else {
-      const listStr = occurrences.map(o => `${o.file}#L${o.lineNum}`).join(', ');
+      const listStr = occurrences.map(o => `${o.file}#${o.slug}`).join(', ');
       mdContent += `sources:: [${listStr}]\n`;
     }
   }

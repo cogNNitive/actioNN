@@ -13,6 +13,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { slugifyHeading, extractHeadingSlugs } = require('./markdown-utils');
 
 const TEMPLATE_URL =
   'https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level2/cogNNitive/cogNNitive_NN.md';
@@ -360,6 +361,11 @@ function writeWorkspaceIndex(projectDir) {
   }
 }
 
+function getModelPath(projectDir, projectName) {
+  const name = projectName || path.basename(projectDir);
+  return path.join(projectDir, `${name}_V_0-1-0_cogNNitive_NN.md`);
+}
+
 /**
  * Build or refresh the cogNNitive provenance model for a project.
  */
@@ -370,7 +376,7 @@ function buildProvenanceModel(projectDir, options = {}) {
 
   materializeAssets(projectDir, sources);
 
-  const modelPath = path.join(projectDir, `${projectName}_V_0-1-0_cogNNitive_NN.md`);
+  const modelPath = getModelPath(projectDir, projectName);
   const created = !fs.existsSync(modelPath);
 
   const content = created
@@ -383,12 +389,145 @@ function buildProvenanceModel(projectDir, options = {}) {
   return { modelPath, sourceCount: sources.length, created };
 }
 
+/* ------------------------------------------------------------------------ *
+ * Citation anchors — heading-slug based (no line-number fallback).
+ *
+ * Citations (both the element-level `sources::` field and the claim-level
+ * `<!-- cite: ... -->` comment) point at `sources/nn/<path>.md#<heading-slug>`.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * Split a "<path>#<slug>" citation anchor into its parts. Returns null if
+ * there is no `#` fragment (a bare path with no heading-slug anchor).
+ */
+function parseCitationAnchor(citation) {
+  const raw = String(citation || '').trim();
+  const idx = raw.indexOf('#');
+  if (idx === -1) return null;
+  return { path: raw.slice(0, idx), slug: raw.slice(idx + 1) };
+}
+
+/**
+ * Validate a `sources/nn/<path>.md#<heading-slug>` citation anchor against
+ * the actual document: parse the `#slug` fragment, load the target document
+ * relative to `projectDir`, compute all of its heading slugs via the same
+ * `slugifyHeading` algorithm used at normalization time, and confirm the
+ * cited slug is one of them.
+ */
+function validateCitationAnchor(projectDir, citation) {
+  const parsed = parseCitationAnchor(citation);
+  if (!parsed || !parsed.path || !parsed.slug) {
+    return { valid: false, reason: `citation is missing a #heading-slug anchor: "${citation}"` };
+  }
+
+  const targetPath = path.resolve(projectDir, parsed.path);
+  if (!fs.existsSync(targetPath)) {
+    return { valid: false, reason: `cited file does not exist: ${parsed.path}` };
+  }
+
+  const content = fs.readFileSync(targetPath, 'utf8');
+  const slugs = extractHeadingSlugs(content).map((h) => h.slug);
+  if (!slugs.includes(parsed.slug)) {
+    return {
+      valid: false,
+      reason: `heading slug "#${parsed.slug}" not found in ${parsed.path} (available: ${slugs.join(', ') || 'none'})`,
+    };
+  }
+
+  return { valid: true };
+}
+
+/* ------------------------------------------------------------------------ *
+ * Procedures — auto-capture, DataLad-style, of the exact command that
+ * produced a Source/Artifact so Source -> Procedure lineage never silently
+ * goes missing.
+ * ------------------------------------------------------------------------ */
+
+function procedureKey({ command, args, timestamp, outputs }) {
+  const argsStr = Array.isArray(args) ? args.join(' ') : String(args || '');
+  const outStr = Array.isArray(outputs) ? outputs.join(',') : String(outputs || '');
+  return `${command}|${argsStr}|${timestamp}|${outStr}`;
+}
+
+function renderProcedureEntry(procedure) {
+  const { command, args, inputs, outputs, timestamp } = procedure;
+  const argsStr = Array.isArray(args) ? args.join(' ') : String(args || '');
+  const key = procedureKey(procedure);
+  const name = argsStr ? `${command} ${argsStr}` : command;
+
+  let out = `\n## NN Procedures: ${name}\n`;
+  out += `<!-- procedure-key: ${key} -->\n`;
+  out += `command:: ${name}\n`;
+  out += `run_at:: ${timestamp}\n`;
+  if (inputs && inputs.length) out += `inputs:: [${inputs.join(', ')}]\n`;
+  if (outputs && outputs.length) out += `outputs:: [${outputs.join(', ')}]\n`;
+  out += `\nAuto-recorded by traNNsform for this scripted operation.\n`;
+
+  return { block: out, key };
+}
+
+/**
+ * Auto-record a Procedure entry under `# NN Procedures` whenever a
+ * scriptable, reproducible pipeline operation runs (--import-url, --scan,
+ * template-apply). Idempotent: re-running the exact same command/args/
+ * timestamp/outputs does not duplicate the entry. Any Procedure entries the
+ * agent already added manually are preserved, mirroring the merge-preserving
+ * behavior already used for the Models/Artifacts sections.
+ */
+function recordProcedure(projectDir, procedure, options = {}) {
+  const projectName = options.projectName || path.basename(projectDir);
+  const modelPath = getModelPath(projectDir, projectName);
+
+  if (!fs.existsSync(modelPath)) {
+    buildProvenanceModel(projectDir, { projectName });
+  }
+
+  const existing = fs.readFileSync(modelPath, 'utf8');
+  const fmMatch = existing.match(/^(---\n[\s\S]*?\n---\n)/);
+  const frontmatter = fmMatch ? fmMatch[1] : '';
+  const body = fmMatch ? existing.slice(frontmatter.length) : existing;
+
+  const { preamble, blocks } = splitTopLevelSections(body);
+  const { block: newEntry, key } = renderProcedureEntry(procedure);
+
+  let procIdx = blocks.findIndex((b) => /^# NN Procedures\b/.test(b.heading));
+  if (procIdx === -1) {
+    blocks.push({ heading: '# NN Procedures', lines: [''] });
+    procIdx = blocks.length - 1;
+  }
+
+  const procBlockText = blocks[procIdx].lines.join('\n');
+  const alreadyRecorded = procBlockText.includes(`<!-- procedure-key: ${key} -->`);
+
+  if (!alreadyRecorded) {
+    const withoutPlaceholder = procBlockText.replace(
+      /\n?<!-- Add one element per transformation run:[\s\S]*?-->\n?/,
+      ''
+    );
+    const updatedText = withoutPlaceholder.replace(/\n+$/, '') + newEntry;
+    blocks[procIdx].lines = updatedText.split('\n');
+  }
+
+  const rebuilt = blocks.map((b) => (b.heading + '\n' + b.lines.join('\n')).replace(/\n+$/, '') + '\n');
+  const notice = preamble.replace(/^\n+|\n+$/g, '');
+  const content = frontmatter + '\n' + notice + '\n\n' + rebuilt.join('\n') + '\n';
+
+  fs.writeFileSync(modelPath, content, 'utf8');
+
+  return { modelPath, recorded: !alreadyRecorded, key };
+}
+
 module.exports = {
   buildProvenanceModel,
   collectSources,
   slugify,
   writeWorkspaceIndex,
   listWorkspaceModels,
+  slugifyHeading,
+  extractHeadingSlugs,
+  parseCitationAnchor,
+  validateCitationAnchor,
+  recordProcedure,
 };
 
 if (require.main === module) {
