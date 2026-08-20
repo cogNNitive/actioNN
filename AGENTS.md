@@ -162,15 +162,15 @@ Version format: `V_x-y-z` where:
 - `y` = minor (feature additions)
 - `z` = patch (fixes, documentation)
 
-This is defined in the defiNNe specification at `specs/defiNNe_V_0-1-1_NN.md` (Â§7).
+This is defined in the defiNNe specification at `specs/defiNNe_V_0-1-0_NN.md` (Â§7).
 
 ### iNNfo Frontmatter Compliance
 
-All iNNfo documents (models, templates, workflows) MUST follow the iNNfo V_0-2-0 spec:
+All iNNfo documents (models, templates, workflows) MUST follow the iNNfo V_0-1-0 spec:
 
 ```yaml
 ---
-spec_version: "V_0-2-0"
+spec_version: "V_0-1-0"
 spec_url: "<immutable-url>"
 level: 3
 parent_spec:

@@ -1,6 +1,6 @@
 ---
 specification_version: "V_0-1-0"
-specification_url: "https://raw.githubusercontent.com/cogNNitive/FORMAT/main/docs/spec/V_0-1-0/_format.md"
+specification_url: "https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/iNNfo_V_0-1-0_NN.md"
 title: "Workflow Template"
 model_version: "V_0-1-0"
 documentation_location: "docs/templates/workflow/V_0-1-0/"

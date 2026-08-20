@@ -120,7 +120,7 @@ function compileWiki(projectDir) {
   // Write sources/nn/entities.md
   const entitiesFile = path.join(nnDir, 'entities.md');
   let mdContent = '---\n' +
-    'specification_version: "V_0-3-0"\n' +
+    'specification_version: "V_0-1-0"\n' +
     'level: 3\n' +
     'title: "Compiled Ingestion Glossary"\n' +
     '---\n\n' +

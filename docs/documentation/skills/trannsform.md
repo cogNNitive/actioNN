@@ -11,7 +11,7 @@ generator: https://actionn.cognnitive.com/nn-design-presets
 
 ## Purpose
 
-Unified document ingestion, template-based transformation, and multi-step procedure orchestrator (`procedures_V_0-2-0_NN.md`). Takes raw files in multiple formats, normalizes them to Markdown, and executes multi-step transformation procedures using the agent's LLM.
+Unified document ingestion, template-based transformation, and multi-step procedure orchestrator (`procedures_V_0-1-0_NN.md`). Takes raw files in multiple formats, normalizes them to Markdown, and executes multi-step transformation procedures using the agent's LLM.
 
 ## Supported Formats
 
@@ -42,7 +42,7 @@ Unified document ingestion, template-based transformation, and multi-step proced
 1. **Bootstrap**: Creates the standard workspace directory structure (`raw/`, `models/`, `procedures/`, `artifacts/`).
 2. **Scan & normalization**: Reads files from `raw/`, converts formats to Markdown, and unifies content in `md/_all.md`.
 3. **Diagnosis**: The agent presents a diagnostic panel for non-text formats.
-4. **Transformation & Orchestration**: The agent applies templates or executes multi-step procedures defined in `procedures_V_0-2-0_NN.md`.
+4. **Transformation & Orchestration**: The agent applies templates or executes multi-step procedures defined in `procedures_V_0-1-0_NN.md`.
 5. **Post-Transformation Feedback Protocol**: If transformation behavior was modified during the conversation, the agent prompts the user to save a new `procedures` spec, update the existing spec, or leave specs unchanged.
 
 ## Included CLI

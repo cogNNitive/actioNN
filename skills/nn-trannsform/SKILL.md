@@ -1,6 +1,6 @@
 ---
 name: nn-trannsform
-description: "Bootstrap projects, scan raw documents, normalize them to Markdown with mandatory provenance frontmatter, apply V_0-3-0 template-based transformations, and execute multi-step transformation procedures compliant with procedures_V_0-3-0_NN.md. Includes document ingestion, format conversion (txt, md, csv, json, docx, pdf, xlsx), procedure orchestration, and export generation. Triggers: trannsform, transform, workflow, pipeline, procedure, normalize, scan documents, document ingestion, document transformation, document processing, markdown conversion, project bootstrap"
+description: "Bootstrap projects, scan raw documents, normalize them to Markdown with mandatory provenance frontmatter, apply V_0-1-0 template-based transformations, and execute multi-step transformation procedures compliant with procedures_V_0-1-0_NN.md. Includes document ingestion, format conversion (txt, md, csv, json, docx, pdf, xlsx), procedure orchestration, and export generation. Triggers: trannsform, transform, workflow, pipeline, procedure, normalize, scan documents, document ingestion, document transformation, document processing, markdown conversion, project bootstrap"
 empty_sections_mode: "ask-per-section"
 license: MIT
 metadata:
@@ -66,7 +66,7 @@ Every project workspace MUST adhere to the following structure:
 │                          # as sources/original/ (e.g. sources/original/clientA/report.docx
 │                          # → sources/nn/clientA/report.md). Never flattened.
 ├── models/               # Structured semantic iNNfo Level 3 models (*_NN.md)
-├── procedures/           # Reusable transformation procedure specs (*_procedures_V_0-3-0_NN.md)
+├── procedures/           # Reusable transformation procedure specs (*_procedures_V_0-1-0_NN.md)
 ├── artifacts/            # Derivative deliverables and generated output products
 │   ├── exports/          # Final deliverables (clean Markdown, HTML, PDF)
 │   └── reports/          # Validation reports and audit trails
@@ -169,15 +169,15 @@ Prints only the extracted plain text to stdout (no frontmatter, no heading noise
 
 ---
 
-### 3. Transformation & Level 3 Modeling (V_0-3-0 Unified Syntax)
+### 3. Transformation & Level 3 Modeling (V_0-1-0 Unified Syntax)
 
-#### 3a. Template Type: Markdown vs iNNfo V_0-3-0
+#### 3a. Template Type: Markdown vs iNNfo V_0-1-0
 
 When creating a new transformation, ask the user:
 
 **"What kind of template do you want to create?"**
 
-- **[a] (Recomendado)** iNNfo V_0-3-0 template — structured model with typed concepts, fields, markers, and matrices
+- **[a] (Recomendado)** iNNfo V_0-1-0 template — structured model with typed concepts, fields, markers, and matrices
 - **[b]** Generic Markdown template — free-form document with narrative sections
 - **[x]** Cancel
 
@@ -186,7 +186,7 @@ When creating a new transformation, ask the user:
 #### 3b. Mandatory Provenance in Level 3 Models (Bloque 2)
 
 When transforming normalized Markdown into an iNNfo Level 3 Model:
-- Frontmatter MUST use lightweight V_0-3-0 format (`level: 3`, `spec_version: "V_0-3-0"`, `parent_spec: { name, url }`).
+- Frontmatter MUST use lightweight V_0-1-0 format (`level: 3`, `spec_version: "V_0-1-0"`, `parent_spec: { name, url }`).
 - Body MUST use unified NN syntax: `# NN <Concept>`, `## NN <Concept>: <Element>`, `key:: value`.
 - Every element MUST include explicit provenance pointers via `sources::`, which points directly at the file(s) in `sources/nn/` and accepts iNNfo's generic list syntax for multiple values.
 - **La descripción del elemento debe ir en prosa Markdown libre después de los campos**, nunca como un campo `description::`:
@@ -234,10 +234,10 @@ Draft deliverables (`_draft.md`) MUST include:
 | **Original Ingestion** | `sources/original/` | `sources/original/photos/room.jpg` | Raw unmodified documents or media |
 | **Processed Ingestion** | `sources/processed/` | `sources/processed/photos/room.jpg` | Compressed images or text extracts |
 | **NN Normalized Model** | `sources/nn/` | `sources/nn/photos/room.md` | Ingested source with standard frontmatter |
-| **Model** (`*_NN.md`) | `models/` | `models/Business_Plan_V_1-0-0_NN.md` | iNNfo Level 3 V_0-3-0 semantic models with `sources::` |
+| **Model** (`*_NN.md`) | `models/` | `models/Business_Plan_V_1-0-0_NN.md` | iNNfo Level 3 V_0-1-0 semantic models with `sources::` |
 | **Export Deliverable** | `artifacts/exports/` | `artifacts/exports/Executive_Summary_V_1-0-0.md` | Clean final deliverable |
 | **Draft Deliverable** | `artifacts/exports/` | `artifacts/exports/Executive_Summary_V_1-0-0_draft.md` | Annotated draft |
-| **Procedure Spec** | `procedures/` | `procedures/Document_Ingest_V_1-0-0_procedures_NN.md` | Procedure spec compliant with `procedures_V_0-3-0_NN.md` |
+| **Procedure Spec** | `procedures/` | `procedures/Document_Ingest_V_1-0-0_procedures_NN.md` | Procedure spec compliant with `procedures_V_0-1-0_NN.md` |
 
 ---
 
@@ -308,7 +308,7 @@ node scripts/batch-mapper.js --model <model-file-path> --src <project-dir>
 3. **Multi-Selection Notice**: Add *"Podés seleccionar una opción o una combinación"* when applicable.
 4. **Mandatory Scanner Provenance**: Normalized Markdown in `sources/nn/` MUST include the flat scanner frontmatter (`source_file`, `processed_file`, `sha256_original`, `sha256_processed`, `size_bytes`, `normalized_at`, `normalized_by`, plus `source_url`/`downloaded_at`/`title`/`description`/`author` when applicable). No `source_id`/`src-NNN`.
 5. **Mandatory Model Provenance**: Level 3 elements MUST include `sources:: <path.md#heading-slug>` (or a list `sources:: [a, b]`) pointing directly at `sources/nn/` — no `src-NNN` IDs, no line-number anchors.
-6. **V_0-3-0 Compliance**: Target iNNfo V_0-3-0 meta-template specification and unified NN syntax (`# NN`, `## NN`, `key:: value`).
+6. **V_0-1-0 Compliance**: Target iNNfo V_0-1-0 meta-template specification and unified NN syntax (`# NN`, `## NN`, `key:: value`).
 7. **Saved Procedure Proactive Check**: When starting `nn-trannsform` or `nn-router`, check for existing procedures in `procedures/` and offer them as runnable options to the user before starting standard ingestion.
 7a. **Auto-Captured Procedure Lineage**: `--import-url`, `--scan`, and template-apply each auto-record a `# NN Procedures` entry in the provenance model (command, timestamp, inputs/outputs) — the agent does not need to (and should not) manually duplicate these. Manual `## NN Procedures:` entries remain only for non-scripted research/analysis steps.
 8. **Descripción en Prosa en Modelos Nivel 3**: La descripción de un elemento en un modelo Nivel 3 NUNCA debe formatearse como un campo de propiedad `description::`. Debe escribirse siempre como texto libre en prosa Markdown debajo de la lista de campos `key:: value`, separado de estos por una línea en blanco.

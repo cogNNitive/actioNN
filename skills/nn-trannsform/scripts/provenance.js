@@ -6,7 +6,7 @@
  * Procedures produced) as first-class iNNfo elements with explicit lineage.
  *
  * The model conforms to the `cogNNitive` level-2 template:
- *   https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level2/cogNNitive/cogNNitive_NN.md
+ *   https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/templates/cogNNitive/cogNNitive_V_0-1-0_NN.md
  *
  * Zero runtime dependencies (Node builtins only), mirroring scanner.js.
  */
@@ -16,9 +16,9 @@ const path = require('path');
 const { slugifyHeading, extractHeadingSlugs } = require('./markdown-utils');
 
 const TEMPLATE_URL =
-  'https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level2/cogNNitive/cogNNitive_NN.md';
+  'https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/templates/cogNNitive/cogNNitive_V_0-1-0_NN.md';
 const INNFO_URL =
-  'https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level1/iNNfo_NN.md';
+  'https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/iNNfo_V_0-1-0_NN.md';
 const TEMPLATE_NAME = 'cogNNitive_V_0-1-0';
 
 const DOC_NOTICE =
@@ -169,7 +169,7 @@ function splitTopLevelSections(body) {
 function buildFreshModel(title, sources) {
   const frontmatter =
     '---\n' +
-    'specification_version: "V_0-3-0"\n' +
+    'specification_version: "V_0-1-0"\n' +
     `specification_url: "${INNFO_URL}"\n` +
     'level: 3\n' +
     'parent_spec:\n' +

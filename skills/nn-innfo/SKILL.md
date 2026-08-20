@@ -1,6 +1,6 @@
 ---
 name: nn-innfo
-version: "V_0-3-0"
+version: "V_0-1-0"
 last_updated: 2026-08-07
 metadata:
   source_type: "original"
@@ -18,11 +18,11 @@ Activates when the user's message is the standalone token `NN` (its own word or 
 - Create or edit any file matching `*_NN.md`.
 - Author or modify business models, procedure models, or any model following an iNNfo template.
 - Create, edit, or modify templates or specializations under `docs/templates/`.
-- Discuss the iNNfo V_0-3-0 specification, meta-templates, primitives, matrices, or naming conventions.
+- Discuss the iNNfo V_0-1-0 specification, meta-templates, primitives, matrices, or naming conventions.
 
 > **ACTIVATION = GREETING REQUIRED**: When this skill is loaded, the agent MUST greet the user. See Greeting Protocol below.
 
-This skill guides LLMs and agents in authoring, creating from scratch (wizard), editing, auditing, and validating **iNNfo-compliant files** (V_0-3-0 Meta-template specification with unified `NN` syntax: `# NN`, `## NN`, and `key:: value`).
+This skill guides LLMs and agents in authoring, creating from scratch (wizard), editing, auditing, and validating **iNNfo-compliant files** (V_0-1-0 Meta-template specification with unified `NN` syntax: `# NN`, `## NN`, and `key:: value`).
 
 **Resolution, validation, and mutation are delegated to the `innfo-mcp` server** — a deterministic engine wrapping `@cognnitive/innfo-core`. The agent does NOT hand-resolve spec chains, hand-validate models, or guess syntax when the MCP is available. See §1 (MCP Operating Model) and §7 (Delegation Contract).
 
@@ -97,7 +97,7 @@ as its very first output — before any questions, analysis, or tool calls. Sess
 > [!NOTE]
 > **El servidor MCP (`innfo-mcp`) y las especificaciones canónicas son la ÚNICA fuente de verdad (SSOT) para la sintaxis y tipos de datos.** El agente NO duplica reglas gramaticales de memoria; las consulta dinámicamente vía MCP (`innfo-mcp_get_spec` / `innfo-mcp_get_template`).
 
-### Resumen de Niveles iNNfo (V_0-3-0)
+### Resumen de Niveles iNNfo (V_0-1-0)
 
 | Nivel | Rol | Sintaxis y Estructura |
 |---|---|---|
@@ -129,11 +129,11 @@ El servidor `innfo-mcp` expone 8 herramientas deterministas basadas en `@cognnit
 
 ## 2. Indicación Canónica de Especificaciones
 
-URLs estables `latest` de referencia:
-- **iNNfo (Nivel 1):** `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level1/iNNfo_NN.md`
-- **Business (Nivel 2):** `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level2/business/business_NN.md`
-- **Procedures (Nivel 2):** `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level2/procedures/procedures_NN.md`
-- **Organization (Nivel 2):** `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level2/organization/organization_NN.md`
+URLs de referencia de la versión actual (el nombre de archivo es el pin; no existe alias `latest`, ver `spec-versioning`):
+- **iNNfo (Nivel 1):** `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/iNNfo_V_0-1-0_NN.md`
+- **Business (Nivel 2):** `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/templates/business/business_V_0-1-0_NN.md`
+- **Procedures (Nivel 2):** `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/templates/procedures/procedures_V_0-1-0_NN.md`
+- **Organization (Nivel 2):** `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/templates/organization/organization_V_0-1-0_NN.md`
 
 ### Regla de `parent_spec.url` en Modelos Nivel 3
 
@@ -247,7 +247,7 @@ Al confirmar el usuario, ejecutar la mutación vía `innfo-mcp_apply_change` y r
 ## 8b. Protocolo de Campos de Activos e Imágenes
 
 * **Tipo Explícito:** Usar siempre `type:: image` para rutas o URLs de imágenes (nunca `string`).
-* **Reglas de Especificación:** La regla de resolución de imagen principal (Rule 1) y la gramática del campo companion libre `<campo>_metadata` con citaciones CSL-JSON en una sola línea están normadas oficialmente en la Especificación Nivel 1 (`iNNfo_NN.md`).
+* **Reglas de Especificación:** La regla de resolución de imagen principal (Rule 1) y la gramática del campo companion libre `<campo>_metadata` con citaciones CSL-JSON en una sola línea están normadas oficialmente en la Especificación Nivel 1 (`iNNfo_V_0-1-0_NN.md`).
 * **Interacción del Agente:** Si el usuario incluye imágenes o activos con información de atribución, el agente sugiere incluir el campo `<campo>_metadata` con la cita CSL-JSON correspondiente.
 
 ---
@@ -376,7 +376,7 @@ Al concluir la generación o edición de un modelo, el agente DEBE incluir atajo
 
 ## Core Rules
 
-1. **Meta-plantilla Estricta V_0-3-0:** Las plantillas Nivel 2 definen primitivas en el cuerpo (`# NN Concept Definition`). NUNCA colocar `concepts: [...]` o `fields: [...]` en el YAML frontmatter de Nivel 2.
+1. **Meta-plantilla Estricta V_0-1-0:** Las plantillas Nivel 2 definen primitivas en el cuerpo (`# NN Concept Definition`). NUNCA colocar `concepts: [...]` o `fields: [...]` en el YAML frontmatter de Nivel 2.
 2. **Sintaxis Unificada NN:** Usar `# NN <Concept>`, `## NN <Concept>: <Element>`, `key:: value`. No usar viñetas obsoletas `_NN` ni bloques de código ````yaml`.
 3. **Proveniencia Opcional y Actualizada:** `sources::` es opcional y apunta a archivos en `sources/nn/` (admite lista `[a, b]` para múltiples valores; sin IDs `src-xxx` ni carpeta `raw/`).
 4. **Cero Mutación Unilateral:** Nunca mover, renombrar ni eliminar archivos del usuario sin confirmación explícita previa.

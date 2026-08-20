@@ -1,10 +1,10 @@
 ---
-specification_version: "V_0-3-0"
-specification_url: "https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/v0.3.0/level3/sample.md"
+specification_version: "V_0-1-0"
+specification_url: "https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/iNNfo_V_0-1-0_NN.md"
 level: 3
 parent_spec:
-  name: "procedures_V_0-3-0"
-  url: "https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level2/procedures/procedures_NN.md"
+  name: "procedures_V_0-1-0"
+  url: "https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/templates/procedures/procedures_V_0-1-0_NN.md"
 model_version: "V_1-0-0"
 title: "Procedimiento Viaje al Futuro DeLorean"
 ---
