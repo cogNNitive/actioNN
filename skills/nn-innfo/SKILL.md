@@ -6,7 +6,7 @@ metadata:
   source_type: "original"
   mcp: "innfo-mcp"
 license: MIT
-description: 'Trigger: user types the standalone token "NN" (not inside another word), or asks to create, edit, or validate any iNNfo model, template, specialization, or *_NN.md file. Includes the Model Creation Wizard and Architecture Coach.'
+description: 'Trigger: user types the standalone token "NN" (not inside another word), or asks to create, edit, validate, or execute procedures of any iNNfo model, template, specialization, or *_NN.md file. Includes the Model Creation Wizard, Architecture Coach, and the ability to execute model procedures (ejecutar procedimientos del modelo).'
 ---
 
 # iNNfo Skill
@@ -38,7 +38,8 @@ When the skill is activated or the user is undecided about what to do, present t
 - **[b]** Edit / extend an existing model
 - **[c]** Validate a model with MCP
 - **[d] Analizar coherencia y solidez (Coach de Arquitectura)** — audit the model across formal, logical, semantic, and solidity layers (§8c)
-- **[x]** Cancel / help
+- **[x] Ejecutar un procedimiento del modelo** — lista los procedimientos declarados en el modelo y ejecuta el que elijas
+- **[y]** Cancel / help
 
 *Nota: Podés seleccionar una opción o una combinación si aplica.*
 
@@ -138,10 +139,10 @@ URLs de referencia de la versión actual (el nombre de archivo es el pin; no exi
 ### Regla de `parent_spec.url` en Modelos Nivel 3
 
 1. `parent_spec.url` de un modelo Nivel 3 debe ser una URL **ESTABLE (http/https)** que apunte a la plantilla Nivel 2, o un **path relativo al workspace** (ej. `specs/MiPlantilla_V_0-1-0_spec_NN.md`).
-2. **PROHIBIDO usar paths absolutos de Windows** (ej. `C:/Users/.../MiPlantilla_spec_NN.md`): rompen la resolución en el Modeler (fetch sobre ruta local) y en el MCP. El resolver local busca la plantilla en `specs/`, `.specs/` y `.spec-cache/` del workspace; la forma canónica es la URL http estable.
+2. **PROHIBIDO usar paths absolutos de Windows** (ej. `C:/Users/.../MiPlantilla_spec_NN.md`): rompen la resolución en el Modeler (fetch sobre ruta local) y en el MCP. El resolver local busca la plantilla recursivamente en `specs/` del workspace (única carpeta de búsqueda local — ver `resolver-node.ts`); la forma canónica es la URL http estable.
 3. Después de fijar `parent_spec.url`, verificar SIEMPRE la resolución (ver §5, pre-chequeo de cadena de padres) antes de dar por listo el modelo.
 4. **Los paths relativos se resuelven contra la raíz del servidor MCP** (la variable de entorno `INNFO_MODELS_DIR` o el cwd del proceso al iniciar el server), NO contra la carpeta del archivo del modelo. Por lo tanto, para validar un workspace con paths relativos, la raíz del MCP DEBE ser la raíz del workspace; los overrides `root:` solo aplican donde la herramienta los acepta (`validate_model` con `root`, `get_spec`/`get_template` con `url`).
-5. **El resolver AUTO-CACHEA cada padre resuelto** (local o remoto) en `<workspace>/.spec-cache/`. NO copiar plantillas manualmente a esa carpeta: si una resolución falla, la corrección es arreglar la raíz del MCP o la URL, no copiar archivos. `.spec-cache` es un cache derivado que el resolver regenera solo.
+5. **El resolver AUTO-GUARDA cada padre resuelto** (local o remoto) en `<workspace>/specs/`, write-once: si el archivo ya existe no lo pisa. NO copiar plantillas manualmente a esa carpeta: si una resolución falla, la corrección es arreglar la raíz del MCP o la URL, no copiar archivos. No existe una carpeta `.spec-cache/` separada — `specs/` es el único destino y la única búsqueda local.
 
 ---
 
@@ -203,7 +204,7 @@ innfo-mcp_apply_change({
 
 - Actualiza `model_version` en el frontmatter y **renombra el archivo del modelo atómicamente** (validate-before-write: si el resultado no valida, no escribe).
 - `bump_version` SOLO toca el archivo del modelo y su frontmatter — NO toca la plantilla ni el `index.md`.
-- **Checklist manual restante después del bump:** (1) renombrar la plantilla Nivel 2 si su versión también subió, (2) sincronizar `.spec-cache/` si el resolver cachea el padre por nombre/versión (dejar que el resolver lo regenerue — no copiar a mano, ver §2 regla 5), (3) actualizar el enlace en el `index.md` del workspace si cambió el nombre físico del archivo (ver §10).
+- **Checklist manual restante después del bump:** (1) renombrar la plantilla Nivel 2 si su versión también subió, (2) dejar que el resolver regenere el archivo correspondiente en `specs/` en la próxima resolución — no copiar a mano (ver §2 regla 5), (3) actualizar el enlace en el `index.md` del workspace si cambió el nombre físico del archivo (ver §10).
 
 ---
 
