@@ -294,7 +294,7 @@ Interactive CLI that reads the compiled `sources/nn/entities.md`, resolves the c
 node scripts/batch-mapper.js --model <model-file-path> --src <project-dir>
 ```
 
-- If `--model` is omitted, it auto-selects the first `*_NN.md` file found in `models/`.
+- If `--model` is omitted: if only one model exists in `models/`, it is automatically selected; if multiple exist, the script prompts the user interactively to select the target model from a list.
 - Requires `sources/nn/entities.md` to already exist — run `llm-wiki-compiler.js --compile` first.
 - Displays a table of candidates with a suggested concept (best-effort name match) and a suggested element name, then prompts for a selection (ranges like `1-3, 5` or `all`) and confirmation.
 - Appends each selected entity as a new `## NN <Concept>: <Element>` element under the matching concept section in the model file, tagged with `sources::` pointing back to its origin in `sources/nn/`.

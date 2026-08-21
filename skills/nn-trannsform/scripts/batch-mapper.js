@@ -148,8 +148,22 @@ async function main() {
     const modelsDir = path.join(projectDir, 'models');
     if (fs.existsSync(modelsDir)) {
       const files = fs.readdirSync(modelsDir).filter(f => f.endsWith('_NN.md'));
-      if (files.length > 0) {
+      if (files.length === 1) {
         modelPath = path.join(modelsDir, files[0]);
+        console.log(`Auto-selected single model found: ${files[0]}`);
+      } else if (files.length > 1) {
+        // Prompt the user to select the model interactively
+        const modelResponse = await prompts({
+          type: 'select',
+          name: 'selectedModel',
+          message: 'Multiple models found. Please select the target model:',
+          choices: files.map(f => ({ title: f, value: path.join(modelsDir, f) }))
+        });
+        if (!modelResponse.selectedModel) {
+          console.error('Error: No model selected.');
+          process.exit(1);
+        }
+        modelPath = modelResponse.selectedModel;
       }
     }
   }

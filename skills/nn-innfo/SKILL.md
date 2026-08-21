@@ -43,6 +43,17 @@ When the skill is activated or the user is undecided about what to do, present t
 
 *Nota: Podés seleccionar una opción o una combinación si aplica.*
 
+### 0a-bis. Active Model Context & Selection Gate (MANDATORY for [b], [c], [d], [x])
+
+Before executing options **[b]**, **[c]**, **[d]**, or **[x]**, the agent MUST ensure there is an active model in context (`active_model_path`).
+
+1. **Verify Session Context:** Check if a model is currently being edited/active in the session.
+2. **Dynamic Discovery:** If no model is active, call `innfo-mcp_list_models` to scan the workspace:
+   - **If 0 models found:** Inform the user that no models exist in `models/` and suggest creating one (redirecting to option **[a]**).
+   - **If 1 model found:** Present it and ask for confirmation: *"Detecté un único modelo: `models/{ModelName}_NN.md`. ¿Querés trabajar con este?"*. Upon confirmation, set it as the active model (`active_model_path`) and proceed.
+   - **If multiple models found:** Present a numbered list of all models found and ask the user to select one: *"Detecté múltiples modelos. Por favor, seleccioná con cuál querés trabajar:"*. Set the selected file as `active_model_path` and proceed.
+3. **Session Persistence:** Once a model is selected or created, save its path in context. Subsequent actions (validation, edits, audits) MUST default to this active model. To switch models, the user can explicitly ask to "cambiar de modelo" or select the change option in the quick actions menu.
+
 ---
 
 ## 0b. Descubrimiento Proactivo (Opción A)
@@ -371,7 +382,25 @@ Al concluir la generación o edición de un modelo, el agente DEBE incluir atajo
 - [a] (Recomendado) Revisión guiada de conceptos y elementos generados
 - [b] Ejecutar auditoría del Coach de Arquitectura ([d])
 - [c] Editar o agregar un nuevo concepto/elemento
+- [m] Cambiar de modelo activo (seleccionar otro modelo)
 ```
+
+**Dynamic Procedure Listing:**
+* **Only if** the active model actually contains declared procedures (e.g. sections `## NN Procedure: ...`), append the following block:
+```markdown
+📌 Procedimientos disponibles en el modelo:
+- [p1] Ejecutar: <Procedimiento 1>
+- [pn] ... (si el modelo declara el procedimiento de master.html, aparecerá aquí como "Generar master.html")
+```
+* If the model does not declare any procedures, omit the "Procedimientos disponibles en el modelo" block completely to avoid broken shortcuts or noise.
+
+---
+
+## 15. Descubrimiento de Procedimientos del Modelo
+
+Los procedimientos ejecutables son contenido declarado en el modelo (no un catálogo fijo del skill). Se descubren consultando el modelo (secciones `## NN Procedure: ...` o el concepto `Procedure` de la plantilla madre) y la carpeta `procedures/` del workspace (`*_procedures_V_0-3-0_NN.md`).
+
+El procedimiento de master.html (anteriormente showroom) es reconocible: si el usuario solicita un "master.html", "master", "showroom", "galería" o "framework visual" de un modelo, se ofrece generarlo (sin modificar cómo se genera ni alterar el comportamiento del generador actual).
 
 ---
 
@@ -389,5 +418,7 @@ Al concluir la generación o edición de un modelo, el agente DEBE incluir atajo
 10. **Delegación Total al MCP:** Consultar tipos, esquemas y validación al servidor `innfo-mcp`; no adivinar ni duplicar la gramática.
 11. **Sintaxis WikiLink Obligatoria en Referencias:** En todo campo referencial (`type:: reference`), el valor DEBE ser formateado usando la sintaxis WikiLink (`key:: [[Elemento]]`). Queda prohibido usar texto plano sin corchetes WikiLink.
 12. **Descripción de Elementos en Prosa:** La descripción/explicación de un elemento en un modelo Nivel 3 NUNCA debe escribirse como un campo de tipo `description::`. Debe ir siempre como texto libre en prosa Markdown debajo de la lista de campos `key:: value`, separada por una línea en blanco.
+13. **Active Model Selection Gate:** Never perform editing, validation, audits, or model procedure execution without a validated active model in context. Run workspace discovery first if none is set.
+14. **Dynamic Quick Actions:** Only list procedure shortcuts in next steps if the model contains declared procedures.
 
 

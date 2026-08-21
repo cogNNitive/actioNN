@@ -40,6 +40,7 @@ Every agent interaction across the cogNNitive ecosystem MUST follow these strict
 5. **Saved Procedure Discovery (Proactive Offering)**:
    - When initiating a conversation under `nn-router`, `nn-trannsform`, or `nn-innfo`, the agent MUST check if the `procedures/` directory contains any `*_procedures_NN.md` files.
    - If one or more procedures are found, the agent MUST offer them to the user as runnable options in the greeting or entry menu, allowing the user to select and execute a saved procedure before presenting default options.
+   - **Verification of Procedure Inputs (Pre-run Check)**: Before executing a proactive procedure, the agent MUST verify if all input files/sources declared in the procedure spec exist in the workspace. If any inputs are missing, warn the user and suggest performing the corresponding ingestion or setup step first, rather than launching the procedure blindly.
 
 ---
 
