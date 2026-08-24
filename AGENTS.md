@@ -63,10 +63,10 @@ authoritative for what should be installed.
 
 ## MCP Bundle â€” On-Demand Download
 
-The `innfo-mcp` server bundle (`scripts/bin/innfo-mcp.bundle.js`) is NOT tracked in git â€” it is downloaded from cogNNitive on demand.
+The `innfo-mcp` server bundle (`.cogNNitive/mcp-bundle.js`) is NOT tracked in git â€” it is downloaded from iNNfo's versioned CDN channel on demand, pinned to the version recorded in `.cogNNitive/mcp-version.json`.
 
 - **First setup**: run `node scripts/update-mcp.js` before using any skill that requires the MCP (e.g. `nn-innfo`).
-- **Updates**: the same command checks for a newer version and downloads it.
+- **Updates**: the same command checks the manifest for a newer published version and downloads it.
 - The skill `nn-skills-lifecycle init` handles this automatically when bootstrapping a workspace.
 
 ## Skill Registry â€” Regeneration

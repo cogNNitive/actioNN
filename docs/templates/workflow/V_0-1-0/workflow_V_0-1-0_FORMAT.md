@@ -1,6 +1,6 @@
 ---
-specification_version: "V_0-1-0"
-specification_url: "https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/iNNfo_V_0-1-0_NN.md"
+spec_version: "V_0-1-0"
+spec_url: "https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/iNNfo_V_0-1-0_NN.md"
 title: "Workflow Template"
 model_version: "V_0-1-0"
 documentation_location: "docs/templates/workflow/V_0-1-0/"
@@ -169,7 +169,7 @@ Every workflow instance MUST include:
 
 ```yaml
 ---
-specification_version: "V_0-1-0"
+spec_version: "V_0-1-0"
 title: "<Workflow Name>"
 model_version: "V_<major>-<minor>-<patch>"
 documentation_location: "docs/templates/workflow/V_0-1-0/"

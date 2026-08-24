@@ -80,7 +80,7 @@ Every workflow instance must include this frontmatter:
 
 ```yaml
 ---
-specification_version: "V_0-1-0"
+spec_version: "V_0-1-0"
 title: "<Workflow Name>"
 model_version: "V_<major>-<minor>-<patch>"
 documentation_location: "docs/templates/workflow/V_0-1-0/"

@@ -4,22 +4,37 @@
  * scripts/update-mcp.js
  *
  * Zero-dependency updater for the innfo-mcp server.
- * Compares local version with remote version on GitHub main branch
- * and downloads the precompiled bundle if an update is available.
+ *
+ * Resolves the latest published version from iNNfo's versioned CDN manifest
+ * (https://raw.githubusercontent.com/cogNNitive/iNNfo/main/docs/cdn/manifest.json,
+ * same manifest consumed by iNNfo/scripts/innfo-mcp.sh and innfo-mcp.ps1), compares
+ * it against the version recorded in .cogNNitive/mcp-version.json, and downloads
+ * the matching versioned bundle from iNNfo's CDN channel into
+ * .cogNNitive/mcp-bundle.js when they differ. It never pulls an unpinned `main`
+ * bundle.
+ *
+ * State lives under .cogNNitive/ — actioNN's real state directory — not .innv0/
+ * or scripts/bin/, which were never created by any part of this pipeline.
+ *
+ * Usage:
+ *   node scripts/update-mcp.js            # normal run: check manifest, download if needed
+ *   node scripts/update-mcp.js --dry-run  # resolve versions and print the plan; no
+ *                                          # network download, no writes to .cogNNitive/
  */
 
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
 
-const REMOTE_PKG_URL = 'https://raw.githubusercontent.com/cogNNitive/iNNfo/main/packages/innfo-mcp/package.json';
-const REMOTE_BUNDLE_URL = 'https://raw.githubusercontent.com/cogNNitive/iNNfo/main/packages/innfo-mcp/bin/innfo-mcp.bundle.js';
+const MANIFEST_URL = 'https://raw.githubusercontent.com/cogNNitive/iNNfo/main/docs/cdn/manifest.json';
+const BUNDLE_URL_TEMPLATE = 'https://raw.githubusercontent.com/cogNNitive/iNNfo/main/docs/cdn/innfo-mcp-{version}.bundle.js';
 
 const ROOT_DIR = path.resolve(__dirname, '..');
-const STATE_DIR = path.join(ROOT_DIR, '.innv0');
+const STATE_DIR = path.join(ROOT_DIR, '.cogNNitive');
 const VERSION_FILE = path.join(STATE_DIR, 'mcp-version.json');
-const BIN_DIR = path.join(ROOT_DIR, 'scripts', 'bin');
-const BUNDLE_FILE = path.join(BIN_DIR, 'innfo-mcp.bundle.js');
+const BUNDLE_FILE = path.join(STATE_DIR, 'mcp-bundle.js');
+
+const DRY_RUN = process.argv.includes('--dry-run');
 
 /**
  * Perform HTTPS GET request returning response body as string
@@ -63,38 +78,28 @@ function downloadFile(url, destPath) {
 }
 
 /**
- * Compare two semantic version strings (simple parsing)
- * Returns true if remote is newer than local
+ * Build the versioned bundle URL for a manifest "latest" value (e.g. "v0.2.1").
+ * The manifest's version string already carries the "v" prefix and is used
+ * verbatim, matching iNNfo/scripts/innfo-mcp.sh and innfo-mcp.ps1.
  */
-function isNewerVersion(local, remote) {
-  if (!local) return true;
-  
-  const localParts = local.split('.').map(Number);
-  const remoteParts = remote.split('.').map(Number);
-  
-  for (let i = 0; i < 3; i++) {
-    const l = localParts[i] || 0;
-    const r = remoteParts[i] || 0;
-    if (r > l) return true;
-    if (l > r) return false;
-  }
-  return false;
+function buildBundleUrl(version) {
+  return BUNDLE_URL_TEMPLATE.replace('{version}', version);
 }
 
 async function main() {
   console.log('[MCP Updater] Checking for updates...');
-  
-  // Ensure directories exist
-  if (!fs.existsSync(STATE_DIR)) {
-    fs.mkdirSync(STATE_DIR, { recursive: true });
+  if (DRY_RUN) {
+    console.log('[MCP Updater] --dry-run: no network requests will be made, no files will be written.');
   }
-  if (!fs.existsSync(BIN_DIR)) {
-    fs.mkdirSync(BIN_DIR, { recursive: true });
+
+  // Ensure state directory exists
+  if (!DRY_RUN && !fs.existsSync(STATE_DIR)) {
+    fs.mkdirSync(STATE_DIR, { recursive: true });
   }
 
   // Load local version info
   let localVersion = null;
-  if (fs.existsSync(VERSION_FILE) && fs.existsSync(BUNDLE_FILE)) {
+  if (fs.existsSync(VERSION_FILE)) {
     try {
       const cache = JSON.parse(fs.readFileSync(VERSION_FILE, 'utf-8'));
       localVersion = cache.version;
@@ -103,26 +108,38 @@ async function main() {
       console.warn('[MCP Updater] Failed to parse local version cache, forcing update');
     }
   } else {
-    console.log('[MCP Updater] No local bundle found, forcing initial download');
+    console.log('[MCP Updater] No local version record found, forcing initial download');
+  }
+
+  if (DRY_RUN) {
+    console.log(`[MCP Updater] Would fetch manifest: ${MANIFEST_URL}`);
+    console.log(`[MCP Updater] Would compare its "latest" field against local version "${localVersion || '(none)'}"`);
+    console.log(`[MCP Updater] If different, would download the versioned bundle into ${BUNDLE_FILE}`);
+    console.log(`[MCP Updater] and record the new version in ${VERSION_FILE}`);
+    return;
   }
 
   try {
-    // Fetch remote package.json
-    const remotePkgStr = await fetchString(REMOTE_PKG_URL);
-    const remotePkg = JSON.parse(remotePkgStr);
-    const remoteVersion = remotePkg.version;
-    console.log(`[MCP Updater] Remote version: ${remoteVersion}`);
+    // Fetch the versioned CDN manifest (never the unpinned `main` bundle)
+    const manifestStr = await fetchString(MANIFEST_URL);
+    const manifest = JSON.parse(manifestStr);
+    const remoteVersion = manifest.latest;
+    if (!remoteVersion) {
+      throw new Error('Manifest is missing a "latest" field');
+    }
+    console.log(`[MCP Updater] Remote (manifest) version: ${remoteVersion}`);
 
-    if (isNewerVersion(localVersion, remoteVersion)) {
+    if (remoteVersion !== localVersion || !fs.existsSync(BUNDLE_FILE)) {
       console.log(`[MCP Updater] Update available! Downloading ${remoteVersion}...`);
-      await downloadFile(REMOTE_BUNDLE_URL, BUNDLE_FILE);
-      
-      // Update local version cache
+      const bundleUrl = buildBundleUrl(remoteVersion);
+      await downloadFile(bundleUrl, BUNDLE_FILE);
+
+      // Update local version record
       fs.writeFileSync(VERSION_FILE, JSON.stringify({
         version: remoteVersion,
         updated_at: new Date().toISOString()
       }, null, 2), 'utf-8');
-      
+
       console.log('[MCP Updater] Update completed successfully!');
     } else {
       console.log('[MCP Updater] MCP server is already up to date.');
@@ -142,3 +159,5 @@ async function main() {
 if (require.main === module) {
   main();
 }
+
+module.exports = { buildBundleUrl };

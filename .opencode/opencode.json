@@ -4,7 +4,7 @@
   "mcp": {
     "innfo-mcp": {
       "type": "local",
-      "command": ["node", "scripts/bin/innfo-mcp.bundle.js"],
+      "command": ["node", ".cogNNitive/mcp-bundle.js"],
       "enabled": true
     }
   },

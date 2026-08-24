@@ -398,7 +398,7 @@ Al concluir la generación o edición de un modelo, el agente DEBE incluir atajo
 
 ## 15. Descubrimiento de Procedimientos del Modelo
 
-Los procedimientos ejecutables son contenido declarado en el modelo (no un catálogo fijo del skill). Se descubren consultando el modelo (secciones `## NN Procedure: ...` o el concepto `Procedure` de la plantilla madre) y la carpeta `procedures/` del workspace (`*_procedures_V_0-3-0_NN.md`).
+Los procedimientos ejecutables son contenido declarado en el modelo (no un catálogo fijo del skill). Se descubren consultando el modelo (secciones `## NN Procedure: ...` o el concepto `Procedure` de la plantilla madre) y la carpeta `procedures/` del workspace (`*_procedures_V_0-1-0_NN.md`).
 
 El procedimiento de master.html (anteriormente showroom) es reconocible: si el usuario solicita un "master.html", "master", "showroom", "galería" o "framework visual" de un modelo, se ofrece generarlo (sin modificar cómo se genera ni alterar el comportamiento del generador actual).
 

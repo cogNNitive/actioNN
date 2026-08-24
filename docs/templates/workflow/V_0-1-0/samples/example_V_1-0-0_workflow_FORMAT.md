@@ -1,5 +1,5 @@
 ---
-specification_version: "V_0-1-0"
+spec_version: "V_0-1-0"
 title: "Video a Comercial"
 model_version: "V_1-0-0"
 documentation_location: "docs/templates/workflow/V_0-1-0/"

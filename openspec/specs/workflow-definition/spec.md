@@ -85,7 +85,7 @@ Every workflow instance MUST include YAML frontmatter referencing the workflow t
 
 - GIVEN a workflow instance file
 - WHEN the frontmatter is parsed
-- THEN it MUST include `specification_version`, `title`, `model_version`, and a `template` block with `name: "workflow"`, `version: "V_0-1-0"`, and the full `concepts`, `markers`, `matrices` arrays
+- THEN it MUST include `spec_version`, `title`, `model_version`, and a `template` block with `name: "workflow"`, `version: "V_0-1-0"`, and the full `concepts`, `markers`, `matrices` arrays
 - AND `documentation_location` MUST point to `docs/templates/workflow/V_0-1-0/`
 
 ### Requirement: Workflow Stage Ordering

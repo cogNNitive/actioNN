@@ -1,5 +1,7 @@
 ﻿# Delta for Infrastructure
 
+> **Note (2026-08-24)**: the "nn-format Refactor" Requirement previously in this spec was removed — it described `skills/nn-format/SKILL.md`, a skill that has no directory under `skills/` in this repo. The remaining Requirements below were checked individually and correspond to real, existing mechanisms (`scripts/build-registry.js`, `.cogNNitive/`, `openspec/config.yaml`) or to `nn-skills-manager`, which was left untouched since it was out of scope for this pass (not `nn-workflow-orchestrator` or `nn-format`) even though it also appears to reference a skill directory that no longer exists under that name — flagged for separate follow-up, not modified here.
+
 ## ADDED Requirements
 
 ### Requirement: Registry Builder Script
@@ -44,26 +46,9 @@ The project MUST migrate its canonical state directory from `.atl/` to `.cogNNit
 - WHEN checking the repo root
 - THEN `.atl/` MUST NOT exist in the filesystem or in git tracking
 
-### Requirement: nn-format Refactor
+### Requirement: nn-skills-lifecycle Refactor
 
-The `nn-format` skill MUST remove the "Source Ingestion Pipeline" section (~55 lines, lines 187â€“241) and update its frontmatter `description` to remove coordination references to `traNNsform`.
-
-#### Scenario: Pipeline section removed
-
-- GIVEN `skills/nn-format/SKILL.md` has a `## Source Ingestion Pipeline` heading
-- WHEN the refactor is applied
-- THEN that heading and all content between it and the end of the file are removed
-- AND the skill no longer references traNNsform coordination in its operational instructions
-
-#### Scenario: Frontmatter cleansed
-
-- GIVEN the frontmatter description currently names `traNNsform` as a coordinated skill
-- WHEN the refactor is applied
-- THEN the description no longer mentions `traNNsform`
-
-### Requirement: nn-skills-manager Refactor
-
-The `nn-skills-manager` skill MUST remove the "Copy" install option from its interactive menu and all associated instructions.
+The `nn-skills-lifecycle` skill (formerly `nn-skills-manager`) MUST remove the "Copy" install option from its interactive menu and all associated instructions.
 
 #### Scenario: Copy option removed from menu
 
