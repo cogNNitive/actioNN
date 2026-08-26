@@ -1,8 +1,14 @@
-﻿# Delta for Infrastructure
+﻿# Infrastructure Specification
+
+## Purpose
+
+Repository infrastructure conventions: the skill registry builder script, the canonical
+`.cogNNitive/` state directory, the `nn-skills-lifecycle` install menu, and the
+documentation/config references that point at them.
 
 > **Note (2026-08-24)**: the "nn-format Refactor" Requirement previously in this spec was removed — it described `skills/nn-format/SKILL.md`, a skill that has no directory under `skills/` in this repo. The remaining Requirements below were checked individually and correspond to real, existing mechanisms (`scripts/build-registry.js`, `.cogNNitive/`, `openspec/config.yaml`) or to `nn-skills-manager`, which was left untouched since it was out of scope for this pass (not `nn-workflow-orchestrator` or `nn-format`) even though it also appears to reference a skill directory that no longer exists under that name — flagged for separate follow-up, not modified here.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Registry Builder Script
 
