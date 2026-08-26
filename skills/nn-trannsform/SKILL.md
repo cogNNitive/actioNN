@@ -310,8 +310,6 @@ node scripts/batch-mapper.js --model <model-file-path> --src <project-dir>
 - Displays a table of candidates with a suggested concept (best-effort name match) and a suggested element name, then prompts for a selection (ranges like `1-3, 5` or `all`) and confirmation.
 - Appends each selected entity as a new `## NN <Concept>: <Element>` element under the matching concept section in the model file, tagged with `sources::` pointing back to its origin in `sources/nn/`.
 
-<!-- TODO: verify against llm-wiki-compiler.js / batch-mapper.js — as of 2026-08-24 both scripts still hardcode sources/nn/ internally (walkNNFiles/compileWiki read+write sources/nn/entities.md, batch-mapper reads sources/nn/entities.md) and were not updated when the workspace convention moved to sources/nn/. This section documents the intended sources/nn/ workspace convention; until the scripts are patched, running them against a project that only has sources/nn/ (no sources/nn/) will find no entities. Anchor format used by the script today is heading-slug (`#<heading-slug>`), not a line-range — left as-is above since no line-range anchor was actually shown by the script. -->
-
 ---
 
 ## Core Rules
