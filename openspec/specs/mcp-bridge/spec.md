@@ -36,20 +36,20 @@ The currently installed `innfo-mcp` version MUST be recorded at `.cogNNitive/mcp
 
 ### Requirement: Version Resolution via Manifest
 
-The updater MUST NOT download an unpinned `main`-branch bundle. It MUST first fetch `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/docs/cdn/manifest.json`, read its `latest` field (a string already carrying the `v`-prefixed version, e.g. `"v0.2.1"`), and use that exact string — unmodified — as the version segment when constructing the bundle download URL.
+The updater MUST NOT download an unpinned `main`-branch bundle. It MUST first fetch `https://innfo.cognnitive.com/cdn/manifest.json` — the same production CDN manifest consumed by `iNNfo/scripts/innfo-mcp.sh` and `innfo-mcp.ps1` — read its `latest` field (a string already carrying the `v`-prefixed version, e.g. `"v0.2.1"`), and use that exact string — unmodified — as the version segment when constructing the bundle download URL. The updater MUST NOT resolve the manifest from any other host (e.g. `raw.githubusercontent.com`): a GitHub-raw mirror of `docs/cdn/` can lag or diverge from the production CDN and would silently break the parity this requirement guarantees.
 
 #### Scenario: Bundle URL built from the resolved version
 
 - GIVEN the manifest reports `"latest": "v0.2.1"`
 - WHEN the updater builds the download URL
-- THEN it MUST request `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/docs/cdn/innfo-mcp-v0.2.1.bundle.js`
+- THEN it MUST request `https://innfo.cognnitive.com/cdn/innfo-mcp-v0.2.1.bundle.js`
 
 #### Scenario: Update skipped when local version matches manifest
 
 - GIVEN the local `.cogNNitive/mcp-version.json` records `version: "v0.2.1"`
 - AND the manifest reports `"latest": "v0.2.1"`
 - WHEN the updater compares them
-- THEN it MUST treat the installation as up to date and skip the download, matching the same string-equality comparison used by `iNNfo/scripts/innfo-mcp.sh` and `innfo-mcp.ps1`
+- THEN it MUST treat the installation as up to date and skip the download, using the same string-equality comparison (after stripping an optional leading `v` from each side) as `iNNfo/scripts/innfo-mcp.sh` and `innfo-mcp.ps1`
 
 ### Requirement: Offline / Network Failure Fallback
 

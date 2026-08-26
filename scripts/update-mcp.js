@@ -5,13 +5,12 @@
  *
  * Zero-dependency updater for the innfo-mcp server.
  *
- * Resolves the latest published version from iNNfo's versioned CDN manifest
- * (https://raw.githubusercontent.com/cogNNitive/iNNfo/main/docs/cdn/manifest.json,
- * same manifest consumed by iNNfo/scripts/innfo-mcp.sh and innfo-mcp.ps1), compares
- * it against the version recorded in .cogNNitive/mcp-version.json, and downloads
- * the matching versioned bundle from iNNfo's CDN channel into
- * .cogNNitive/mcp-bundle.js when they differ. It never pulls an unpinned `main`
- * bundle.
+ * Resolves the latest published version from iNNfo's production CDN manifest
+ * (https://innfo.cognnitive.com/cdn/manifest.json — the same manifest
+ * consumed by iNNfo/scripts/innfo-mcp.sh and innfo-mcp.ps1), compares it
+ * against the version recorded in .cogNNitive/mcp-version.json, and downloads
+ * the matching versioned bundle from that same CDN into .cogNNitive/mcp-bundle.js
+ * when they differ. It never pulls an unpinned `main` bundle.
  *
  * State lives under .cogNNitive/ — actioNN's real state directory — not .innv0/
  * or scripts/bin/, which were never created by any part of this pipeline.
@@ -26,8 +25,8 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 
-const MANIFEST_URL = 'https://raw.githubusercontent.com/cogNNitive/iNNfo/main/docs/cdn/manifest.json';
-const BUNDLE_URL_TEMPLATE = 'https://raw.githubusercontent.com/cogNNitive/iNNfo/main/docs/cdn/innfo-mcp-{version}.bundle.js';
+const MANIFEST_URL = 'https://innfo.cognnitive.com/cdn/manifest.json';
+const BUNDLE_URL_TEMPLATE = 'https://innfo.cognnitive.com/cdn/innfo-mcp-{version}.bundle.js';
 
 const ROOT_DIR = path.resolve(__dirname, '..');
 const STATE_DIR = path.join(ROOT_DIR, '.cogNNitive');
