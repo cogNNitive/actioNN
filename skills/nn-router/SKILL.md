@@ -21,7 +21,7 @@ Single entry point for system governance, setup, readiness checks, and routing i
 Before launching any specialized workflow, `nn-router` verifies the environment:
 1. **Node.js**: Checks `node --version` (>= 18 required).
 2. **MCP Server**: Verifies `innfo-mcp` responsiveness via `innfo-mcp_list_models` (or resolves bundle at `.cogNNitive/mcp-bundle.js`).
-3. **Workspace Layout**: Ensures workspace contains standard folders (`raw/`, `models/`, `procedures/`, `artifacts/`, `index.md`).
+3. **Workspace Layout**: Ensures workspace contains standard folders (`sources/`, `models/`, `procedures/`, `artifacts/`, `index.md`). There is no `sources/raw/` — see `nn-preflight` and `nn-trannsform`.
 
 ---
 
@@ -46,17 +46,19 @@ Every agent interaction across the cogNNitive ecosystem MUST follow these strict
 
 ---
 
-## 3. Canonical Skill Catalog (5 Core Skills)
+## 3. Canonical Skill Catalog (7 Core Skills)
 
-The cogNNitive ecosystem is streamlined into 5 specialized skills:
+The cogNNitive ecosystem is streamlined into 7 specialized skills:
 
 | Skill | Role & Scope | Invocation |
 |:---|:---|:---|
 | **`nn-router`** | System governance, setup, preflight readiness gate & routing | User / `/nn-router` |
+| **`nn-preflight`** | Environment readiness gate (Tier 1/2 checks) — loaded by `nn-router` and `nn-trannsform` before they proceed | Model (Auto) |
 | **`nn-trannsform`** | Document ingestion (PDF/DOCX/XLSX), template transformation & procedures orchestration (`procedures_V_0-1-0_NN.md`) | User / Model |
 | **`nn-innfo`** | iNNfo model authoring, editing, schema validation & step-by-step Model Creation Wizard (Meta-template V_0-1-0) | User / Model |
 | **`nn-site-generator`** | Website generation & hydration | User / Model |
 | **`nn-design-presets`** | Visual design system tokens (Morado Nazareno, 8px grid) — activated for visual artifacts | Model (Auto/User) |
+| **`nn-skills-lifecycle`** | Install/update/audit skills from the remote manifest (Steward branch) | User / Model |
 
 ---
 

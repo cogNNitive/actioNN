@@ -1,10 +1,10 @@
 ---
 name: nn-trannsform
 description: "Bootstrap projects, scan raw documents, normalize them to Markdown with mandatory provenance frontmatter, apply V_0-1-0 template-based transformations, and execute multi-step transformation procedures compliant with procedures_V_0-1-0_NN.md. Includes document ingestion, format conversion (txt, md, csv, json, docx, pdf, xlsx), procedure orchestration, and export generation. Triggers: trannsform, transform, workflow, pipeline, procedure, normalize, scan documents, document ingestion, document transformation, document processing, markdown conversion, project bootstrap"
+version: "2.0"
 empty_sections_mode: "ask-per-section"
 license: MIT
 metadata:
-  version: "2.0"
   source_type: "integrated"
   source: "https://github.com/cogNNitive/actioNN/tree/main/skills/nn-trannsform"
   installed_at: "2026-08-02"
