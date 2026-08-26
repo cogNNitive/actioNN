@@ -129,7 +129,7 @@ function run() {
     assertEqual(typeof scanner.generateSourceRegistry, 'undefined', 'generateSourceRegistry no longer exists');
     assertEqual(typeof scanner.flattenOriginalToRaw, 'undefined', 'flattenOriginalToRaw no longer exists');
 
-    // Test 10: scanAndProcess mirrors sources/original/ subfolders into sources/markdown/ (no flattening)
+    // Test 10: scanAndProcess mirrors sources/original/ subfolders into sources/nn/ (no flattening)
     const projDir = path.join(TEST_TEMP, 'mirror-project');
     const originalDir = path.join(projDir, 'sources', 'original');
     fs.mkdirSync(path.join(originalDir, 'clientA', 'nested'), { recursive: true });
@@ -140,18 +140,18 @@ function run() {
     fs.writeFileSync(path.join(originalDir, 'clientB', 'notes.txt'), 'Client B notes.', 'utf8');
 
     return scanner.scanAndProcess(projDir, { autoAcceptPrompt: true }).then((result) => {
-      const markdownDir = path.join(projDir, 'sources', 'markdown');
+      const nnDir = path.join(projDir, 'sources', 'nn');
 
       assertEqual(result.totalDiscovered, 4, 'scanAndProcess discovers all files across subfolders');
       assertEqual(result.processedCount, 4, 'scanAndProcess processes all plain-text files');
 
-      assertTrue(fs.existsSync(path.join(markdownDir, 'root.txt'.replace('.txt', '.md'))), 'root-level file normalized at sources/markdown/root.md');
-      assertTrue(fs.existsSync(path.join(markdownDir, 'clientA', 'report.md')), 'clientA/report.md mirrors sources/original/clientA/');
-      assertTrue(fs.existsSync(path.join(markdownDir, 'clientA', 'nested', 'deep.md')), 'clientA/nested/deep.md mirrors nested subfolders');
-      assertTrue(fs.existsSync(path.join(markdownDir, 'clientB', 'notes.md')), 'clientB/notes.md mirrors sources/original/clientB/');
-      assertTrue(!fs.existsSync(path.join(markdownDir, 'clientA__report.md')), 'output is not flattened with __ separators');
+      assertTrue(fs.existsSync(path.join(nnDir, 'root.txt'.replace('.txt', '.md'))), 'root-level file normalized at sources/nn/root.md');
+      assertTrue(fs.existsSync(path.join(nnDir, 'clientA', 'report.md')), 'clientA/report.md mirrors sources/original/clientA/');
+      assertTrue(fs.existsSync(path.join(nnDir, 'clientA', 'nested', 'deep.md')), 'clientA/nested/deep.md mirrors nested subfolders');
+      assertTrue(fs.existsSync(path.join(nnDir, 'clientB', 'notes.md')), 'clientB/notes.md mirrors sources/original/clientB/');
+      assertTrue(!fs.existsSync(path.join(nnDir, 'clientA__report.md')), 'output is not flattened with __ separators');
 
-      const nestedContent = fs.readFileSync(path.join(markdownDir, 'clientA', 'nested', 'deep.md'), 'utf8');
+      const nestedContent = fs.readFileSync(path.join(nnDir, 'clientA', 'nested', 'deep.md'), 'utf8');
       assertTrue(
         nestedContent.includes('source_file: "sources/original/clientA/nested/deep.txt"'),
         'nested file frontmatter records the full sources/original/ relative path'

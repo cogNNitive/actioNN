@@ -6,7 +6,7 @@
  * Procedures produced) as first-class iNNfo elements with explicit lineage.
  *
  * The model conforms to the `cogNNitive` level-2 template:
- *   https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level2/cogNNitive/cogNNitive_NN.md
+ *   https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/templates/cogNNitive/cogNNitive_V_0-1-0_NN.md
  *
  * Zero runtime dependencies (Node builtins only), mirroring scanner.js.
  */
@@ -15,9 +15,9 @@ const fs = require('fs');
 const path = require('path');
 
 const TEMPLATE_URL =
-  'https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level2/cogNNitive/cogNNitive_NN.md';
+  'https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/templates/cogNNitive/cogNNitive_V_0-1-0_NN.md';
 const INNFO_URL =
-  'https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level1/iNNfo_NN.md';
+  'https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/iNNfo_V_0-1-0_NN.md';
 const TEMPLATE_NAME = 'cogNNitive_V_0-1-0';
 
 const DOC_NOTICE =
@@ -57,7 +57,7 @@ function parseSourceFrontmatter(content) {
 }
 
 /**
- * Recursively collect *.md files under sources/markdown/, preserving their
+ * Recursively collect *.md files under sources/nn/, preserving their
  * path relative to that directory (subfolders mirror sources/original/).
  * The top-level ingestion manifest (index.md) is excluded.
  */
@@ -104,7 +104,7 @@ function collectSources(mdDir) {
       source_format: ext,
       normalized_at: fmData.normalized_at,
       normalized_by: fmData.normalized_by,
-      normalized_content: `sources/markdown/${relFilePosix}`,
+      normalized_content: `sources/nn/${relFilePosix}`,
       mdFile: relFile,
     });
   }
@@ -112,7 +112,7 @@ function collectSources(mdDir) {
 }
 
 function materializeAssets(projectDir, sources) {
-  const mdDir = path.join(projectDir, 'sources', 'markdown');
+  const mdDir = path.join(projectDir, 'sources', 'nn');
   const seenHashes = new Set();
   for (const src of sources) {
     if (src.raw_hash) {
@@ -175,7 +175,7 @@ function splitTopLevelSections(body) {
 function buildFreshModel(title, sources) {
   const frontmatter =
     '---\n' +
-    'specification_version: "V_0-3-0"\n' +
+    'specification_version: "V_0-1-0"\n' +
     `specification_url: "${INNFO_URL}"\n` +
     'level: 3\n' +
     'parent_spec:\n' +
@@ -518,7 +518,7 @@ function writeWorkspaceIndex(projectDir) {
  */
 function buildProvenanceModel(projectDir, options = {}) {
   const projectName = options.projectName || path.basename(projectDir);
-  const mdDir = path.join(projectDir, 'sources', 'markdown');
+  const mdDir = path.join(projectDir, 'sources', 'nn');
   const sources = collectSources(mdDir);
 
   materializeAssets(projectDir, sources);

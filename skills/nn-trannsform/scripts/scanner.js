@@ -333,7 +333,7 @@ function processOkFile(ext, absPath, sourceFileField, destPath, displayOutPath, 
   const newHash = computeFileHash(absPath);
   const existingHash = readExistingSha256(destPath);
   if (existingHash && existingHash === newHash) {
-    return { format, status: '✅ Processed', action: `Already up to date at \`sources/markdown/${displayOutPath}\` (unchanged, sha256 match).`, outcome: 'processed' };
+    return { format, status: '✅ Processed', action: `Already up to date at \`sources/nn/${displayOutPath}\` (unchanged, sha256 match).`, outcome: 'processed' };
   }
 
   try {
@@ -352,7 +352,7 @@ function processOkFile(ext, absPath, sourceFileField, destPath, displayOutPath, 
 
     fs.mkdirSync(path.dirname(destPath), { recursive: true });
     fs.writeFileSync(destPath, generateSourceFrontmatter(absPath, sourceFileField, finalExtra) + body, 'utf8');
-    return { format, status: '✅ Processed', action: `Converted to markdown at \`sources/markdown/${displayOutPath}\``, outcome: 'processed' };
+    return { format, status: '✅ Processed', action: `Converted to markdown at \`sources/nn/${displayOutPath}\``, outcome: 'processed' };
   } catch (err) {
     return { format, status: '❌ Error', action: `Failed to process: ${err.message}`, outcome: 'skipped' };
   }
@@ -380,7 +380,7 @@ async function processPromptFile(ext, absPath, sourceFileField, destPath, displa
   const newHash = computeFileHash(absPath);
   const existingHash = readExistingSha256(destPath);
   if (existingHash && existingHash === newHash) {
-    return { format, status: '✅ Processed', action: `Already up to date at \`sources/markdown/${displayOutPath}\` (unchanged, sha256 match).`, outcome: 'processed' };
+    return { format, status: '✅ Processed', action: `Already up to date at \`sources/nn/${displayOutPath}\` (unchanged, sha256 match).`, outcome: 'processed' };
   }
 
   let approve = options.autoAcceptPrompt;
@@ -416,9 +416,9 @@ async function processPromptFile(ext, absPath, sourceFileField, destPath, displa
     fs.mkdirSync(path.dirname(destPath), { recursive: true });
     fs.writeFileSync(destPath, generateSourceFrontmatter(absPath, sourceFileField, finalExtra) + result.body, 'utf8');
     if (result.partial) {
-      return { format, status: '✅ Processed (Partial)', action: `Created placeholder markdown at \`sources/markdown/${displayOutPath}\`. PDF parsing failed: ${result.note}`, outcome: 'processed' };
+      return { format, status: '✅ Processed (Partial)', action: `Created placeholder markdown at \`sources/nn/${displayOutPath}\`. PDF parsing failed: ${result.note}`, outcome: 'processed' };
     }
-    return { format, status: '✅ Processed', action: `Converted ${format} to markdown at \`sources/markdown/${displayOutPath}\``, outcome: 'processed' };
+    return { format, status: '✅ Processed', action: `Converted ${format} to markdown at \`sources/nn/${displayOutPath}\``, outcome: 'processed' };
   } catch (err) {
     return { format, status: '❌ Error', action: `Failed to convert: ${err.message}`, outcome: 'skipped' };
   }
@@ -426,7 +426,7 @@ async function processPromptFile(ext, absPath, sourceFileField, destPath, displa
 
 /**
  * Scan sources/original/ (recursively, subfolders preserved) and normalize
- * straight into sources/markdown/, mirroring the same relative paths.
+ * straight into sources/nn/, mirroring the same relative paths.
  *
  * options.webImportMeta: optional map of { "<relPath-posix-under-original>": { source_url, downloaded_at, title, description, author } }
  * for files that were downloaded via webImport.downloadToOriginal — merged into
@@ -434,11 +434,11 @@ async function processPromptFile(ext, absPath, sourceFileField, destPath, displa
  */
 async function scanAndProcess(projectDir, options = {}) {
   const originalDir = path.join(projectDir, 'sources', 'original');
-  const markdownDir = path.join(projectDir, 'sources', 'markdown');
-  const indexFile = path.join(markdownDir, 'index.md');
+  const nnDir = path.join(projectDir, 'sources', 'nn');
+  const indexFile = path.join(nnDir, 'index.md');
 
   fs.mkdirSync(originalDir, { recursive: true });
-  fs.mkdirSync(markdownDir, { recursive: true });
+  fs.mkdirSync(nnDir, { recursive: true });
 
   const logs = [];
   const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
@@ -461,7 +461,7 @@ async function scanAndProcess(projectDir, options = {}) {
     const baseName = path.basename(relPath, ext);
     const outRelDir = relDir === '.' ? '' : relDir;
     const displayOutPath = (outRelDir ? path.join(outRelDir, `${baseName}.md`) : `${baseName}.md`).replace(/\\/g, '/');
-    const destPath = path.join(markdownDir, displayOutPath);
+    const destPath = path.join(nnDir, displayOutPath);
 
     const relPathPosix = relPath.replace(/\\/g, '/');
     const sourceFileField = `sources/original/${relPathPosix}`;
@@ -495,9 +495,9 @@ async function scanAndProcess(projectDir, options = {}) {
     });
   }
 
-  logs.push(`*   **${timestamp}:** Converted ${processedCount} file(s) to Markdown in \`sources/markdown/\`, mirroring \`sources/original/\` subfolders.`);
+  logs.push(`*   **${timestamp}:** Converted ${processedCount} file(s) to Markdown in \`sources/nn/\`, mirroring \`sources/original/\` subfolders.`);
 
-  // Build sources/markdown/index.md manifest
+  // Build sources/nn/index.md manifest
   let indexContent = `# traNNsform Ingestion Manifest & Processing Log\n\n`;
   indexContent += `## Ingestion Status\n`;
   indexContent += `*   **Total Files Discovered:** ${totalDiscovered}\n`;

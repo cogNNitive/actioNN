@@ -53,8 +53,8 @@ The cogNNitive ecosystem is streamlined into 5 specialized skills:
 | Skill | Role & Scope | Invocation |
 |:---|:---|:---|
 | **`nn-router`** | System governance, setup, preflight readiness gate & routing | User / `/nn-router` |
-| **`nn-trannsform`** | Document ingestion (PDF/DOCX/XLSX), template transformation & procedures orchestration (`procedures_V_0-3-0_NN.md`) | User / Model |
-| **`nn-innfo`** | iNNfo model authoring, editing, schema validation & step-by-step Model Creation Wizard (Meta-template V_0-3-0) | User / Model |
+| **`nn-trannsform`** | Document ingestion (PDF/DOCX/XLSX), template transformation & procedures orchestration (`procedures_V_0-1-0_NN.md`) | User / Model |
+| **`nn-innfo`** | iNNfo model authoring, editing, schema validation & step-by-step Model Creation Wizard (Meta-template V_0-1-0) | User / Model |
 | **`nn-site-generator`** | Website generation & hydration | User / Model |
 | **`nn-design-presets`** | Visual design system tokens (Morado Nazareno, 8px grid) — activated for visual artifacts | Model (Auto/User) |
 

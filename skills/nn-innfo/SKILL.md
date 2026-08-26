@@ -1,6 +1,6 @@
 ---
 name: nn-innfo
-version: "V_0-3-0"
+version: "V_0-1-0"
 last_updated: 2026-08-24
 metadata:
   source_type: "original"
@@ -13,7 +13,7 @@ description: |
   - Creating or editing any file matching *_NN.md
   - Authoring or modifying business models, procedure models, or any model following an iNNfo template
   - Creating, editing, or modifying templates or specializations under docs/templates/
-  - Discussing the iNNfo V_0-3-0 specification, meta-templates, primitives, matrices, or naming conventions
+  - Discussing the iNNfo V_0-1-0 specification, meta-templates, primitives, matrices, or naming conventions
   - Any conversation about how iNNfo works, how to use it, or how to structure iNNfo files
   - Executing procedures declared in a model (ejecutar procedimientos del modelo)
 ---
@@ -27,12 +27,12 @@ Activates when the user's message is the standalone token `NN` (its own word or 
 - Create or edit any file matching `*_NN.md`.
 - Author or modify business models, procedure models, or any model following an iNNfo template.
 - Create, edit, or modify templates or specializations under `docs/templates/`.
-- Discuss the iNNfo V_0-3-0 specification, meta-templates, primitives, matrices, or naming conventions.
+- Discuss the iNNfo V_0-1-0 specification, meta-templates, primitives, matrices, or naming conventions.
 - Execute procedures declared in a model (ejecutar procedimientos del modelo).
 
 > **ACTIVATION = GREETING REQUIRED**: When this skill is loaded, the agent MUST greet the user. See Greeting Protocol below.
 
-This skill guides LLMs and agents in authoring, creating from scratch (wizard), editing, auditing, and validating **iNNfo-compliant files** (V_0-3-0 Meta-template specification with unified `NN` syntax: `# NN`, `## NN`, and `key:: value`).
+This skill guides LLMs and agents in authoring, creating from scratch (wizard), editing, auditing, and validating **iNNfo-compliant files** (V_0-1-0 Meta-template specification with unified `NN` syntax: `# NN`, `## NN`, and `key:: value`).
 
 **Resolution, validation, and mutation are delegated to the `innfo-mcp` server** — a deterministic engine wrapping `@cognnitive/innfo-core`. The agent does NOT hand-resolve spec chains, hand-validate models, or guess syntax when the MCP is available. See §1 (MCP Operating Model) and §7 (Delegation Contract).
 
@@ -72,7 +72,7 @@ If the user wants to create a model but is unsure which template fits best:
 
 1. Ask 2-3 brief diagnostic questions:
    - ¿El objetivo es estructurar un modelo de negocio/propuesta de valor, un proceso operativo paso a paso, o una estructura organizacional/equipo?
-   - ¿Contás con documentos fuente en `sources/markdown/` para extraer información o partimos desde cero?
+   - ¿Contás con documentos fuente en `sources/nn/` para extraer información o partimos desde cero?
 2. Recommend the optimal template with a 1-sentence technical justification and mark option `[a]` with `(Recomendado)`.
 
 ---
@@ -170,7 +170,7 @@ Con la estructura ya aprobada, ofrecer la modalidad de redacción:
 - **[b] Generación Completa:** El agente redacta el borrador completo en un solo archivo para posterior auditoría, respetando el plan ya aprobado en B1.
 
 **B3. Model Naming & Scaffolding**:
-Prompt for `{ModelName}` and create `{ModelName}_V_0-1-0_{Template}_NN.md` with workspace structure (`models/`, `sources/markdown/`, `procedures/`, `artifacts/`, `index.md`).
+Prompt for `{ModelName}` and create `{ModelName}_V_0-1-0_{Template}_NN.md` with workspace structure (`models/`, `sources/nn/`, `procedures/`, `artifacts/`, `index.md`).
 
 **B4. Validation & Visual Checklist**:
 Validate via `innfo-mcp_validate_model` and output the Visual Expectation Checklist (§12).
@@ -194,7 +194,7 @@ as its very first output — before any questions, analysis, or tool calls. Sess
 > [!NOTE]
 > **El servidor MCP (`innfo-mcp`) y las especificaciones canónicas son la ÚNICA fuente de verdad (SSOT) para la sintaxis y tipos de datos.** El agente NO duplica reglas gramaticales de memoria; las consulta dinámicamente vía MCP (`innfo-mcp_get_spec` / `innfo-mcp_get_template`).
 
-### Resumen de Niveles iNNfo (V_0-3-0)
+### Resumen de Niveles iNNfo (V_0-1-0)
 
 | Nivel | Rol | Sintaxis y Estructura |
 |---|---|---|
@@ -227,10 +227,10 @@ El servidor `innfo-mcp` expone 8 herramientas deterministas basadas en `@cognnit
 ## 2. Indicación Canónica de Especificaciones
 
 URLs estables `latest` de referencia:
-- **iNNfo (Nivel 1):** `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level1/iNNfo_NN.md`
-- **Business (Nivel 2):** `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level2/business/business_NN.md`
-- **Procedures (Nivel 2):** `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level2/procedures/procedures_NN.md`
-- **Organization (Nivel 2):** `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level2/organization/organization_NN.md`
+- **iNNfo (Nivel 1):** `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/iNNfo_V_0-1-0_NN.md`
+- **Business (Nivel 2):** `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/templates/business/business_V_0-1-0_NN.md`
+- **Procedures (Nivel 2):** `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/templates/procedures/procedures_V_0-1-0_NN.md`
+- **Organization (Nivel 2):** `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/templates/organization/organization_V_0-1-0_NN.md`
 
 ### Regla de `parent_spec.url` en Modelos Nivel 3
 
@@ -245,31 +245,31 @@ URLs estables `latest` de referencia:
 ## 4. Protocolo de Proveniencia (`sources::`)
 
 1. **Carácter Opcional:** `sources::` es una propiedad de trazabilidad **OPCIONAL**. No invalida sintácticamente un modelo de Nivel 3 si no está presente.
-2. **Fuentes de Origen:** Las fuentes ingeridas se almacenan en la carpeta `sources/markdown/` (mismas subcarpetas que `sources/original/`, sin aplanar). No existe carpeta `raw/` ni sistema de IDs `src-xxx`.
+2. **Fuentes de Origen:** Las fuentes ingeridas se almacenan en la carpeta `sources/nn/` (mismas subcarpetas que `sources/original/`, sin aplanar). No existe carpeta `raw/` ni sistema de IDs `src-xxx`.
 3. **Gramática exacta:**
    ```
    sources:: <ref>
    sources:: [<ref>, <ref>, ...]
 
-   <ref>  ::= sources/markdown/<ruta-relativa>.md( #<ancla> )?
+   <ref>  ::= sources/nn/<ruta-relativa>.md( #<ancla> )?
    <ancla> ::= L<n> | L<n>-L<m>
    ```
-   - `<ref>` es SIEMPRE una ruta que empieza con `sources/markdown/` y termina en `.md` — es la misma ruta que el archivo normalizado, nunca una ruta a `sources/original/` ni al documento fuente sin normalizar.
+   - `<ref>` es SIEMPRE una ruta que empieza con `sources/nn/` y termina en `.md` — es la misma ruta que el archivo normalizado, nunca una ruta a `sources/original/` ni al documento fuente sin normalizar.
    - El ancla de línea es opcional. `L<n>` es una línea puntual, `L<n>-L<m>` un rango inclusive (ambos extremos incluidos), 1-indexado sobre el archivo `.md` citado — la misma numeración que ve un humano abriendo el archivo en un editor.
    - Sin ancla, la cita apunta al archivo completo. **Preferí citar el archivo completo antes que inventar un rango de líneas que no verificaste** — nunca adivines números de línea.
 4. **Un solo valor va sin corchetes.** Los corchetes `[...]` se usan ÚNICAMENTE cuando hay 2 o más referencias — no envuelvas un valor único en `[...]`, es ruido visual innecesario:
    ```markdown
    ## NN Stakeholders: Cliente Enterprise
-   sources:: [sources/markdown/entrevista_cliente.md#L15-L30, sources/markdown/notas.md#L4]
+   sources:: [sources/nn/entrevista_cliente.md#L15-L30, sources/nn/notas.md#L4]
    relationship_model:: B2B Long-term
 
    ## NN Stakeholders: Cliente Piloto
-   sources:: sources/markdown/notas.md#L20-L25
+   sources:: sources/nn/notas.md#L20-L25
    relationship_model:: Trial
    ```
-5. **Granularidad: a nivel de elemento, no de afirmación individual.** `sources::` cubre el conjunto de fuentes que respaldan TODO el elemento (todos sus campos en conjunto) — no hay mecanismo de cita por campo o por frase dentro de un modelo de dominio. Si distintos campos de un mismo elemento vienen de fuentes distintas, listá la unión de todas en el único `sources::` del elemento. La cita a nivel de afirmación individual (`<!-- cite: sources/markdown/<path>.md#L<n>-L<m>, section <nombre> -->`) es un mecanismo aparte, usado solo dentro de artefactos/drafts generados a partir del modelo (ver `nn-trannsform/SKILL.md` §4) — nunca dentro de un `*_NN.md`.
+5. **Granularidad: a nivel de elemento, no de afirmación individual.** `sources::` cubre el conjunto de fuentes que respaldan TODO el elemento (todos sus campos en conjunto) — no hay mecanismo de cita por campo o por frase dentro de un modelo de dominio. Si distintos campos de un mismo elemento vienen de fuentes distintas, listá la unión de todas en el único `sources::` del elemento. La cita a nivel de afirmación individual (`<!-- cite: sources/nn/<path>.md#L<n>-L<m>, section <nombre> -->`) es un mecanismo aparte, usado solo dentro de artefactos/drafts generados a partir del modelo (ver `nn-trannsform/SKILL.md` §4) — nunca dentro de un `*_NN.md`.
 6. **Sin duplicados ni referencias vacías.** No repitas la misma `<ref>` dos veces en la misma lista. Si no hay ninguna fuente real que citar, omití el campo entero — no escribas `sources:: []` ni un valor placeholder.
-7. **Instrucción Conversacional:** Si el proyecto cuenta con archivos en `sources/markdown/`, el agente debe sugerir incluir `sources::`. Si es un modelo greenfield/creativo desde cero, el agente NO solicita ni exige proveniencia. En ambos casos aplica la regla general del skill: nunca inventés ni un `<ref>` ni un contenido que no esté verificablemente presente en el archivo citado.
+7. **Instrucción Conversacional:** Si el proyecto cuenta con archivos en `sources/nn/`, el agente debe sugerir incluir `sources::`. Si es un modelo greenfield/creativo desde cero, el agente NO solicita ni exige proveniencia. En ambos casos aplica la regla general del skill: nunca inventés ni un `<ref>` ni un contenido que no esté verificablemente presente en el archivo citado.
 
 ---
 
@@ -501,9 +501,9 @@ El procedimiento de master.html (anteriormente showroom) es reconocible: si el u
 
 ## Core Rules
 
-1. **Meta-plantilla Estricta V_0-3-0:** Las plantillas Nivel 2 definen primitivas en el cuerpo (`# NN Concept Definition`). NUNCA colocar `concepts: [...]` o `fields: [...]` en el YAML frontmatter de Nivel 2.
+1. **Meta-plantilla Estricta V_0-1-0:** Las plantillas Nivel 2 definen primitivas en el cuerpo (`# NN Concept Definition`). NUNCA colocar `concepts: [...]` o `fields: [...]` en el YAML frontmatter de Nivel 2.
 2. **Sintaxis Unificada NN:** Usar `# NN <Concept>`, `## NN <Concept>: <Element>`, `key:: value`. No usar viñetas obsoletas `_NN` ni bloques de código ````yaml`.
-3. **Proveniencia Opcional y Actualizada:** `sources::` es opcional y apunta a archivos en `sources/markdown/` (admite lista `[a, b]` para múltiples valores; sin IDs `src-xxx` ni carpeta `raw/`).
+3. **Proveniencia Opcional y Actualizada:** `sources::` es opcional y apunta a archivos en `sources/nn/` (admite lista `[a, b]` para múltiples valores; sin IDs `src-xxx` ni carpeta `raw/`).
 4. **Cero Mutación Unilateral:** Nunca renombrar ni mover archivos sin confirmación explícita.
 5. **Opción Recomendada Primero:** Prefijar la opción `[a]` con `(Recomendado)`.
 6. **Notación de Selección Múltiple:** Incluir *"Podés seleccionar una opción o una combinación"* cuando aplique.

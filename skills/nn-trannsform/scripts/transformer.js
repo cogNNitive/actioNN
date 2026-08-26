@@ -14,7 +14,7 @@ function listTemplates(projectDir) {
 }
 
 /**
- * Recursively collect *.md files under sources/markdown/, preserving the path
+ * Recursively collect *.md files under sources/nn/, preserving the path
  * relative to that directory (it mirrors sources/original/'s subfolders).
  * The top-level ingestion manifest (index.md) is excluded.
  */
@@ -41,11 +41,11 @@ function collectMarkdownFiles(mdDir) {
  * Fallback heuristic transformer — used only when the agent cannot perform
  * the transformation directly (e.g. context too large).
  *
- * Reads individual markdown files from sources/markdown/ and applies template structure.
+ * Reads individual markdown files from sources/nn/ and applies template structure.
  */
 async function applyTransformation(projectDir, templateName, options = {}) {
   const transDir = path.join(projectDir, 'traNNsformations');
-  const mdDir = path.join(projectDir, 'sources', 'markdown');
+  const mdDir = path.join(projectDir, 'sources', 'nn');
 
   const cleanTemplateName = path.basename(templateName, '.md').replace(/\s+/g, '_');
   const outputDir = path.join(projectDir, 'artifacts');
@@ -60,13 +60,13 @@ async function applyTransformation(projectDir, templateName, options = {}) {
   }
 
   if (!fs.existsSync(mdDir)) {
-    throw new Error('Markdown directory sources/markdown/ not found. Please run scan first.');
+    throw new Error('Markdown directory sources/nn/ not found. Please run scan first.');
   }
 
   const mdFiles = collectMarkdownFiles(mdDir);
 
   if (mdFiles.length === 0) {
-    throw new Error('No normalized markdown files found in sources/markdown/. Please run scan first.');
+    throw new Error('No normalized markdown files found in sources/nn/. Please run scan first.');
   }
 
   let sourceContent = '';
