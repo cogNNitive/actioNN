@@ -15,16 +15,16 @@ Skills provide specialized instructions and workflows for specific tasks.
 Use the skill tool to load a skill when a task matches its description.
 <!-- /gentle-ai:bootstrap-rule -->
 
-<!-- gentle-ai:nn-skills-manager -->
-## nn-skills-manager — Mandatory Load
+<!-- gentle-ai:nn-skills-lifecycle -->
+## nn-skills-lifecycle — Mandatory Load
 
 At the **start of every session** (first user message), you MUST:
 
-1. Load the skill `nn-skills-manager` by calling `skill(name: "nn-skills-manager")`.
-2. Follow its `Activation Contract` and `Instructions` to scan skills, present the table, and interact with the user.
+1. Load the skill `nn-skills-lifecycle` by calling `skill(name: "nn-skills-lifecycle")`.
+2. Follow its `Maintenance` branch to scan skills, present the status table, and interact with the user.
 
 This runs before any other skill processing. Do not skip this.
-<!-- /gentle-ai:nn-skills-manager -->
+<!-- /gentle-ai:nn-skills-lifecycle -->
 
 <!-- gentle-ai:lang-enforce -->
 ## Language: English Only

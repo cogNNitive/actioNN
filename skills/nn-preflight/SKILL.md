@@ -62,7 +62,7 @@ Present exactly three sections, each a bullet list:
 
 ## Reference
 
-`reference/skill-locations.md` — canonical locations of installed skills, MCP bundles, and the exact PowerShell for Junction/Symlink detection and creation. `nn-skills-lifecycle` reads this file and MUST NOT hardcode paths.
+`reference/skill-locations.md` — canonical locations of installed skills and MCP bundles, plus a manual-only PowerShell reference for Junction/Symlink detection and creation (not used by any automated flow). `nn-skills-lifecycle`'s automated install/update/sync comes from the bootstrap manifest instead — see its own SKILL.md. Consuming skills MUST NOT hardcode paths.
 
 ---
 
