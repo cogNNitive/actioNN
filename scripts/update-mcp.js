@@ -86,6 +86,15 @@ function buildBundleUrl(version) {
   return BUNDLE_URL_TEMPLATE.replace('{version}', version);
 }
 
+/**
+ * Strips an optional leading "v" so "0.2.1" and "v0.2.1" compare equal.
+ * Comparison-only: storage and URL building always use the manifest's
+ * verbatim string, never this normalized form.
+ */
+function normalizeVersion(version) {
+  return version ? version.replace(/^v/, '') : version;
+}
+
 async function main() {
   console.log('[MCP Updater] Checking for updates...');
   if (DRY_RUN) {
@@ -129,7 +138,7 @@ async function main() {
     }
     console.log(`[MCP Updater] Remote (manifest) version: ${remoteVersion}`);
 
-    if (remoteVersion !== localVersion || !fs.existsSync(BUNDLE_FILE)) {
+    if (normalizeVersion(remoteVersion) !== normalizeVersion(localVersion) || !fs.existsSync(BUNDLE_FILE)) {
       console.log(`[MCP Updater] Update available! Downloading ${remoteVersion}...`);
       const bundleUrl = buildBundleUrl(remoteVersion);
       await downloadFile(bundleUrl, BUNDLE_FILE);
@@ -160,4 +169,4 @@ if (require.main === module) {
   main();
 }
 
-module.exports = { buildBundleUrl };
+module.exports = { buildBundleUrl, normalizeVersion };

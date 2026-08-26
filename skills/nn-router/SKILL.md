@@ -20,7 +20,7 @@ Single entry point for system governance, setup, readiness checks, and routing i
 
 Before launching any specialized workflow, `nn-router` verifies the environment:
 1. **Node.js**: Checks `node --version` (>= 18 required).
-2. **MCP Server**: Verifies `innfo-mcp` responsiveness via `innfo-mcp_list_models` (or resolves bundle at `~/.agents/mcp/innfo-mcp.bundle.js`).
+2. **MCP Server**: Verifies `innfo-mcp` responsiveness via `innfo-mcp_list_models` (or resolves bundle at `.cogNNitive/mcp-bundle.js`).
 3. **Workspace Layout**: Ensures workspace contains standard folders (`raw/`, `models/`, `procedures/`, `artifacts/`, `index.md`).
 
 ---

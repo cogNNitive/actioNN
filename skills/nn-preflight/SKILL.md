@@ -30,7 +30,7 @@ Environment readiness gate for cogNNitive workflows. Runs deterministic checks a
 ## Tier 1 Checks (always run)
 
 1. **Node.js**: run `node --version`; require >= 18. Report the detected version.
-2. **innfo-mcp availability**: call `innfo-mcp_list_models`; if the MCP tool is unavailable, fall back to checking that the bundle exists at `~/.agents/mcp/innfo-mcp.bundle.js`.
+2. **innfo-mcp availability**: call `innfo-mcp_list_models`; if the MCP tool is unavailable, fall back to checking that the bundle exists at `.cogNNitive/mcp-bundle.js`.
 3. **Workspace layout**: verify the expected directories exist — `sources/`, `models/`, `procedures/`, `artifacts/`, `index.md` (as appropriate for the workflow; `nn-trannsform` projects use `sources/original/` and `sources/nn/`).
 
 ## Tier 2 Checks (optional — only for iNNfo output workflows)

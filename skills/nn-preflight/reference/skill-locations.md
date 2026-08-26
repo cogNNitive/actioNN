@@ -11,7 +11,7 @@ this file and MUST NOT hardcode paths.
 | `~/.agents/skills/{name}/` | Installed skills (user-level, managed by `scripts/skills-manager.js`) |
 | `~/.config/opencode/skills/{name}/` | opencode user skills (global) |
 | `.opencode/skills/` | opencode project skills (repo-scoped) |
-| `~/.agents/mcp/{name}.bundle.js` | MCP server bundles (e.g. `innfo-mcp.bundle.js`) |
+| `.cogNNitive/mcp-bundle.js` (repo root) | Downloaded `innfo-mcp` bundle, written by `scripts/update-mcp.js` (see `openspec/specs/mcp-bridge`) |
 
 ## Detection — LinkType
 
