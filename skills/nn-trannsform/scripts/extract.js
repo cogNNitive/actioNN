@@ -33,11 +33,12 @@ const FORMAT_BY_EXT = {
   '.json': 'json',
   '.html': 'html',
   '.htm': 'html',
+  '.doc': 'doc',
 };
 
 const FORMAT_ALIASES = { xls: 'xlsx', htm: 'html', markdown: 'md' };
 
-const USAGE = `Usage: node scripts/extract.js <file> [--format pdf|docx|xlsx|txt|md|csv|json|html]
+const USAGE = `Usage: node scripts/extract.js <file> [--format pdf|docx|xlsx|doc|txt|md|csv|json|html]
 
 Extracts plain text from a single file without running a full ingestion scan.
 Format is detected from the file extension when --format is omitted.
@@ -87,6 +88,8 @@ async function main() {
 
   try {
     switch (format) {
+      case 'doc':
+        throw new Error(".doc no soportado — convertirlo a .docx o usar el .txt");
       case 'pdf': {
         const result = await scanner.convertPdf(filePath, baseName);
         if (result.partial) {

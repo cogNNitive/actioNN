@@ -2,7 +2,6 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { execSync } = require('child_process');
-const { sanitizeMarkdownBody, ensureHeading } = require('./markdown-utils');
 
 const TRANNNSFORM_VERSION = (() => {
   try {
@@ -14,26 +13,19 @@ const TRANNNSFORM_VERSION = (() => {
 
 // Supported extensions by category
 const EXT_OK = ['.txt', '.md', '.csv', '.json', '.html', '.htm'];
-const EXT_PROMPT = ['.docx', '.pdf', '.xlsx', '.xls'];
-const EXT_IMAGE = ['.png', '.jpg', '.jpeg', '.webp', '.gif'];
-const EXT_NO = ['.mp3', '.wav'];
+const EXT_PROMPT = ['.docx', '.pdf', '.xlsx', '.xls', '.doc'];
+const EXT_NO = ['.mp3', '.wav', '.png', '.jpg', '.jpeg', '.gif'];
 
 const EXT_LABELS = {
   '.txt': 'txt', '.md': 'md', '.csv': 'csv', '.json': 'json', '.html': 'html', '.htm': 'htm',
-  '.docx': 'docx', '.pdf': 'pdf', '.xlsx': 'xlsx', '.xls': 'xls',
-  '.png': 'png', '.jpg': 'jpg', '.jpeg': 'jpeg', '.webp': 'webp', '.gif': 'gif'
+  '.docx': 'docx', '.pdf': 'pdf', '.xlsx': 'xlsx', '.xls': 'xls', '.doc': 'doc'
 };
 
 const EXT_DEPS = {
   '.docx': { pkg: 'mammoth', label: 'mammoth' },
   '.pdf':  { pkg: 'pdf-parse', label: 'pdf-parse' },
   '.xlsx': { pkg: 'xlsx', label: 'xlsx' },
-  '.xls':  { pkg: 'xlsx', label: 'xlsx' },
-  '.png':  { pkg: 'sharp', label: 'sharp' },
-  '.jpg':  { pkg: 'sharp', label: 'sharp' },
-  '.jpeg': { pkg: 'sharp', label: 'sharp' },
-  '.webp': { pkg: 'sharp', label: 'sharp' },
-  '.gif':  { pkg: 'sharp', label: 'sharp' }
+  '.xls':  { pkg: 'xlsx', label: 'xlsx' }
 };
 
 /**
@@ -55,33 +47,22 @@ function escapeYamlString(value) {
  * Generate the canonical flat YAML frontmatter for a normalized source file.
  *
  * Schema (must match the iNNfo editor exactly — flat, no nesting):
- *   source_file, processed_file, sha256_original, sha256_processed, size_bytes, normalized_at, normalized_by
+ *   source_file, sha256, size_bytes, normalized_at, normalized_by
  * Optional (web-imported sources only): source_url, downloaded_at, title, description, author.
  */
-function generateSourceFrontmatter(originalFilePath, processedFilePath, relativeSourcePath, relativeProcessedPath, extra = {}) {
-  const originalHash = computeFileHash(originalFilePath);
-  const processedHash = fs.existsSync(processedFilePath) ? computeFileHash(processedFilePath) : '';
+function generateSourceFrontmatter(originalFilePath, relativeSourcePath, extra = {}) {
+  const hash = computeFileHash(originalFilePath);
   const timestamp = new Date().toISOString();
   const stat = fs.statSync(originalFilePath);
 
   const lines = [
     '---',
     `source_file: "${relativeSourcePath}"`,
-    `processed_file: "${relativeProcessedPath}"`,
-    `sha256_original: "${originalHash}"`,
-    `sha256_processed: "${processedHash}"`,
+    `sha256: "${hash}"`,
     `size_bytes: ${stat.size}`,
     `normalized_at: "${timestamp}"`,
     `normalized_by: "traNNsform v${TRANNNSFORM_VERSION}"`,
   ];
-
-  if (extra.processing_pipeline) {
-    lines.push('processing_pipeline:');
-    for (const step of extra.processing_pipeline) {
-      lines.push(`  - step: "${step.step}"`);
-      lines.push(`    tool: "${step.tool}"`);
-    }
-  }
 
   if (extra.source_url) lines.push(`source_url: "${escapeYamlString(extra.source_url)}"`);
   if (extra.downloaded_at) lines.push(`downloaded_at: "${escapeYamlString(extra.downloaded_at)}"`);
@@ -101,7 +82,7 @@ function readExistingSha256(destPath) {
   if (!fs.existsSync(destPath)) return null;
   try {
     const content = fs.readFileSync(destPath, 'utf8');
-    const m = content.match(/^sha256_original:\s*"([a-f0-9]{64})"\s*$/m);
+    const m = content.match(/^sha256:\s*"([a-f0-9]{64})"\s*$/m);
     return m ? m[1] : null;
   } catch {
     return null;
@@ -310,55 +291,82 @@ async function ensureDependency(ext, options) {
   }
 }
 
-async function resizeImageLocal(inputPath, outputPath, ext) {
-  const sharp = require('sharp');
-  let pipeline = sharp(inputPath)
-    .resize(768, 768, { fit: 'inside', withoutEnlargement: true });
-
-  if (ext === '.png') {
-    pipeline = pipeline.png({ quality: 80 });
-  } else if (ext === '.webp') {
-    pipeline = pipeline.webp({ quality: 80 });
-  } else if (ext === '.gif') {
-    pipeline = pipeline.gif();
-  } else {
-    pipeline = pipeline.jpeg({ quality: 80 });
+function parseFrontmatterFields(content) {
+  const fm = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+  if (!fm) return {};
+  const block = fm[1];
+  const fields = {};
+  const lines = block.split(/\r?\n/);
+  for (const line of lines) {
+    const colonIdx = line.indexOf(':');
+    if (colonIdx === -1) continue;
+    const key = line.substring(0, colonIdx).trim();
+    let val = line.substring(colonIdx + 1).trim();
+    if (val.startsWith('"') && val.endsWith('"')) {
+      val = val.substring(1, val.length - 1);
+    }
+    fields[key] = val;
   }
-
-  await pipeline.toFile(outputPath);
+  return fields;
 }
 
-function processOkFile(ext, absPath, processedPath, sourceFileField, processedFileField, destPath, displayOutPath, isSelected, extra) {
+function getExistingFrontmatterFields(destPath, sourceFileField) {
+  if (!fs.existsSync(destPath)) return {};
+  try {
+    const content = fs.readFileSync(destPath, 'utf8');
+    const fields = parseFrontmatterFields(content);
+    if (!fields.source_file || fields.source_file === sourceFileField) {
+      return fields;
+    }
+  } catch {
+    // Ignore read errors
+  }
+  return {};
+}
+
+function processOkFile(ext, absPath, sourceFileField, destPath, displayOutPath, isSelected, extra) {
   const format = ext === '.txt' ? 'Plain Text' : ext.substring(1).toUpperCase();
   if (!isSelected) {
     return { format, status: '⚠️ Skipped', action: `Format ${EXT_LABELS[ext]} excluded by user selection.`, outcome: 'skipped' };
   }
+
+  const newHash = computeFileHash(absPath);
+  const existingHash = readExistingSha256(destPath);
+  if (existingHash && existingHash === newHash) {
+    return { format, status: '✅ Processed', action: `Already up to date at \`sources/markdown/${displayOutPath}\` (unchanged, sha256 match).`, outcome: 'processed' };
+  }
+
   try {
     const baseName = path.basename(displayOutPath, '.md');
-    const rawBody = convertOkFormat(ext, absPath, baseName);
-    const body = ensureHeading(sanitizeMarkdownBody(rawBody), baseName);
+    const body = convertOkFormat(ext, absPath, baseName);
 
-    fs.mkdirSync(path.dirname(processedPath), { recursive: true });
-    fs.copyFileSync(absPath, processedPath);
+    // Merge existing optional fields
+    const existingFields = getExistingFrontmatterFields(destPath, sourceFileField);
+    const finalExtra = {
+      source_url: extra.source_url || existingFields.source_url,
+      downloaded_at: extra.downloaded_at || existingFields.downloaded_at,
+      title: extra.title || existingFields.title,
+      description: extra.description || existingFields.description,
+      author: extra.author || existingFields.author
+    };
 
     fs.mkdirSync(path.dirname(destPath), { recursive: true });
-    const fm = generateSourceFrontmatter(absPath, processedPath, sourceFileField, processedFileField, {
-      ...extra,
-      processing_pipeline: [
-        { step: 'copy', tool: 'fs' }
-      ]
-    });
-    fs.writeFileSync(destPath, fm + body, 'utf8');
-    return { format, status: '✅ Processed', action: `Converted to NN model at \`sources/nn/${displayOutPath}\``, outcome: 'processed' };
+    fs.writeFileSync(destPath, generateSourceFrontmatter(absPath, sourceFileField, finalExtra) + body, 'utf8');
+    return { format, status: '✅ Processed', action: `Converted to markdown at \`sources/markdown/${displayOutPath}\``, outcome: 'processed' };
   } catch (err) {
     return { format, status: '❌ Error', action: `Failed to process: ${err.message}`, outcome: 'skipped' };
   }
 }
 
-async function processPromptFile(ext, absPath, processedPath, sourceFileField, processedFileField, destPath, displayOutPath, isSelected, options, extra) {
+async function processPromptFile(ext, absPath, sourceFileField, destPath, displayOutPath, isSelected, options, extra) {
   const format = ext.substring(1).toUpperCase();
   if (!isSelected) {
     return { format, status: '⚠️ Skipped', action: `Format ${EXT_LABELS[ext]} excluded by user selection.`, outcome: 'skipped' };
+  }
+
+  // Handle .doc format separately as it's legacy and not supported, skipping conversions
+  if (ext === '.doc') {
+    return { format, status: '⚠️ Skipped', action: '.doc no soportado — convertirlo a .docx o usar el .txt', outcome: 'skipped' };
   }
 
   const dep = await ensureDependency(ext, options);
@@ -366,10 +374,13 @@ async function processPromptFile(ext, absPath, processedPath, sourceFileField, p
     return { format, status: dep.status, action: dep.reason, outcome: 'skipped' };
   }
 
+  // Performance optimization preserved from the previous implementation, but now
+  // based on comparing sha256 of the source against the sha256 already recorded
+  // in the normalized file's frontmatter — not on raw/ artifacts or mere existence.
   const newHash = computeFileHash(absPath);
   const existingHash = readExistingSha256(destPath);
   if (existingHash && existingHash === newHash) {
-    return { format, status: '✅ Processed', action: `Already up to date at \`sources/nn/${displayOutPath}\` (unchanged, sha256 match).`, outcome: 'processed' };
+    return { format, status: '✅ Processed', action: `Already up to date at \`sources/markdown/${displayOutPath}\` (unchanged, sha256 match).`, outcome: 'processed' };
   }
 
   let approve = options.autoAcceptPrompt;
@@ -384,85 +395,50 @@ async function processPromptFile(ext, absPath, processedPath, sourceFileField, p
     const baseName = path.basename(displayOutPath, '.md');
     const result = await PROMPT_CONVERTERS[ext](absPath, baseName);
 
-    fs.mkdirSync(path.dirname(processedPath), { recursive: true });
-    const rawText = result.body.replace(/^# [^\n]*\n\n/, '');
-    fs.writeFileSync(processedPath, rawText, 'utf8');
-
+    // Best-effort PDF metadata (title/author) from pdf-parse's own `info` object —
+    // no separate PDF metadata extractor, no new dependency.
     const mergedExtra = { ...extra };
     if (ext === '.pdf' && result.info) {
       if (result.info.Title && !mergedExtra.title) mergedExtra.title = result.info.Title;
       if (result.info.Author && !mergedExtra.author) mergedExtra.author = result.info.Author;
     }
 
+    // Merge existing optional fields
+    const existingFields = getExistingFrontmatterFields(destPath, sourceFileField);
+    const finalExtra = {
+      source_url: mergedExtra.source_url || existingFields.source_url,
+      downloaded_at: mergedExtra.downloaded_at || existingFields.downloaded_at,
+      title: mergedExtra.title || existingFields.title,
+      description: mergedExtra.description || existingFields.description,
+      author: mergedExtra.author || existingFields.author
+    };
+
     fs.mkdirSync(path.dirname(destPath), { recursive: true });
-    const fm = generateSourceFrontmatter(absPath, processedPath, sourceFileField, processedFileField, {
-      ...mergedExtra,
-      processing_pipeline: [
-        { step: 'extraction', tool: EXT_DEPS[ext] ? EXT_DEPS[ext].pkg : 'built-in' }
-      ]
-    });
-    const normalizedBody = ensureHeading(sanitizeMarkdownBody(result.body), baseName);
-    fs.writeFileSync(destPath, fm + normalizedBody, 'utf8');
+    fs.writeFileSync(destPath, generateSourceFrontmatter(absPath, sourceFileField, finalExtra) + result.body, 'utf8');
     if (result.partial) {
-      return { format, status: '✅ Processed (Partial)', action: `Created placeholder NN model at \`sources/nn/${displayOutPath}\`. PDF parsing failed: ${result.note}`, outcome: 'processed' };
+      return { format, status: '✅ Processed (Partial)', action: `Created placeholder markdown at \`sources/markdown/${displayOutPath}\`. PDF parsing failed: ${result.note}`, outcome: 'processed' };
     }
-    return { format, status: '✅ Processed', action: `Converted ${format} to NN model at \`sources/nn/${displayOutPath}\``, outcome: 'processed' };
+    return { format, status: '✅ Processed', action: `Converted ${format} to markdown at \`sources/markdown/${displayOutPath}\``, outcome: 'processed' };
   } catch (err) {
     return { format, status: '❌ Error', action: `Failed to convert: ${err.message}`, outcome: 'skipped' };
   }
 }
 
-async function processImageFile(ext, absPath, processedPath, sourceFileField, processedFileField, destPath, displayOutPath, isSelected, options, extra) {
-  const format = ext.substring(1).toUpperCase();
-  if (!isSelected) {
-    return { format, status: '⚠️ Skipped', action: `Format ${EXT_LABELS[ext]} excluded by user selection.`, outcome: 'skipped' };
-  }
-
-  const dep = await ensureDependency(ext, options);
-  if (!dep.ok) {
-    return { format, status: dep.status, action: dep.reason, outcome: 'skipped' };
-  }
-
-  const newHash = computeFileHash(absPath);
-  const existingHash = readExistingSha256(destPath);
-  if (existingHash && existingHash === newHash) {
-    return { format, status: '✅ Processed', action: `Already up to date at \`sources/nn/${displayOutPath}\` (unchanged, sha256 match).`, outcome: 'processed' };
-  }
-
-  try {
-    fs.mkdirSync(path.dirname(processedPath), { recursive: true });
-    await resizeImageLocal(absPath, processedPath, ext);
-
-    const baseName = path.basename(displayOutPath, '.md');
-    const rawBody = `# Source Image: ${baseName}${ext}\n\n` +
-      `[IMAGE: ${processedFileField}]\n\n` +
-      `<!-- agent-query: Analizá la imagen original en "${processedFileField}" y extraé los elementos/conceptos correspondientes al modelo iNNfo. -->\n`;
-    const body = ensureHeading(sanitizeMarkdownBody(rawBody), baseName);
-
-    fs.mkdirSync(path.dirname(destPath), { recursive: true });
-    const fm = generateSourceFrontmatter(absPath, processedPath, sourceFileField, processedFileField, {
-      ...extra,
-      processing_pipeline: [
-        { step: 'compression', tool: 'sharp' }
-      ]
-    });
-    fs.writeFileSync(destPath, fm + body, 'utf8');
-
-    return { format, status: '✅ Processed', action: `Resized and created NN placeholder at \`sources/nn/${displayOutPath}\``, outcome: 'processed' };
-  } catch (err) {
-    return { format, status: '❌ Error', action: `Failed to process image: ${err.message}`, outcome: 'skipped' };
-  }
-}
-
+/**
+ * Scan sources/original/ (recursively, subfolders preserved) and normalize
+ * straight into sources/markdown/, mirroring the same relative paths.
+ *
+ * options.webImportMeta: optional map of { "<relPath-posix-under-original>": { source_url, downloaded_at, title, description, author } }
+ * for files that were downloaded via webImport.downloadToOriginal — merged into
+ * that file's frontmatter when it is normalized.
+ */
 async function scanAndProcess(projectDir, options = {}) {
   const originalDir = path.join(projectDir, 'sources', 'original');
-  const processedDir = path.join(projectDir, 'sources', 'processed');
-  const nnDir = path.join(projectDir, 'sources', 'nn');
-  const indexFile = path.join(nnDir, 'index.md');
+  const markdownDir = path.join(projectDir, 'sources', 'markdown');
+  const indexFile = path.join(markdownDir, 'index.md');
 
   fs.mkdirSync(originalDir, { recursive: true });
-  fs.mkdirSync(processedDir, { recursive: true });
-  fs.mkdirSync(nnDir, { recursive: true });
+  fs.mkdirSync(markdownDir, { recursive: true });
 
   const logs = [];
   const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
@@ -485,27 +461,18 @@ async function scanAndProcess(projectDir, options = {}) {
     const baseName = path.basename(relPath, ext);
     const outRelDir = relDir === '.' ? '' : relDir;
     const displayOutPath = (outRelDir ? path.join(outRelDir, `${baseName}.md`) : `${baseName}.md`).replace(/\\/g, '/');
-    const destPath = path.join(nnDir, displayOutPath);
+    const destPath = path.join(markdownDir, displayOutPath);
 
     const relPathPosix = relPath.replace(/\\/g, '/');
     const sourceFileField = `sources/original/${relPathPosix}`;
-    let processedRelPath = relPathPosix;
-    if (EXT_PROMPT.includes(ext) && ext !== '.xls') {
-      processedRelPath = relPathPosix.substring(0, relPathPosix.length - ext.length) + '.txt';
-    }
-    const processedFileField = `sources/processed/${processedRelPath}`;
-    const processedPath = path.join(processedDir, processedRelPath.replace(/\//g, path.sep));
-
     const isSelected = !options.formats || options.formats.includes(ext);
     const extra = webImportMeta[relPathPosix] || {};
 
     let entry;
     if (EXT_OK.includes(ext)) {
-      entry = processOkFile(ext, absPath, processedPath, sourceFileField, processedFileField, destPath, displayOutPath, isSelected, extra);
+      entry = processOkFile(ext, absPath, sourceFileField, destPath, displayOutPath, isSelected, extra);
     } else if (EXT_PROMPT.includes(ext)) {
-      entry = await processPromptFile(ext, absPath, processedPath, sourceFileField, processedFileField, destPath, displayOutPath, isSelected, options, extra);
-    } else if (EXT_IMAGE.includes(ext)) {
-      entry = await processImageFile(ext, absPath, processedPath, sourceFileField, processedFileField, destPath, displayOutPath, isSelected, options, extra);
+      entry = await processPromptFile(ext, absPath, sourceFileField, destPath, displayOutPath, isSelected, options, extra);
     } else if (EXT_NO.includes(ext)) {
       entry = { format: ext.substring(1).toUpperCase(), status: '🚫 Blocked', action: 'Unsupported format (needs manual action)', outcome: 'skipped' };
     } else {
@@ -528,9 +495,9 @@ async function scanAndProcess(projectDir, options = {}) {
     });
   }
 
-  logs.push(`*   **${timestamp}:** Converted ${processedCount} file(s) to NN models in \`sources/nn/\`, mirroring \`sources/original/\` subfolders.`);
+  logs.push(`*   **${timestamp}:** Converted ${processedCount} file(s) to Markdown in \`sources/markdown/\`, mirroring \`sources/original/\` subfolders.`);
 
-  // Build sources/nn/index.md manifest
+  // Build sources/markdown/index.md manifest
   let indexContent = `# traNNsform Ingestion Manifest & Processing Log\n\n`;
   indexContent += `## Ingestion Status\n`;
   indexContent += `*   **Total Files Discovered:** ${totalDiscovered}\n`;
@@ -572,8 +539,6 @@ module.exports = {
   convertOkFormat,
   stripFrontmatter,
   htmlToPlainText,
-  sanitizeMarkdownBody,
-  ensureHeading,
   EXT_LABELS,
   EXT_DEPS
 };

@@ -6,19 +6,18 @@
  * Procedures produced) as first-class iNNfo elements with explicit lineage.
  *
  * The model conforms to the `cogNNitive` level-2 template:
- *   https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/templates/cogNNitive/cogNNitive_V_0-1-0_NN.md
+ *   https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level2/cogNNitive/cogNNitive_NN.md
  *
  * Zero runtime dependencies (Node builtins only), mirroring scanner.js.
  */
 
 const fs = require('fs');
 const path = require('path');
-const { slugifyHeading, extractHeadingSlugs } = require('./markdown-utils');
 
 const TEMPLATE_URL =
-  'https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/templates/cogNNitive/cogNNitive_V_0-1-0_NN.md';
+  'https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level2/cogNNitive/cogNNitive_NN.md';
 const INNFO_URL =
-  'https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/iNNfo_V_0-1-0_NN.md';
+  'https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/latest/level1/iNNfo_NN.md';
 const TEMPLATE_NAME = 'cogNNitive_V_0-1-0';
 
 const DOC_NOTICE =
@@ -39,18 +38,18 @@ function slugify(name) {
 }
 
 function parseSourceFrontmatter(content) {
-  const fm = content.match(/^---\n([\s\S]*?)\n---/);
+  const fm = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
   if (!fm) return null;
   const block = fm[1];
   const get = (key) => {
-    const m = block.match(new RegExp('^\\s*' + key + ':\\s*"?([^"\\n]+)"?\\s*$', 'm'));
+    const m = block.match(new RegExp('^\\s*' + key + ':\\s*"?([^"\\n\\r]+)"?\\s*$', 'm'));
     return m ? m[1].trim() : null;
   };
   const file = get('source_file');
   if (!file) return null;
   return {
     file,
-    hash: get('sha256_original') || get('sha256'),
+    hash: get('sha256'),
     size: get('size_bytes'),
     normalized_at: get('normalized_at'),
     normalized_by: get('normalized_by'),
@@ -58,7 +57,7 @@ function parseSourceFrontmatter(content) {
 }
 
 /**
- * Recursively collect *.md files under sources/nn/, preserving their
+ * Recursively collect *.md files under sources/markdown/, preserving their
  * path relative to that directory (subfolders mirror sources/original/).
  * The top-level ingestion manifest (index.md) is excluded.
  */
@@ -105,7 +104,7 @@ function collectSources(mdDir) {
       source_format: ext,
       normalized_at: fmData.normalized_at,
       normalized_by: fmData.normalized_by,
-      normalized_content: `sources/nn/${relFilePosix}`,
+      normalized_content: `sources/markdown/${relFilePosix}`,
       mdFile: relFile,
     });
   }
@@ -113,8 +112,15 @@ function collectSources(mdDir) {
 }
 
 function materializeAssets(projectDir, sources) {
-  const mdDir = path.join(projectDir, 'sources', 'nn');
+  const mdDir = path.join(projectDir, 'sources', 'markdown');
+  const seenHashes = new Set();
   for (const src of sources) {
+    if (src.raw_hash) {
+      if (seenHashes.has(src.raw_hash)) {
+        continue;
+      }
+      seenHashes.add(src.raw_hash);
+    }
     const slug = slugify(src.name);
     const destDir = path.join(projectDir, 'assets', slug);
     fs.mkdirSync(destDir, { recursive: true });
@@ -169,7 +175,7 @@ function splitTopLevelSections(body) {
 function buildFreshModel(title, sources) {
   const frontmatter =
     '---\n' +
-    'specification_version: "V_0-1-0"\n' +
+    'specification_version: "V_0-3-0"\n' +
     `specification_url: "${INNFO_URL}"\n` +
     'level: 3\n' +
     'parent_spec:\n' +
@@ -211,7 +217,7 @@ function buildFreshModel(title, sources) {
 }
 
 function refreshExistingModel(existing, sources) {
-  const fmMatch = existing.match(/^(---\n[\s\S]*?\n---\n)/);
+  const fmMatch = existing.match(/^(---\r?\n([\s\S]*?)\r?\n---(?:\r?\n)?)/);
   const frontmatter = fmMatch ? fmMatch[1] : '';
   const body = fmMatch ? existing.slice(frontmatter.length) : existing;
 
@@ -302,68 +308,209 @@ function indexHref(relPath) {
   ).join('/');
 }
 
+function compareVersions(v1, v2) {
+  for (let i = 0; i < 3; i++) {
+    const diff = v1[i] - v2[i];
+    if (diff !== 0) return diff;
+  }
+  return 0;
+}
+
+function parseVersionFromPath(relPath) {
+  const m = relPath.match(/_V_(\d+)-(\d+)-(\d+)_/i);
+  if (m) {
+    return [parseInt(m[1], 10), parseInt(m[2], 10), parseInt(m[3], 10)];
+  }
+  return [0, 0, 0];
+}
+
+function getVersionStrippedKey(target) {
+  let t = String(target).trim();
+  try {
+    t = decodeURIComponent(t);
+  } catch (e) {}
+  t = t.replace(/\\/g, '/').toLowerCase();
+  return t.replace(/_v_\d+-\d+-\d+_/, '_');
+}
+
 function writeWorkspaceIndex(projectDir) {
   const indexPath = path.join(projectDir, 'index.md');
   const existed = fs.existsSync(indexPath);
 
   const fresh = listWorkspaceModels(projectDir);
-  const preserved = [];
-  const dropped = [];
 
+  let lines = [];
   if (existed) {
-    const seen = new Set();
-    for (const link of parseIndexLinks(fs.readFileSync(indexPath, 'utf8'))) {
-      if (!link.target.endsWith('.md')) continue;
-      const { key, resolved } = normalizeIndexTarget(projectDir, link.target);
-      if (seen.has(key)) continue;
-      seen.add(key);
-      if (fs.existsSync(resolved)) {
-        preserved.push({ ...link, key });
-      } else {
-        dropped.push(link);
-      }
-    }
+    try {
+      lines = fs.readFileSync(indexPath, 'utf8').split(/\r?\n/);
+    } catch (e) {}
   }
 
-  const merged = [];
-  const used = new Set();
-  for (const p of preserved) {
-    merged.push(p);
-    used.add(p.key);
+  const parsedLinks = [];
+  const nonLinkLines = [];
+  const linkRegex = /^\*\s*(?:\[([^\]]*)\]\(([^)]*)\)|\[\[([^\]]+)\]\])\s*$/;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const match = line.match(linkRegex);
+    if (!match) {
+      nonLinkLines.push({ lineIndex: i, line });
+      continue;
+    }
+
+    const label = match[1];
+    const target = match[2] || match[3];
+    const isWiki = match[3] !== undefined;
+
+    if (!target.endsWith('.md')) {
+      nonLinkLines.push({ lineIndex: i, line });
+      continue;
+    }
+
+    const { key, resolved } = normalizeIndexTarget(projectDir, target);
+    const strippedKey = getVersionStrippedKey(target);
+    const version = parseVersionFromPath(target);
+    const exists = fs.existsSync(resolved);
+
+    parsedLinks.push({
+      lineIndex: i,
+      line,
+      label,
+      target,
+      isWiki,
+      key,
+      strippedKey,
+      version,
+      resolved,
+      exists,
+    });
   }
-  let added = 0;
+
+  const freshMap = new Map();
   for (const m of fresh) {
-    const { key } = normalizeIndexTarget(projectDir, m);
-    if (used.has(key)) continue;
-    used.add(key);
-    merged.push({ type: 'md', label: deriveIndexLabel(m), target: indexHref(m), key });
-    added++;
+    const { key, resolved } = normalizeIndexTarget(projectDir, m);
+    const strippedKey = getVersionStrippedKey(m);
+    const version = parseVersionFromPath(m);
+    freshMap.set(key, { target: indexHref(m), strippedKey, version, resolved, isFresh: true });
   }
 
-  let out = '# NN index\n\n';
-  if (merged.length === 0) {
-    out += '<!-- No models yet. -->\n';
-  } else {
-    for (const item of merged) {
-      if (item.type === 'wiki') {
-        out += `* [[${item.target}]]\n`;
-      } else {
-        out += `* [${item.label}](${item.target})\n`;
-      }
+  const allCandidates = {};
+  const droppedDangling = [];
+
+  for (const pl of parsedLinks) {
+    if (!pl.exists) {
+      droppedDangling.push(pl.line);
+      continue;
+    }
+    if (!allCandidates[pl.strippedKey]) allCandidates[pl.strippedKey] = [];
+    allCandidates[pl.strippedKey].push({
+      target: pl.target,
+      version: pl.version,
+      isFresh: false,
+      existingLink: pl,
+    });
+  }
+
+  for (const [key, fm] of freshMap.entries()) {
+    if (!allCandidates[fm.strippedKey]) allCandidates[fm.strippedKey] = [];
+    if (!allCandidates[fm.strippedKey].some((c) => c.target === fm.target)) {
+      allCandidates[fm.strippedKey].push({
+        target: fm.target,
+        version: fm.version,
+        isFresh: true,
+      });
     }
   }
-  fs.writeFileSync(indexPath, out, 'utf8');
+
+  const selectedLinks = [];
+  let added = 0;
+  let preserved = 0;
+
+  for (const strippedKey in allCandidates) {
+    const candidates = allCandidates[strippedKey];
+    let best = candidates[0];
+    for (let i = 1; i < candidates.length; i++) {
+      if (compareVersions(candidates[i].version, best.version) > 0) {
+        best = candidates[i];
+      }
+    }
+
+    for (const c of candidates) {
+      if (c !== best && c.existingLink) {
+        droppedDangling.push(c.existingLink.line);
+      }
+    }
+
+    if (best.existingLink) {
+      selectedLinks.push({
+        type: 'existing',
+        lineIndex: best.existingLink.lineIndex,
+        line: best.existingLink.line,
+      });
+      preserved++;
+    } else {
+      const label = deriveIndexLabel(best.target);
+      selectedLinks.push({
+        type: 'new',
+        line: `* [${label}](${best.target})`,
+      });
+      added++;
+    }
+  }
+
+  const finalLines = [];
+  const maxOriginalLines = lines.length;
+  const originalLineSlot = new Array(maxOriginalLines).fill(null);
+
+  for (const nll of nonLinkLines) {
+    originalLineSlot[nll.lineIndex] = nll.line;
+  }
+
+  for (const sl of selectedLinks) {
+    if (sl.type === 'existing') {
+      originalLineSlot[sl.lineIndex] = sl.line;
+    }
+  }
+
+  for (let i = 0; i < maxOriginalLines; i++) {
+    if (originalLineSlot[i] !== null) {
+      finalLines.push(originalLineSlot[i]);
+    }
+  }
+
+  let lastListItemIdx = -1;
+  for (let i = 0; i < finalLines.length; i++) {
+    if (finalLines[i].startsWith('*')) {
+      lastListItemIdx = i;
+    }
+  }
+
+  const newLinkLines = selectedLinks.filter((sl) => sl.type === 'new').map((sl) => sl.line);
+  if (newLinkLines.length > 0) {
+    if (lastListItemIdx !== -1) {
+      finalLines.splice(lastListItemIdx + 1, 0, ...newLinkLines);
+    } else {
+      if (finalLines.length === 0) {
+        finalLines.push('# NN index', '');
+      }
+      finalLines.push(...newLinkLines);
+    }
+  }
+
+  let finalContent = finalLines.join('\n');
+  if (!finalContent.endsWith('\n')) {
+    finalContent += '\n';
+  }
+  fs.writeFileSync(indexPath, finalContent, 'utf8');
 
   if (existed) {
-    console.log(`Workspace index.md regenerated (preserved ${preserved.length} existing entrie(s), dropped ${dropped.length} dangling, added ${added} new)`);
+    console.log(
+      `Workspace index.md regenerated using Markdown-links format (preserved ${preserved} existing entry(ies), dropped ${droppedDangling.length} dangling/duplicate, added ${added} new). ` +
+        `Note that workspace index uses Markdown links, unlike the WikiLinks used internally in Level 3 models.`
+    );
   } else {
     console.log('Workspace index.md created');
   }
-}
-
-function getModelPath(projectDir, projectName) {
-  const name = projectName || path.basename(projectDir);
-  return path.join(projectDir, `${name}_V_0-1-0_cogNNitive_NN.md`);
 }
 
 /**
@@ -371,13 +518,43 @@ function getModelPath(projectDir, projectName) {
  */
 function buildProvenanceModel(projectDir, options = {}) {
   const projectName = options.projectName || path.basename(projectDir);
-  const mdDir = path.join(projectDir, 'sources', 'nn');
+  const mdDir = path.join(projectDir, 'sources', 'markdown');
   const sources = collectSources(mdDir);
 
   materializeAssets(projectDir, sources);
 
-  const modelPath = getModelPath(projectDir, projectName);
-  const created = !fs.existsSync(modelPath);
+  const files = fs.existsSync(projectDir) ? fs.readdirSync(projectDir) : [];
+  const prefix = `${projectName}_V_`;
+  const suffix = `_cogNNitive_NN.md`;
+
+  let bestFile = null;
+  let bestVersion = [-1, -1, -1];
+
+  for (const f of files) {
+    if (f.startsWith(prefix) && f.endsWith(suffix)) {
+      const verStr = f.substring(prefix.length, f.length - suffix.length);
+      const parts = verStr.split('-');
+      if (parts.length === 3) {
+        const ver = parts.map(Number);
+        if (ver.every((n) => !isNaN(n))) {
+          if (compareVersions(ver, bestVersion) > 0) {
+            bestVersion = ver;
+            bestFile = f;
+          }
+        }
+      }
+    }
+  }
+
+  let modelPath;
+  let created;
+  if (bestFile) {
+    modelPath = path.join(projectDir, bestFile);
+    created = false;
+  } else {
+    modelPath = path.join(projectDir, `${projectName}_V_0-1-0_cogNNitive_NN.md`);
+    created = true;
+  }
 
   const content = created
     ? buildFreshModel(projectName, sources)
@@ -389,145 +566,12 @@ function buildProvenanceModel(projectDir, options = {}) {
   return { modelPath, sourceCount: sources.length, created };
 }
 
-/* ------------------------------------------------------------------------ *
- * Citation anchors — heading-slug based (no line-number fallback).
- *
- * Citations (both the element-level `sources::` field and the claim-level
- * `<!-- cite: ... -->` comment) point at `sources/nn/<path>.md#<heading-slug>`.
- * ------------------------------------------------------------------------ */
-
-/**
- * Split a "<path>#<slug>" citation anchor into its parts. Returns null if
- * there is no `#` fragment (a bare path with no heading-slug anchor).
- */
-function parseCitationAnchor(citation) {
-  const raw = String(citation || '').trim();
-  const idx = raw.indexOf('#');
-  if (idx === -1) return null;
-  return { path: raw.slice(0, idx), slug: raw.slice(idx + 1) };
-}
-
-/**
- * Validate a `sources/nn/<path>.md#<heading-slug>` citation anchor against
- * the actual document: parse the `#slug` fragment, load the target document
- * relative to `projectDir`, compute all of its heading slugs via the same
- * `slugifyHeading` algorithm used at normalization time, and confirm the
- * cited slug is one of them.
- */
-function validateCitationAnchor(projectDir, citation) {
-  const parsed = parseCitationAnchor(citation);
-  if (!parsed || !parsed.path || !parsed.slug) {
-    return { valid: false, reason: `citation is missing a #heading-slug anchor: "${citation}"` };
-  }
-
-  const targetPath = path.resolve(projectDir, parsed.path);
-  if (!fs.existsSync(targetPath)) {
-    return { valid: false, reason: `cited file does not exist: ${parsed.path}` };
-  }
-
-  const content = fs.readFileSync(targetPath, 'utf8');
-  const slugs = extractHeadingSlugs(content).map((h) => h.slug);
-  if (!slugs.includes(parsed.slug)) {
-    return {
-      valid: false,
-      reason: `heading slug "#${parsed.slug}" not found in ${parsed.path} (available: ${slugs.join(', ') || 'none'})`,
-    };
-  }
-
-  return { valid: true };
-}
-
-/* ------------------------------------------------------------------------ *
- * Procedures — auto-capture, DataLad-style, of the exact command that
- * produced a Source/Artifact so Source -> Procedure lineage never silently
- * goes missing.
- * ------------------------------------------------------------------------ */
-
-function procedureKey({ command, args, timestamp, outputs }) {
-  const argsStr = Array.isArray(args) ? args.join(' ') : String(args || '');
-  const outStr = Array.isArray(outputs) ? outputs.join(',') : String(outputs || '');
-  return `${command}|${argsStr}|${timestamp}|${outStr}`;
-}
-
-function renderProcedureEntry(procedure) {
-  const { command, args, inputs, outputs, timestamp } = procedure;
-  const argsStr = Array.isArray(args) ? args.join(' ') : String(args || '');
-  const key = procedureKey(procedure);
-  const name = argsStr ? `${command} ${argsStr}` : command;
-
-  let out = `\n## NN Procedures: ${name}\n`;
-  out += `<!-- procedure-key: ${key} -->\n`;
-  out += `command:: ${name}\n`;
-  out += `run_at:: ${timestamp}\n`;
-  if (inputs && inputs.length) out += `inputs:: [${inputs.join(', ')}]\n`;
-  if (outputs && outputs.length) out += `outputs:: [${outputs.join(', ')}]\n`;
-  out += `\nAuto-recorded by traNNsform for this scripted operation.\n`;
-
-  return { block: out, key };
-}
-
-/**
- * Auto-record a Procedure entry under `# NN Procedures` whenever a
- * scriptable, reproducible pipeline operation runs (--import-url, --scan,
- * template-apply). Idempotent: re-running the exact same command/args/
- * timestamp/outputs does not duplicate the entry. Any Procedure entries the
- * agent already added manually are preserved, mirroring the merge-preserving
- * behavior already used for the Models/Artifacts sections.
- */
-function recordProcedure(projectDir, procedure, options = {}) {
-  const projectName = options.projectName || path.basename(projectDir);
-  const modelPath = getModelPath(projectDir, projectName);
-
-  if (!fs.existsSync(modelPath)) {
-    buildProvenanceModel(projectDir, { projectName });
-  }
-
-  const existing = fs.readFileSync(modelPath, 'utf8');
-  const fmMatch = existing.match(/^(---\n[\s\S]*?\n---\n)/);
-  const frontmatter = fmMatch ? fmMatch[1] : '';
-  const body = fmMatch ? existing.slice(frontmatter.length) : existing;
-
-  const { preamble, blocks } = splitTopLevelSections(body);
-  const { block: newEntry, key } = renderProcedureEntry(procedure);
-
-  let procIdx = blocks.findIndex((b) => /^# NN Procedures\b/.test(b.heading));
-  if (procIdx === -1) {
-    blocks.push({ heading: '# NN Procedures', lines: [''] });
-    procIdx = blocks.length - 1;
-  }
-
-  const procBlockText = blocks[procIdx].lines.join('\n');
-  const alreadyRecorded = procBlockText.includes(`<!-- procedure-key: ${key} -->`);
-
-  if (!alreadyRecorded) {
-    const withoutPlaceholder = procBlockText.replace(
-      /\n?<!-- Add one element per transformation run:[\s\S]*?-->\n?/,
-      ''
-    );
-    const updatedText = withoutPlaceholder.replace(/\n+$/, '') + newEntry;
-    blocks[procIdx].lines = updatedText.split('\n');
-  }
-
-  const rebuilt = blocks.map((b) => (b.heading + '\n' + b.lines.join('\n')).replace(/\n+$/, '') + '\n');
-  const notice = preamble.replace(/^\n+|\n+$/g, '');
-  const content = frontmatter + '\n' + notice + '\n\n' + rebuilt.join('\n') + '\n';
-
-  fs.writeFileSync(modelPath, content, 'utf8');
-
-  return { modelPath, recorded: !alreadyRecorded, key };
-}
-
 module.exports = {
   buildProvenanceModel,
   collectSources,
   slugify,
   writeWorkspaceIndex,
   listWorkspaceModels,
-  slugifyHeading,
-  extractHeadingSlugs,
-  parseCitationAnchor,
-  validateCitationAnchor,
-  recordProcedure,
 };
 
 if (require.main === module) {

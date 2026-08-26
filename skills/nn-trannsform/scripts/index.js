@@ -55,13 +55,6 @@ async function handleCliMode(argv) {
     try {
       importResult = await webImport.downloadToOriginal(argv['import-url'], originalDir);
       console.log(`Downloaded to: sources/original/${importResult.relPath}`);
-      provenance.recordProcedure(projectDir, {
-        command: 'node scripts/index.js',
-        args: process.argv.slice(2),
-        inputs: [argv['import-url']],
-        outputs: [`sources/original/${importResult.relPath}`],
-        timestamp: new Date().toISOString(),
-      });
     } catch (err) {
       console.error(`Error downloading URL: ${err.message}`);
       process.exit(1);
@@ -96,14 +89,6 @@ async function handleCliMode(argv) {
 
     const prov = provenance.buildProvenanceModel(projectDir);
     console.log(`cogNNitive Provenance model ${prov.created ? 'created' : 'refreshed'} with ${prov.sourceCount} source(s): ${prov.modelPath}`);
-
-    provenance.recordProcedure(projectDir, {
-      command: 'node scripts/index.js',
-      args: process.argv.slice(2),
-      inputs: ['sources/original/'],
-      outputs: ['sources/nn/'],
-      timestamp: new Date().toISOString(),
-    });
   }
 
   if (argv.provenance && !argv.scan) {
@@ -245,8 +230,7 @@ function bootstrapProject(srcDir, destParentDir, projectName) {
 
   const dirs = [
     path.join('sources', 'original'),
-    path.join('sources', 'processed'),
-    path.join('sources', 'nn'),
+    path.join('sources', 'markdown'),
     'models',
     'procedures',
     'artifacts',
@@ -262,9 +246,8 @@ function bootstrapProject(srcDir, destParentDir, projectName) {
 
 Transform (traNNsform) is a tool to structure and process unstructured documents:
 1. Place files in \`sources/original/\`.
-2. Process and optimize to \`sources/processed/\`.
-3. Normalize to \`sources/nn/\`.
-4. Track provenance with \`<Project>_V_0-1-0_cogNNitive_NN.md\`.
+2. Scan and normalize to \`sources/markdown/\`.
+3. Track provenance with \`<Project>_V_0-1-0_cogNNitive_NN.md\`.
 `;
     fs.writeFileSync(readmePath, readmeContent, 'utf8');
   }
@@ -317,24 +300,16 @@ async function runProjectMenu(projectDir) {
   }
 
   if (response.action === 'scan') {
-    // Scan sources/original, optimizing to sources/processed and normalizing straight into sources/nn
+    // Scan sources/original directly, normalizing straight into sources/markdown
     console.log('\nScanning sources/original directory...');
     const result = await scanner.scanAndProcess(projectDir, { autoAcceptPrompt: true });
     console.log('\n=== Ingestion Manifest Created ===');
     console.log(`Processed: ${result.processedCount} files successfully.`);
     console.log(`Skipped/Needs Review: ${result.skippedCount} files.`);
-    console.log(`Review the manifest log at: ${path.join(projectDir, 'sources', 'nn', 'index.md')}`);
+    console.log(`Review the manifest log at: ${path.join(projectDir, 'sources', 'markdown', 'index.md')}`);
 
     const prov = provenance.buildProvenanceModel(projectDir);
     console.log(`cogNNitive Provenance model ${prov.created ? 'created' : 'refreshed'} with ${prov.sourceCount} source(s): ${prov.modelPath}\n`);
-
-    provenance.recordProcedure(projectDir, {
-      command: 'node scripts/index.js',
-      args: ['--scan', '--src', projectDir],
-      inputs: ['sources/original/'],
-      outputs: ['sources/nn/'],
-      timestamp: new Date().toISOString(),
-    });
 
     return runProjectMenu(projectDir);
   }

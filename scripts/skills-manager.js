@@ -475,16 +475,83 @@ async function cmdUpdate(args) {
   console.log(`\nUpdated ${selected.length} skill(s).`);
 }
 
+function copyDirRecursive(src, dest) {
+  if (!fs.existsSync(src)) return;
+  const base = path.basename(src);
+  if (base === 'node_modules' || base.startsWith('.')) return;
+
+  if (fs.statSync(src).isDirectory()) {
+    fs.mkdirSync(dest, { recursive: true });
+    const entries = fs.readdirSync(src);
+    for (const entry of entries) {
+      copyDirRecursive(path.join(src, entry), path.join(dest, entry));
+    }
+  } else {
+    fs.copyFileSync(src, dest);
+  }
+}
+
+async function cmdSync(args) {
+  const localSkillsDir = path.join(__dirname, '..', 'skills');
+  const direction = args.direction || 'local-to-global';
+
+  if (direction !== 'local-to-global' && direction !== 'global-to-local') {
+    throw new Error(`Invalid sync direction: ${direction}. Expected local-to-global or global-to-local.`);
+  }
+
+  const srcDir = direction === 'local-to-global' ? localSkillsDir : args.skillsDir;
+  const destDir = direction === 'local-to-global' ? args.skillsDir : localSkillsDir;
+
+  console.log(`Sync direction: ${direction}`);
+  console.log(`Source:      ${srcDir}`);
+  console.log(`Destination: ${destDir}\n`);
+
+  if (!fs.existsSync(srcDir)) {
+    throw new Error(`Source directory does not exist: ${srcDir}`);
+  }
+
+  // Find directories to sync
+  const skillsToSync = fs.readdirSync(localSkillsDir).filter(name => {
+    return fs.statSync(path.join(localSkillsDir, name)).isDirectory() && !name.startsWith('.');
+  });
+
+  const proceed = await consentOrAbort(
+    'synchronize skills',
+    skillsToSync,
+    `This will synchronize the following skills:\n${skillsToSync.map(s => `  - ${s}`).join('\n')}\n\n[a] Proceed with sync\n[b] Skip\n`,
+    args.yes
+  );
+  if (!proceed) return;
+
+  for (const skill of skillsToSync) {
+    const srcSkill = path.join(srcDir, skill);
+    const destSkill = path.join(destDir, skill);
+
+    if (fs.existsSync(srcSkill)) {
+      console.log(`Syncing ${skill}...`);
+      copyDirRecursive(srcSkill, destSkill);
+    }
+  }
+  console.log('\nSync completed successfully.');
+}
+
 // ---------------------------------------------------------------------------
 // CLI entry
 // ---------------------------------------------------------------------------
 
 function parseArgs(argv) {
-  const args = { positional: [], skillsDir: null, state: null, yes: false };
+  const args = { positional: [], skillsDir: null, state: null, yes: false, direction: 'local-to-global' };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     if (arg === '--yes') {
       args.yes = true;
+    } else if (arg === '--direction') {
+      const value = argv[i + 1];
+      if (value === undefined || value.startsWith('--')) {
+        throw new Error(`Option ${arg} requires a value`);
+      }
+      args.direction = value;
+      i++;
     } else if (arg === '--skills-dir' || arg === '--state') {
       const value = argv[i + 1];
       if (value === undefined || value.startsWith('--')) {
@@ -504,18 +571,21 @@ function parseArgs(argv) {
 
 function usage() {
   console.log(`Usage:
-  node scripts/skills-manager.js status  [--skills-dir <dir>] [--state <file>]
-  node scripts/skills-manager.js install [--skills-dir <dir>] [--state <file>] [--yes]
-  node scripts/skills-manager.js update  [skill ...] [--skills-dir <dir>] [--state <file>] [--yes]
+  node scripts/skills-manager.js status    [--skills-dir <dir>] [--state <file>]
+  node scripts/skills-manager.js install   [--skills-dir <dir>] [--state <file>] [--yes]
+  node scripts/skills-manager.js update    [skill ...] [--skills-dir <dir>] [--state <file>] [--yes]
+  node scripts/skills-manager.js sync      [--skills-dir <dir>] [--direction <local-to-global|global-to-local>] [--yes]
 
 Commands:
   status   Compare installed commits (state file) against manifest pins.
   install  Install missing skills at their pinned commit.
   update   Update outdated skills at their pinned commit.
+  sync     Synchronize skill files between local repository and global agent skills directory.
 
 Flags:
   --skills-dir <dir>   Skills directory (default: ~/.agents/skills)
   --state <file>       State file (default: ~/.agents/skills-state.json)
+  --direction <dir>    Sync direction: local-to-global (default) or global-to-local
   --yes                Skip the interactive consent prompt.
 
 Consent is mandatory. Without a TTY and without --yes, the script prints
@@ -532,7 +602,7 @@ async function main() {
   }
 
   const command = args.positional.shift();
-  if (!command || !['status', 'install', 'update'].includes(command)) {
+  if (!command || !['status', 'install', 'update', 'sync'].includes(command)) {
     usage();
     process.exit(1);
   }
@@ -543,7 +613,8 @@ async function main() {
   try {
     if (command === 'status') await cmdStatus(args);
     else if (command === 'install') await cmdInstall(args);
-    else await cmdUpdate(args);
+    else if (command === 'update') await cmdUpdate(args);
+    else await cmdSync(args);
   } catch (err) {
     console.error(`skills-manager: ${err.message}`);
     process.exit(1);

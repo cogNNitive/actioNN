@@ -328,6 +328,8 @@ Cuando se requiere renombrar un Concepto o Elemento:
 
 Todo campo debe declarar un `type` explícito (`string`, `select`, `reference`, `markdown_inline`, `number`, `date`, `file`, `image`, `video`, `audio`).
 
+> ⚠️ **Sintaxis de listas — NUNCA uses comillas sin corchetes.** Para cualquier campo con múltiples valores (`reference`, `sources::`, o cualquier otro tipo de lista), el único formato válido es `[a, b, c]` — sin comillas alrededor de cada valor. El formato `"a", "b"` (comillas individuales, sin corchetes envolventes) **corrompe el parseo silenciosamente**: el validador lo trata como un único string ilegible en vez de una lista, y termina reportando una referencia colgada genérica sin explicar la causa real. Si ves ese error y el campo tiene comillas sueltas sin `[...]`, la causa casi seguro es esta.
+
 ### Preview de Cambios con Diff (Opción D)
 Antes de ejecutar cualquier cambio o mutación en el modelo, el agente DEBE presentar un breve resumen en lenguaje natural del cambio propuesto:
 

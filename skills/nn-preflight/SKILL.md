@@ -30,12 +30,13 @@ Environment readiness gate for cogNNitive workflows. Runs deterministic checks a
 ## Tier 1 Checks (always run)
 
 1. **Node.js**: run `node --version`; require >= 18. Report the detected version.
-2. **innfo-mcp availability**: call `innfo-mcp_list_models`; if the MCP tool is unavailable, fall back to checking that the bundle exists at `.cogNNitive/mcp-bundle.js` (relative to the actioNN repo root).
-3. **Workspace layout**: verify the expected directories exist — `sources/`, `models/`, `procedures/`, `artifacts/`, `index.md` (as appropriate for the workflow; `nn-trannsform` projects use `sources/original/` and `sources/nn/`).
+2. **innfo-mcp availability**: call `innfo-mcp_list_models`; if the MCP tool is unavailable, fall back to checking that the bundle exists at `~/.agents/mcp/innfo-mcp.bundle.js`.
+3. **Workspace layout**: verify the expected directories exist — `sources/`, `models/`, `procedures/`, `artifacts/`, `index.md` (as appropriate for the workflow; `nn-trannsform` projects use `sources/original/` and `sources/markdown/`).
 
 ## Tier 2 Checks (optional — only for iNNfo output workflows)
 
-4. **iNNfo output workspace structure**: for Level 3 model workflows, verify `models/` holds `*_NN.md` files and that `index.md` exists with `# NN index` as the entry point.
+4. **iNNfo output workspace structure**: for Level 3 model workflows, verify `models/` holds `*_NN.md` files (note that `list_models` recursively scans both the workspace root and the `models/` subdirectory to find all models) and that `index.md` exists with `# NN index` as the entry point.
+5. **Semantic link validation (sources)**: parse all Level 3 model files and verify that every file path listed in the `sources:: [...]` metadata array exists physically in the workspace. Report any missing or dangling sources as warnings.
 
 ---
 
