@@ -235,10 +235,10 @@ URLs estables `latest` de referencia:
 ### Regla de `parent_spec.url` en Modelos Nivel 3
 
 1. `parent_spec.url` de un modelo Nivel 3 debe ser una URL **ESTABLE (http/https)** que apunte a la plantilla Nivel 2, o un **path relativo al workspace** (ej. `specs/MiPlantilla_V_0-1-0_spec_NN.md`).
-2. **PROHIBIDO usar paths absolutos de Windows** (ej. `C:/Users/.../MiPlantilla_spec_NN.md`): rompen la resolución en el Modeler (fetch sobre ruta local) y en el MCP. El resolver local busca la plantilla en `specs/`, `.specs/` y `.spec-cache/` del workspace; la forma canónica es la URL http estable.
+2. **PROHIBIDO usar paths absolutos de Windows** (ej. `C:/Users/.../MiPlantilla_spec_NN.md`): rompen la resolución en el Modeler (fetch sobre ruta local) y en el MCP. El resolver de `innfo-mcp` (`resolver-node.ts`) busca la plantilla únicamente en `specs/` (recursivo) del workspace; la forma canónica es la URL http estable.
 3. Después de fijar `parent_spec.url`, verificar SIEMPRE la resolución (ver §5, pre-chequeo de cadena de padres) antes de dar por listo el modelo.
 4. **Los paths relativos se resuelven contra la raíz del servidor MCP** (la variable de entorno `INNFO_MODELS_DIR` o el cwd del proceso al iniciar el server), NO contra la carpeta del archivo del modelo. Por lo tanto, para validar un workspace con paths relativos, la raíz del MCP DEBE ser la raíz del workspace; los overrides `root:` solo aplican donde la herramienta los acepta (`validate_model` con `root`, `get_spec`/`get_template` con `url`).
-5. **El resolver AUTO-CACHEA cada padre resuelto** (local o remoto) en `<workspace>/.spec-cache/`. El resolver local busca de forma secuencial la plantilla en los directorios `specs/`, `.specs/` y `.spec-cache/` relativos al `root` del servidor MCP. Si una resolución falla, se debe verificar que el `root` del MCP apunte a la raíz del workspace para que resuelva los paths relativos correctamente. NUNCA copies archivos a mano en `.spec-cache/`, deja que el resolver los sincronice.
+5. **El resolver AUTO-CACHEA cada padre resuelto** (local o remoto) en `<workspace>/specs/`, bajo el nombre de archivo canónico versionado del propio documento (write-once: si ya existe un archivo con ese nombre, nunca lo sobreescribe). No hay un directorio de caché separado — `specs/` es la única búsqueda local, recursiva, relativa al `root` del servidor MCP. (Nota: `.spec-cache/` y `.specs/` solo los escanea, como heurística adicional para un aviso de versión, el editor en el navegador — no forman parte de la resolución real del MCP; no copies archivos ahí esperando que el MCP los use.) Si una resolución falla, se debe verificar que el `root` del MCP apunte a la raíz del workspace para que resuelva los paths relativos correctamente. NUNCA copies archivos a mano en `specs/`, deja que el resolver los sincronice.
 
 ---
 
@@ -303,7 +303,7 @@ innfo-mcp_apply_change({
 
 - **Comportamiento Automatizado**:
   1. Actualiza `model_version` en el frontmatter y renombrará el archivo del modelo atómicamente.
-  2. Si se proporciona `parent_version`, renombrará físicamente el archivo local de la plantilla, actualizará su `spec_version` (en frontmatter), actualizará el `parent_spec.name`/`url` en el frontmatter del modelo, y copiará la plantilla renombrada al directorio `.spec-cache/`.
+  2. Si se proporciona `parent_version`, renombrará físicamente el archivo local de la plantilla, actualizará su `spec_version` (en frontmatter), actualizará el `parent_spec.name`/`url` en el frontmatter del modelo, y copiará la plantilla renombrada al directorio `specs/`.
   3. Actualiza de manera consistente las referencias en el `index.md` del workspace.
   4. Todo se valida mediante pre-chequeo antes de efectuar cualquier escritura (si falla la validación, aborta sin escribir).
 - **Checklist manual restante**: Si la plantilla era remota, recordar subirla a su correspondiente servidor o repositorio.
@@ -449,20 +449,27 @@ Cuando el proyecto escala a múltiples sub-modelos, presentar las **4 Alternativ
 
 ## 12. Checklist de Expectativa Visual (App Verification)
 
-Al finalizar la creación o modificación de un modelo, el agente DEBE imprimir el Checklist Visual:
+Al finalizar la creación o modificación de un modelo, el agente DEBE imprimir el Checklist Visual con enlaces profundos dinámicos en lugar del genérico `https://innfo.cognnitive.com/app/`.
 
+### Instrucción de construcción de URLs profundas:
+- **Base URL**: `https://innfo.cognnitive.com/app/workspace?view=editor`
+- **Model Query Parameter**: `&model=<model_id>` (donde `<model_id>` es el identificador del modelo/nombre del archivo sin extensión, ej: `arenzano_V_1-2-0_business`).
+- **Concept Deep Link (Hash)**: `#@<ConceptName>` (URL-encoded si tiene espacios, ej: `#@Market%20trends`).
+- **Element Deep Link (Hash)**: `#<ConceptName>.<ElementName>` (ej: `#Productos.CogNNitive`).
+
+Si hay un modelo activo en contexto, usá su `model_id` y mostrá los enlaces interactivos hacia sus partes principales.
+
+Ejemplo de checklist dinámico a generar:
 ```markdown
-📋 Checklist de Expectativa Visual en iNNfo Modeler (https://innfo.cognnitive.com/app/):
+📋 Checklist de Expectativa Visual en iNNfo Modeler (suponiendo que ya tenés el workspace abierto):
 
-Al abrir la carpeta del proyecto en el Modeler, vas a visualizar:
-
-- [ ] 🌳 **Árbol Lateral de Navegación**:
+- [ ] 🌳 [**Árbol Lateral de Navegación**](https://innfo.cognnitive.com/app/workspace?view=editor&model=<model_id>):
       Estructura jerárquica basada en `# NN index` con navegación fluida por conceptos y elementos.
-- [ ] 📋 **Paneles de Campos por Concepto**:
+- [ ] 📋 [**Paneles de Campos por Concepto** (ej. <Concepto>)](https://innfo.cognnitive.com/app/workspace?view=editor&model=<model_id>#@<Concepto_url_encoded>):
       Vista detallada renderizada para cada `key:: value` (propiedades, tipos y referencias).
-- [ ] 🎴 **Tarjetas de Elementos**:
+- [ ] 🎴 [**Tarjetas de Elementos** (ej. <Elemento>)](https://innfo.cognnitive.com/app/workspace?view=editor&model=<model_id>#<Concepto_url_encoded>.<Elemento_url_encoded>):
       Tarjetas interactivas por cada bloque `## NN <Concept>: <Element>` mostrando metadatos y descripciones.
-- [ ] 📊 **Tablas de Matrices Comparativas**:
+- [ ] 📊 [**Tablas de Matrices Comparativas**](https://innfo.cognnitive.com/app/workspace?view=matrices&model=<model_id>):
       Tablas N-a-M de relaciones e `item-markers matrix` renderizadas con celdas interactivas (`X` / `-`).
 ```
 
