@@ -106,8 +106,12 @@ Diseñar desde cero, en este orden, consultando `innfo-mcp_get_spec` para la gra
 
 1. **Concepts**: qué Concepts va a tener la plantilla (las categorías raíz del modelo).
 2. **Fields por Concept**, con su `type::` — aplicar la **Heurística de Tipos** (abajo) antes de asignar `string` a ningún campo.
-3. **Matrices**: qué relaciones entre Concepts ameritan una matriz — aplicar la **Heurística de Matrices** (abajo).
-4. **Markers**: preguntar explícitamente — *"¿Esta plantilla necesita Markers (etiquetas/estados reutilizables, por ejemplo para celdas de matriz o para clasificar Elements transversalmente)? Si sí, ¿cuáles?"* No asumir que no hacen falta solo porque el usuario no los mencionó.
+3. **Matrices**: qué relaciones entre Concepts ameritan una matriz — aplicar la **Heurística de Matrices** (abajo). Cada Matrix Definition puede declarar `values::` (conjunto de valores de celda permitidos), `widget::` (`boolean` | `cycle` | `scale` | `set` | `text`) y `widget_config::` (objeto JSON: `scale`→`{min,max,step}`, `cycle`→`{order}`, `set`→`{max_selections}`, `text`→`{max_length}`). `widget:: scale` sin `min`/`max` en `widget_config` es ERROR de validación.
+4. **Markers**: preguntar explícitamente — *"¿Esta plantilla necesita Markers (etiquetas/estados reutilizables, por ejemplo para celdas de matriz o para clasificar Elements transversalmente)? Si sí, ¿cuáles?"* No asumir que no hacen falta solo porque el usuario no los mencionó. Cada Marker Definition declara:
+   - `applies_to:: [Element]` (default), `[Concept]`, o `[Element, Concept]` — qué entidades pueden puntuarse. Puntuar una fila cuyo scope no está en `applies_to` es ERROR de validación.
+   - `values:: / widget:: / widget_config::` — mismo vocabulario que Matrix Definition (omitir `values` para un marker numérico libre acotado solo por `widget_config`).
+   - `symbol / icon / color / weight` — presentacionales; `weight` NO es un score.
+5. **`includes` (composición aditiva, opcional)**: si la plantilla debe reutilizar Concepts/Fields/Markers/Matrices de otras plantillas *pares*, declararlas en frontmatter como `includes:` con entradas `{ name, url }`. Es composición horizontal (plantilla ∪ plantilla), aditiva: NADA se override ni se elimina, y un choque de nombres entre dos fuentes es ERROR. Es un eje distinto de `parent_spec` (cadena vertical a L1) y de `specializes` (inerte). Ver §9.
 
 ##### Heurística de Tipos (String vs. Reference)
 
@@ -404,6 +408,18 @@ Cuando un modelo requiere conceptos o campos personalizados fuera de la plantill
 4. **El `index.md` del workspace lista SOLO modelos Nivel 3.** Un archivo `_spec_NN.md` (plantilla Nivel 2 / especialización) NO debe listarse como modelo en `index.md`: se resuelve como plantilla vía `parent_spec.url` y se renderiza como nodo `spec:`, nunca como modelo del árbol de navegación.
 
 > **Nota — Plantilla 100% nueva (sin base a especializar):** Cuando la Fase A (§0c) resulta en un diseño desde cero, sin ninguna plantilla canónica como base, el archivo se nombra `<Plantilla>_V_0-1-0_spec_NN.md` (sin prefijo `<Modelo>_`, porque no hay base que especializar). El resto del flujo —`parent_spec.url` del modelo Nivel 3, `index.md` listando solo modelos Nivel 3— aplica igual.
+
+### 9-bis. `includes` vs. especialización
+
+Son mecanismos distintos:
+
+| | `includes` (composición) | Especialización (`parent_spec` a un `_spec_NN.md`) |
+|---|---|---|
+| Qué hace | Une aditivamente Definitions de plantillas *pares* | El modelo apunta a una plantilla propia que reemplaza a la canónica |
+| Override | Prohibido (choque de nombres = ERROR) | La especialización redefine el cuerpo completo |
+| Cuándo | Necesitás combinar varias plantillas canónicas tal cual | Necesitás cambiar/extender una plantilla concreta para un modelo |
+
+Una plantilla **composite** (la que declara `includes`) es la que el modelo nombra en su `parent_spec`; las incluidas son plantillas standalone usadas como ingredientes, no una categoría inferior. `includes` solo es válido en Nivel 2 — un modelo Nivel 3 compone a través del `includes` de *su* plantilla, nunca del propio. Combinar `projects` + `organization` vía `includes` es ERROR mientras ambas declaren el Concept `Roles` (hay que renombrar en un lado).
 
 ---
 
