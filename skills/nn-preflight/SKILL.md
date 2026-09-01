@@ -72,3 +72,6 @@ Present exactly three sections, each a bullet list:
 1. **Never fabricate a pass**: a check that was not executed is reported as a warning, never as OK.
 2. **Consent first**: never mutate the environment during a preflight; it only inspects and reports.
 3. **Canonical reference**: path and link conventions live in `reference/skill-locations.md` — update them there, not in consuming skills.
+4. **Windows Network Resilience**: Do NOT execute bare `curl` in PowerShell (which aliases to `Invoke-WebRequest` and fails SSL handshakes). Use `curl.exe` explicitly, Node.js native fetch (`node -e "fetch(...)"`), or git.
+5. **Zero Workspace Pollution**: Temporary checkouts or network cache files MUST be written to system temp (`$env:TEMP` / `~/.agents/tmp/`) and deleted immediately after use. Never clone git repositories into the user's workspace root.
+
