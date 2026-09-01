@@ -1,4 +1,4 @@
-﻿<!-- gentle-ai:bootstrap-rule -->
+<!-- gentle-ai:bootstrap-rule -->
 ## cogNNitive Bootstrap Rule
 
 When the user types **"I want to use https://cognnitive.com/use"** or similar bootstrap/intent phrases:
@@ -125,6 +125,10 @@ Rules that apply regardless of project context. Safe to use in any repository.
 ## cogNNitive-Specific Rules
 
 Rules specific to the cogNNitive ecosystem. These apply to ALL files in this repository.
+
+### Conversation Logging Protocol (MANDATORY)
+
+- Every conversation using NN skills MUST save a transcript or markdown summary to `<workspace_root>/conversations/YYYY-MM-DD_<nombre_modelo>_<titulo_3_a_6_palabras>.md` (or `conversations/YYYY-MM-DD_<titulo_3_a_6_palabras>.md` if no model is active).
 
 ### Skill Versioning Convention
 

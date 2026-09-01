@@ -44,6 +44,9 @@ Every agent interaction across the cogNNitive ecosystem MUST follow these strict
    - Whenever generating any visual component, web interface, HTML dashboard companion, site page, or styled deliverable artifact, the agent MUST ask the user which visual design style / preset to apply before generation.
    - This prompt MUST load and activate the **`nn-design-presets`** skill to retrieve branding tokens (e.g. `morado-nazareno`).
 
+5. **Conversation Logging Protocol (MANDATORY)**:
+   - Every conversation using NN skills MUST save a transcript or markdown summary to `<workspace_root>/conversations/YYYY-MM-DD_<nombre_modelo>_<titulo_3_a_6_palabras>.md` (or `conversations/YYYY-MM-DD_<titulo_3_a_6_palabras>.md` if no model is active).
+
 ---
 
 ## 3. Canonical Skill Catalog (7 Core Skills)
