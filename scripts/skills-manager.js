@@ -3,18 +3,19 @@
 /**
  * scripts/skills-manager.js
  *
- * Lockfile-lite manager for cogNNitive skills.
+ * Lockfile-lite manager for cogNNitive skills and Level 2 templates.
  *
  * The bootstrap manifest (eNNvironment/docs/use/manifest.md) is the source of
- * truth for DESIRED pins: per skill a `commit` (full 40-char sha — the integrity
- * anchor) and a `version` (display string that must match the SKILL.md frontmatter).
- * A per-machine state file (~/.agents/skills-state.json, like lazy.nvim's
- * lazy-lock.json) records what is actually INSTALLED.
+ * truth for DESIRED pins: per skill and template a `commit` (full 40-char sha)
+ * and a `version` (display string that must match frontmatter).
+ * A per-machine state file (~/.agents/bootstrap-state.json, with automatic migration
+ * from legacy ~/.agents/skills-state.json) records what is actually INSTALLED.
  *
  * Commands:
  *   status   — compare installed commits against pinned commits (with diff previews)
- *   install  — install missing skills at their pinned commit (consent required)
- *   update   — update outdated skills at their pinned commit (consent required)
+ *   install  — install missing skills and templates at their pinned commit (consent required)
+ *   update   — update outdated skills and templates at their pinned commit (consent required)
+ *   sync     — synchronize skill files and templates between local repo and global agent directory
  *
  * Consent is mandatory: without `--yes` and without a TTY, the script prints a
  * "needs decision: ..." line and exits 2 WITHOUT applying anything.
@@ -36,7 +37,9 @@ const { parseFocusedYaml, parseFrontmatter } = require('./lib/yaml-lite');
 const MANIFEST_URL = process.env.SM_MANIFEST_URL ||
   'https://raw.githubusercontent.com/cogNNitive/eNNvironment/main/docs/use/manifest.md';
 const DEFAULT_SKILLS_DIR = path.join(os.homedir(), '.agents', 'skills');
-const DEFAULT_STATE_FILE = path.join(os.homedir(), '.agents', 'skills-state.json');
+const DEFAULT_TEMPLATES_DIR = path.join(os.homedir(), '.agents', 'templates');
+const DEFAULT_STATE_FILE = path.join(os.homedir(), '.agents', 'bootstrap-state.json');
+const LEGACY_STATE_FILE = path.join(os.homedir(), '.agents', 'skills-state.json');
 
 /**
  * Pick the built-in client matching the URL protocol. `http` is only used for
@@ -69,6 +72,8 @@ function fetchString(url) {
  */
 function downloadFile(url, destPath) {
   return new Promise((resolve, reject) => {
+    const dir = path.dirname(destPath);
+    fs.mkdirSync(dir, { recursive: true });
     const file = fs.createWriteStream(destPath);
     const req = requestFor(url)(url, { headers: { 'User-Agent': 'actioNN-Skills-Updater' } }, (res) => {
       if (res.statusCode !== 200) {
@@ -99,12 +104,9 @@ function fetchJson(url) {
 }
 
 // ---------------------------------------------------------------------------
-// Manifest parsing (uses the generic parser from lib/yaml-lite.js)
+// Manifest parsing
 // ---------------------------------------------------------------------------
 
-/**
- * Parse the bootstrap manifest and return the agent-bootstrap.skills list.
- */
 function parseManifest(text) {
   const doc = parseFocusedYaml(parseFrontmatter(text));
   const bootstrap = doc['agent-bootstrap'];
@@ -114,28 +116,57 @@ function parseManifest(text) {
   if (!Array.isArray(bootstrap.skills)) {
     throw new Error('agent-bootstrap.skills is not a list');
   }
-  return bootstrap.skills;
+  const templates = Array.isArray(bootstrap.templates) ? bootstrap.templates : [];
+  return {
+    skills: bootstrap.skills,
+    templates,
+    version: bootstrap.version,
+    entrypoint: bootstrap.entrypoint,
+  };
 }
 
 // ---------------------------------------------------------------------------
-// State file (~/.agents/skills-state.json)
+// State file (~/.agents/bootstrap-state.json)
 // ---------------------------------------------------------------------------
 
 function emptyState() {
-  return { manifest: MANIFEST_URL, skills: {} };
+  return { manifest: MANIFEST_URL, skills: {}, templates: {} };
 }
 
 function loadState(file) {
-  if (!fs.existsSync(file)) return emptyState();
-  try {
-    const data = JSON.parse(fs.readFileSync(file, 'utf-8'));
-    return {
-      manifest: data.manifest || MANIFEST_URL,
-      skills: data.skills || {},
-    };
-  } catch (err) {
-    return emptyState();
+  if (fs.existsSync(file)) {
+    try {
+      const data = JSON.parse(fs.readFileSync(file, 'utf-8'));
+      return {
+        manifest: data.manifest || MANIFEST_URL,
+        skills: data.skills || {},
+        templates: data.templates || {},
+      };
+    } catch (err) {
+      return emptyState();
+    }
   }
+
+  // Legacy fallback migration: check sibling skills-state.json or LEGACY_STATE_FILE
+  const siblingLegacy = path.join(path.dirname(file), 'skills-state.json');
+  const legacyFileToUse = fs.existsSync(siblingLegacy) ? siblingLegacy : LEGACY_STATE_FILE;
+
+  if (fs.existsSync(legacyFileToUse)) {
+    try {
+      const legacyData = JSON.parse(fs.readFileSync(legacyFileToUse, 'utf-8'));
+      const state = {
+        manifest: legacyData.manifest || MANIFEST_URL,
+        skills: legacyData.skills || {},
+        templates: {},
+      };
+      saveState(file, state);
+      return state;
+    } catch (err) {
+      return emptyState();
+    }
+  }
+
+  return emptyState();
 }
 
 function saveState(file, state) {
@@ -162,10 +193,6 @@ function extractTarball(tarFile, destDir) {
   }
 }
 
-/**
- * Locate the single top-level directory inside an extracted tarball
- * (GitHub names it `<repo>-<ref>`).
- */
 function findRepoRoot(extractDir) {
   const dirs = fs.readdirSync(extractDir, { withFileTypes: true })
     .filter(e => e.isDirectory())
@@ -176,9 +203,6 @@ function findRepoRoot(extractDir) {
   return path.join(extractDir, dirs[0]);
 }
 
-/**
- * Copy a directory to a sibling temp path, then rename it into place (atomic).
- */
 function copyDirAtomic(src, dest) {
   const parent = path.dirname(dest);
   const staged = path.join(parent, `.${path.basename(dest)}.new-${process.pid}`);
@@ -187,11 +211,6 @@ function copyDirAtomic(src, dest) {
   fs.renameSync(staged, dest);
 }
 
-/**
- * Atomically replace `dest` with the contents of `src`.
- * Existing dir is renamed to a .bak sibling; the new dir is renamed into place;
- * the backup is removed. If the swap fails, the backup is rolled back.
- */
 function replaceDirAtomic(src, dest) {
   const parent = path.dirname(dest);
   const name = path.basename(dest);
@@ -211,17 +230,17 @@ function replaceDirAtomic(src, dest) {
 }
 
 // ---------------------------------------------------------------------------
-// Diff previews via the GitHub compare API
+// Diff previews via GitHub compare API
 // ---------------------------------------------------------------------------
 
-async function fetchCompareSummary(skill, installedCommit) {
+async function fetchCompareSummary(item, installedCommit) {
   if (!installedCommit) return '(no installed commit recorded)';
   try {
-    const url = `https://api.github.com/repos/${skill.repo}/compare/${installedCommit}...${skill.commit}`;
+    const url = `https://api.github.com/repos/${item.repo}/compare/${installedCommit}...${item.commit}`;
     const data = await fetchJson(url);
-    const prefix = skill.path + '/';
-    const files = (data.files || []).filter(f => f.filename && f.filename.startsWith(prefix));
-    if (files.length === 0) return `0 files changed under ${skill.path}`;
+    const prefix = item.path + '/';
+    const files = (data.files || []).filter(f => f.filename && (f.filename.startsWith(prefix) || f.filename === item.path));
+    if (files.length === 0) return `0 files changed under ${item.path}`;
     const first = files.slice(0, 3).map(f => f.filename);
     const more = files.length > 3 ? ` (+${files.length - 3} more)` : '';
     return `${files.length} files changed: ${first.join(', ')}${more}`;
@@ -231,7 +250,7 @@ async function fetchCompareSummary(skill, installedCommit) {
 }
 
 // ---------------------------------------------------------------------------
-// Shared install/update routine
+// Shared install/update routines
 // ---------------------------------------------------------------------------
 
 async function installSkillAtCommit(skill, skillsDir, state) {
@@ -268,18 +287,63 @@ async function installSkillAtCommit(skill, skillsDir, state) {
   }
 }
 
+async function installTemplateAtCommit(template, templatesDir, state) {
+  const isMdFile = template.path.endsWith('.md') || template.path.endsWith('.markdown');
+  const fileName = template.name.endsWith('.md') ? template.name : `${template.name}.md`;
+  const destPath = isMdFile ? path.join(templatesDir, fileName) : path.join(templatesDir, template.name);
+
+  fs.mkdirSync(templatesDir, { recursive: true });
+
+  if (isMdFile) {
+    const rawUrl = `https://raw.githubusercontent.com/${template.repo}/${template.commit}/${template.path}`;
+    await downloadFile(rawUrl, destPath);
+  } else {
+    const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'actioNN-templates-'));
+    try {
+      const tarball = path.join(tmpRoot, 'tmpl.tar.gz');
+      const url = `https://codeload.github.com/${template.repo}/tar.gz/${template.commit}`;
+      await downloadFile(url, tarball);
+
+      const extractDir = path.join(tmpRoot, 'x');
+      extractTarball(tarball, extractDir);
+      const repoRoot = findRepoRoot(extractDir);
+
+      const src = path.join(repoRoot, template.path);
+      if (!fs.existsSync(src)) {
+        throw new Error(`template path ${template.path} not found in ${template.repo} at ${template.commit}`);
+      }
+
+      if (fs.statSync(src).isDirectory()) {
+        if (fs.existsSync(destPath)) replaceDirAtomic(src, destPath);
+        else copyDirAtomic(src, destPath);
+      } else {
+        fs.copyFileSync(src, destPath);
+      }
+    } finally {
+      fs.rmSync(tmpRoot, { recursive: true, force: true });
+    }
+  }
+
+  state.templates[template.name] = {
+    commit: template.commit,
+    version: template.version,
+    path: destPath,
+    updated_at: new Date().toISOString(),
+  };
+}
+
 // ---------------------------------------------------------------------------
-// Console helpers
+// Console helpers & Consent gate
 // ---------------------------------------------------------------------------
 
 function printStatusTable(rows) {
-  const headers = ['Skill', 'Pinned', 'Installed', 'Status'];
-  const cells = [headers, ...rows.map(r => [r.name, r.pinned, r.installed, r.status])];
+  const headers = ['Type', 'Name', 'Pinned', 'Installed', 'Status'];
+  const cells = [headers, ...rows.map(r => [r.type, r.name, r.pinned, r.installed, r.status])];
   const widths = headers.map((_, ci) => Math.max(...cells.map(r => r[ci].length)));
   const format = r => r.map((c, ci) => c.padEnd(widths[ci])).join(' | ');
   console.log(format(headers));
   console.log(headers.map((_, ci) => '-'.repeat(widths[ci])).join(' | '));
-  for (const row of rows) console.log(format([row.name, row.pinned, row.installed, row.status]));
+  for (const row of rows) console.log(format([row.type, row.name, row.pinned, row.installed, row.status]));
 }
 
 function promptChoice(promptText) {
@@ -296,11 +360,6 @@ function isConsent(answer) {
   return ['a', 'y', 'yes'].includes(answer);
 }
 
-/**
- * Consent gate. Returns true to proceed. `--yes` short-circuits. Otherwise, when
- * stdin is not a TTY, prints "needs decision: ..." and exits 2. In TTY mode, presents
- * `menu` and reads one line; anything other than a/y/yes aborts without applying changes.
- */
 async function consentOrAbort(label, names, menu, yes) {
   if (names.length === 0) return false;
   if (yes) return true;
@@ -322,12 +381,14 @@ async function consentOrAbort(label, names, menu, yes) {
 // ---------------------------------------------------------------------------
 
 async function cmdStatus(args) {
-  const manifest = await fetchString(MANIFEST_URL);
-  const skills = parseManifest(manifest);
+  const manifestRaw = await fetchString(MANIFEST_URL);
+  const { skills, templates } = parseManifest(manifestRaw);
   const state = loadState(args.stateFile);
 
   const rows = [];
-  const outdated = [];
+  const outdatedSkills = [];
+  const outdatedTemplates = [];
+
   for (const skill of skills) {
     const dirPresent = fs.existsSync(path.join(args.skillsDir, skill.name));
     const entry = state.skills[skill.name];
@@ -340,139 +401,185 @@ async function cmdStatus(args) {
       status = entry ? 'dir-missing' : 'missing';
     }
     rows.push({
+      type: 'skill',
       name: skill.name,
-      pinned: skill.commit || '-',
-      installed: entry ? entry.commit : '-',
+      pinned: skill.commit ? skill.commit.slice(0, 7) : '-',
+      installed: entry ? entry.commit.slice(0, 7) : '-',
       status,
     });
-    if (status === 'outdated') outdated.push(skill);
+    if (status === 'outdated') outdatedSkills.push(skill);
+  }
+
+  for (const template of templates) {
+    const fileName = template.name.endsWith('.md') ? template.name : `${template.name}.md`;
+    const pathPresent = fs.existsSync(path.join(args.templatesDir, fileName)) || fs.existsSync(path.join(args.templatesDir, template.name));
+    const entry = state.templates[template.name];
+    let status;
+    if (pathPresent) {
+      if (!entry) status = 'untracked';
+      else if (entry.commit === template.commit) status = 'up-to-date';
+      else status = 'outdated';
+    } else {
+      status = entry ? 'missing' : 'missing';
+    }
+    rows.push({
+      type: 'template',
+      name: template.name,
+      pinned: template.commit ? template.commit.slice(0, 7) : '-',
+      installed: entry ? entry.commit.slice(0, 7) : '-',
+      status,
+    });
+    if (status === 'outdated') outdatedTemplates.push(template);
   }
 
   printStatusTable(rows);
 
-  if (outdated.length > 0) {
-    console.log('\nDiff previews for outdated skills:');
-    for (const skill of outdated) {
+  if (outdatedSkills.length > 0 || outdatedTemplates.length > 0) {
+    console.log('\nDiff previews for outdated items:');
+    for (const skill of outdatedSkills) {
       const installed = state.skills[skill.name].commit;
-      console.log(`  ${skill.name}: ${await fetchCompareSummary(skill, installed)}`);
+      console.log(`  skill ${skill.name}: ${await fetchCompareSummary(skill, installed)}`);
+    }
+    for (const template of outdatedTemplates) {
+      const installed = state.templates[template.name].commit;
+      console.log(`  template ${template.name}: ${await fetchCompareSummary(template, installed)}`);
     }
   }
 }
 
 async function cmdInstall(args) {
-  const manifest = await fetchString(MANIFEST_URL);
-  const skills = parseManifest(manifest);
+  const manifestRaw = await fetchString(MANIFEST_URL);
+  const { skills, templates } = parseManifest(manifestRaw);
   const state = loadState(args.stateFile);
 
-  const toInstall = skills.filter(skill => !fs.existsSync(path.join(args.skillsDir, skill.name)));
-  if (toInstall.length === 0) {
-    console.log('All skills present.');
+  const toInstallSkills = skills.filter(skill => !fs.existsSync(path.join(args.skillsDir, skill.name)));
+  const toInstallTemplates = templates.filter(template => {
+    const fileName = template.name.endsWith('.md') ? template.name : `${template.name}.md`;
+    return !fs.existsSync(path.join(args.templatesDir, fileName)) && !fs.existsSync(path.join(args.templatesDir, template.name));
+  });
+
+  if (toInstallSkills.length === 0 && toInstallTemplates.length === 0) {
+    console.log('All skills and templates present.');
     return;
   }
 
-  const names = toInstall.map(s => s.name);
-  const proceed = await consentOrAbort(
-    'install missing skills',
-    names,
-    `The following skills are missing from ${args.skillsDir}:\n  - ${toInstall.map(s => `${s.name} (${s.version})`).join('\n  - ')}\n\n[a] Install all missing (Recommended)\n[b] Skip\n`,
-    args.yes
-  );
+  const names = [
+    ...toInstallSkills.map(s => `skill:${s.name}`),
+    ...toInstallTemplates.map(t => `template:${t.name}`),
+  ];
+
+  const menu = `The following items are missing:\n` +
+    (toInstallSkills.length > 0 ? `Skills:\n  - ${toInstallSkills.map(s => `${s.name} (${s.version})`).join('\n  - ')}\n` : '') +
+    (toInstallTemplates.length > 0 ? `Templates:\n  - ${toInstallTemplates.map(t => `${t.name} (${t.version})`).join('\n  - ')}\n` : '') +
+    `\n[a] Install all missing (Recommended)\n[b] Skip\n`;
+
+  const proceed = await consentOrAbort('install missing skills and templates', names, menu, args.yes);
   if (!proceed) return;
 
   let failures = 0;
-  for (const skill of toInstall) {
+
+  for (const skill of toInstallSkills) {
     try {
       await installSkillAtCommit(skill, args.skillsDir, state);
-      console.log(`  installed ${skill.name} (${skill.version}) @ ${skill.commit.slice(0, 7)}`);
+      console.log(`  installed skill ${skill.name} (${skill.version}) @ ${skill.commit.slice(0, 7)}`);
     } catch (err) {
       failures++;
-      console.error(`  FAIL ${skill.name}: ${err.message}`);
+      console.error(`  FAIL skill ${skill.name}: ${err.message}`);
     }
   }
+
+  for (const template of toInstallTemplates) {
+    try {
+      await installTemplateAtCommit(template, args.templatesDir, state);
+      console.log(`  installed template ${template.name} (${template.version}) @ ${template.commit.slice(0, 7)}`);
+    } catch (err) {
+      failures++;
+      console.error(`  FAIL template ${template.name}: ${err.message}`);
+    }
+  }
+
   saveState(args.stateFile, state);
 
   if (failures > 0) {
-    console.error(`\n${failures} of ${toInstall.length} skill(s) failed to install.`);
+    console.error(`\n${failures} item(s) failed to install.`);
     process.exit(1);
   }
-  console.log(`\nInstalled ${toInstall.length} skill(s).`);
+  console.log(`\nInstalled ${toInstallSkills.length} skill(s) and ${toInstallTemplates.length} template(s).`);
 }
 
 async function cmdUpdate(args) {
-  const manifest = await fetchString(MANIFEST_URL);
-  const skills = parseManifest(manifest);
+  const manifestRaw = await fetchString(MANIFEST_URL);
+  const { skills, templates } = parseManifest(manifestRaw);
   const state = loadState(args.stateFile);
-  const byName = new Map(skills.map(s => [s.name, s]));
 
-  const isOutdated = (skill) => {
+  const isOutdatedSkill = (skill) => {
     const dirPresent = fs.existsSync(path.join(args.skillsDir, skill.name));
     const entry = state.skills[skill.name];
     return dirPresent && (!entry || entry.commit !== skill.commit);
   };
 
-  let selected = skills.filter(isOutdated);
+  const isOutdatedTemplate = (template) => {
+    const fileName = template.name.endsWith('.md') ? template.name : `${template.name}.md`;
+    const pathPresent = fs.existsSync(path.join(args.templatesDir, fileName)) || fs.existsSync(path.join(args.templatesDir, template.name));
+    const entry = state.templates[template.name];
+    return pathPresent && (!entry || entry.commit !== template.commit);
+  };
+
+  let selectedSkills = skills.filter(isOutdatedSkill);
+  let selectedTemplates = templates.filter(isOutdatedTemplate);
 
   if (args.positional.length > 0) {
-    const unknown = args.positional.filter(name => !byName.has(name));
-    if (unknown.length > 0) {
-      console.error(`Unknown skill(s): ${unknown.join(', ')}`);
-      process.exit(1);
-    }
-    selected = skills.filter(s => args.positional.includes(s.name) && isOutdated(s));
-    // Group in any outdated skills that appear in the requires of the selected skills.
-    const selectedNames = new Set(selected.map(s => s.name));
-    for (const skill of selected) {
-      for (const req of (skill.requires || [])) {
-        const dep = byName.get(req);
-        if (dep && isOutdated(dep) && !selectedNames.has(req)) {
-          selected.push(dep);
-          selectedNames.add(req);
-        }
-      }
-    }
+    selectedSkills = skills.filter(s => args.positional.includes(s.name) && isOutdatedSkill(s));
+    selectedTemplates = templates.filter(t => args.positional.includes(t.name) && isOutdatedTemplate(t));
   }
 
-  if (selected.length === 0) {
-    console.log('All skills up to date.');
+  if (selectedSkills.length === 0 && selectedTemplates.length === 0) {
+    console.log('All skills and templates up to date.');
     return;
   }
 
-  const diffs = [];
-  for (const skill of selected) {
-    const entry = state.skills[skill.name];
-    diffs.push(await fetchCompareSummary(skill, entry ? entry.commit : null));
-  }
+  const names = [
+    ...selectedSkills.map(s => `skill:${s.name}`),
+    ...selectedTemplates.map(t => `template:${t.name}`),
+  ];
 
-  const names = selected.map(s => s.name);
-  const table = selected.map((skill, i) => {
-    const entry = state.skills[skill.name];
-    return `${skill.name} | ${diffs[i]} | ${entry ? entry.commit.slice(0, 7) : 'none'} | ${skill.commit.slice(0, 7)}`;
-  }).join('\n');
   const proceed = await consentOrAbort(
-    'update skills',
+    'update skills and templates',
     names,
-    `The following skills are outdated:\n\nSkill | Files changed | From | To\n${table}\n\n[a] Update all listed (Recommended)\n[b] Skip\n`,
+    `Updating ${selectedSkills.length} skill(s) and ${selectedTemplates.length} template(s).\n\n[a] Update all listed (Recommended)\n[b] Skip\n`,
     args.yes
   );
   if (!proceed) return;
 
   let failures = 0;
-  for (const skill of selected) {
+
+  for (const skill of selectedSkills) {
     try {
       await installSkillAtCommit(skill, args.skillsDir, state);
-      console.log(`  updated ${skill.name} -> ${skill.version} (${skill.commit.slice(0, 7)})`);
+      console.log(`  updated skill ${skill.name} -> ${skill.version} (${skill.commit.slice(0, 7)})`);
     } catch (err) {
       failures++;
-      console.error(`  FAIL ${skill.name}: ${err.message}`);
+      console.error(`  FAIL skill ${skill.name}: ${err.message}`);
     }
   }
+
+  for (const template of selectedTemplates) {
+    try {
+      await installTemplateAtCommit(template, args.templatesDir, state);
+      console.log(`  updated template ${template.name} -> ${template.version} (${template.commit.slice(0, 7)})`);
+    } catch (err) {
+      failures++;
+      console.error(`  FAIL template ${template.name}: ${err.message}`);
+    }
+  }
+
   saveState(args.stateFile, state);
 
   if (failures > 0) {
-    console.error(`\n${failures} of ${selected.length} skill(s) failed to update.`);
+    console.error(`\n${failures} item(s) failed to update.`);
     process.exit(1);
   }
-  console.log(`\nUpdated ${selected.length} skill(s).`);
+  console.log(`\nUpdated ${selectedSkills.length} skill(s) and ${selectedTemplates.length} template(s).`);
 }
 
 function copyDirRecursive(src, dest) {
@@ -510,7 +617,6 @@ async function cmdSync(args) {
     throw new Error(`Source directory does not exist: ${srcDir}`);
   }
 
-  // Find directories to sync
   const skillsToSync = fs.readdirSync(localSkillsDir).filter(name => {
     return fs.statSync(path.join(localSkillsDir, name)).isDirectory() && !name.startsWith('.');
   });
@@ -540,10 +646,10 @@ async function cmdSync(args) {
 // ---------------------------------------------------------------------------
 
 function parseArgs(argv) {
-  const args = { positional: [], skillsDir: null, state: null, yes: false, direction: 'local-to-global' };
+  const args = { positional: [], skillsDir: null, templatesDir: null, state: null, yes: false, direction: 'local-to-global' };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
-    if (arg === '--yes') {
+    if (arg === '--yes' || arg === '-y') {
       args.yes = true;
     } else if (arg === '--direction') {
       const value = argv[i + 1];
@@ -552,12 +658,13 @@ function parseArgs(argv) {
       }
       args.direction = value;
       i++;
-    } else if (arg === '--skills-dir' || arg === '--state') {
+    } else if (arg === '--skills-dir' || arg === '--templates-dir' || arg === '--state') {
       const value = argv[i + 1];
       if (value === undefined || value.startsWith('--')) {
         throw new Error(`Option ${arg} requires a value`);
       }
       if (arg === '--skills-dir') args.skillsDir = value;
+      else if (arg === '--templates-dir') args.templatesDir = value;
       else args.state = value;
       i++;
     } else if (arg.startsWith('--')) {
@@ -571,22 +678,23 @@ function parseArgs(argv) {
 
 function usage() {
   console.log(`Usage:
-  node scripts/skills-manager.js status    [--skills-dir <dir>] [--state <file>]
-  node scripts/skills-manager.js install   [--skills-dir <dir>] [--state <file>] [--yes]
-  node scripts/skills-manager.js update    [skill ...] [--skills-dir <dir>] [--state <file>] [--yes]
-  node scripts/skills-manager.js sync      [--skills-dir <dir>] [--direction <local-to-global|global-to-local>] [--yes]
+  node scripts/skills-manager.js status    [--skills-dir <dir>] [--templates-dir <dir>] [--state <file>]
+  node scripts/skills-manager.js install   [--skills-dir <dir>] [--templates-dir <dir>] [--state <file>] [--yes]
+  node scripts/skills-manager.js update    [item ...] [--skills-dir <dir>] [--templates-dir <dir>] [--state <file>] [--yes]
+  node scripts/skills-manager.js sync      [--skills-dir <dir>] [--templates-dir <dir>] [--direction <local-to-global|global-to-local>] [--yes]
 
 Commands:
   status   Compare installed commits (state file) against manifest pins.
-  install  Install missing skills at their pinned commit.
-  update   Update outdated skills at their pinned commit.
-  sync     Synchronize skill files between local repository and global agent skills directory.
+  install  Install missing skills and templates at their pinned commit.
+  update   Update outdated skills and templates at their pinned commit.
+  sync     Synchronize skill and template files between local repository and global agent directory.
 
 Flags:
-  --skills-dir <dir>   Skills directory (default: ~/.agents/skills)
-  --state <file>       State file (default: ~/.agents/skills-state.json)
-  --direction <dir>    Sync direction: local-to-global (default) or global-to-local
-  --yes                Skip the interactive consent prompt.
+  --skills-dir <dir>     Skills directory (default: ~/.agents/skills)
+  --templates-dir <dir>  Templates directory (default: ~/.agents/templates)
+  --state <file>         State file (default: ~/.agents/bootstrap-state.json)
+  --direction <dir>      Sync direction: local-to-global (default) or global-to-local
+  --yes, -y              Skip the interactive consent prompt.
 
 Consent is mandatory. Without a TTY and without --yes, the script prints
 "needs decision: ..." and exits 2 without applying anything.`);
@@ -608,6 +716,7 @@ async function main() {
   }
 
   args.skillsDir = path.resolve(args.skillsDir || DEFAULT_SKILLS_DIR);
+  args.templatesDir = path.resolve(args.templatesDir || DEFAULT_TEMPLATES_DIR);
   args.stateFile = path.resolve(args.state || DEFAULT_STATE_FILE);
 
   try {

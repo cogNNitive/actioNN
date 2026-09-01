@@ -8,6 +8,7 @@ version: "V_0-1-0"
 last_updated: 2026-07-21
 metadata:
   source_type: original
+bundled_templates: []
 ---
 
 # nn Site Generator

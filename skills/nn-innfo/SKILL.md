@@ -6,6 +6,9 @@ metadata:
   source_type: "original"
   mcp: "innfo-mcp"
 license: MIT
+bundled_templates:
+  - name: workspace_spec_NN
+    path: templates/workspace_spec_NN.md
 description: |
   MANDATORY trigger: MUST activate this skill whenever the user types "NN", "nn", or is creating, editing, validating, scaffolding, or discussing any iNNfo model, template, specialization, sample, or specification file. Includes the conversational Model Creation Wizard and Architecture Coach.
   This includes but is not limited to:

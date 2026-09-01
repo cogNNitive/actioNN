@@ -12,6 +12,7 @@ metadata:
     skills: ["nn-innfo"]
     mcp_servers: ["innfo-mcp"]
     cli_tools: ["scripts/index.js"]
+bundled_templates: []
 ---
 
 # Skill: nn-trannsform

@@ -8,6 +8,7 @@ license: MIT
 compatibility: opencode, claude-code, cursor, any agent supporting skills
 metadata:
   source_type: original
+bundled_templates: []
 ---
 
 # nn System & Router
