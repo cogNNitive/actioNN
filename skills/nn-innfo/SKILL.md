@@ -402,6 +402,15 @@ Existen **4 formas formales de relación** en iNNfo (`hierarchy`, `evaluable_mat
 
 ---
 
+## 8e. Protocolo de Etiquetas Libres (`tags::`)
+
+1. **Etiquetado Ad-hoc en Nivel 3**: Todo Elemento o Concepto en un modelo Nivel 3 puede declarar la propiedad `tags::` para categorización libre *on the fly* sin necesidad de modificar la plantilla Nivel 2 ni definir un `Marker Definition` previo.
+2. **Sintaxis de Listas**: Se escribe como una lista inline `tags:: [urgente, sprint-1, cliente-vip]` (o `tags:: urgente` para una sola etiqueta). Para múltiples valores, la sintaxis con corchetes `[...]` es OBLIGATORIA.
+3. **Uso por el Agente**: Cuando el usuario solicite "filtrá o actuá solo sobre los elementos con la etiqueta X", el agente DEBE inspeccionar los campos `tags::` de cada Element/Concept para restringir su alcance únicamente a las entidades coincidentes.
+4. **Coexistencia con Markers**: Los `tags::` son etiquetas livianas de texto plano. Si el usuario requiere icono, color, peso o participación en matrices comparativas, el tag se puede promover a un `Marker Definition` formal a Nivel 2.
+
+---
+
 ## 9. Estrategia de Especializaciones
 
 Cuando un modelo requiere conceptos o campos personalizados fuera de la plantilla base:
@@ -542,6 +551,7 @@ El procedimiento de master.html (anteriormente showroom) es reconocible: si el u
 13. **Descripción de Elementos en Prosa:** La descripción/explicación de un elemento en un modelo Nivel 3 NUNCA debe escribirse como un campo de tipo `description::`. Debe ir siempre como texto libre en prosa Markdown debajo de la lista de campos `key:: value`, separada por una línea en blanco.
 14. **Active Model Selection Gate:** Never perform editing, validation, audits, or model procedure execution without a validated active model in context. Run workspace discovery first if none is set.
 15. **Dynamic Quick Actions:** Only list procedure shortcuts in next steps if the model contains declared procedures.
+16. **Etiquetas Libres (`tags::`)**: Todo Elemento o Concepto en un modelo Nivel 3 puede declarar `tags:: [tag1, tag2]` para categorización libre sin necesidad de modificar la plantilla Nivel 2. La sintaxis de múltiples etiquetas exige el uso de corchetes `[...]`. Los agentes deben usar este campo para filtrar y acotar acciones sobre elementos etiquetados.
 
 ---
 
