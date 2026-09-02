@@ -220,7 +220,7 @@ as its very first output — before any questions, analysis, or tool calls. Sess
 
 ## 1. MCP Operating Model
 
-El servidor `innfo-mcp` expone 8 herramientas deterministas basadas en `@cognnitive/innfo-core`.
+El servidor `innfo-mcp` expone 13 herramientas deterministas basadas en `@cognnitive/innfo-core`.
 
 | Herramienta | Propósito |
 |---|---|
@@ -232,6 +232,11 @@ El servidor `innfo-mcp` expone 8 herramientas deterministas basadas en `@cognnit
 | `validate_model_url` | Valida un modelo desde una URL sin escribirlo en disco. |
 | `validate_template` | Valida una plantilla Nivel 2 contra su especificación Nivel 1 madre. |
 | `apply_change` | Ejecuta mutaciones deterministas (agregar campo, renombrar, `bump_version`, etc.). |
+| `list_templates` | Lista plantillas Nivel 2 en workspace, caché global y skills instalados. |
+| `hydrate_template` | Copia de forma atómica e inmutable una plantilla Nivel 2 al workspace. |
+| `prune_orphaned_specs` | Analiza alcanzabilidad y purga specs huérfanas con respaldo en zip. |
+| `list_template_procedures` | Descubre procedimientos SOP transitivamente a través del árbol de `includes` (profundidad 10). |
+| `list_template_skills` | Descubre skills de agente transitivamente a través del árbol de `includes` (profundidad 10). |
 
 **Regla de Oro:** La URL de la especificación/plantilla siempre proviene de `parent_spec.url` o del usuario. Nunca hardcodear ni inventar URLs.
 
@@ -532,9 +537,11 @@ Al concluir la generación o edición de un modelo, el agente DEBE incluir atajo
 
 ---
 
-## 15. Descubrimiento de Procedimientos del Modelo
+## 15. Descubrimiento de Procedimientos y Skills del Modelo
 
-Los procedimientos ejecutables son contenido declarado en el modelo (no un catálogo fijo del skill). Se descubren consultando el modelo (secciones `## NN Procedure: ...` o el concepto `Procedure` de la plantilla madre) y la carpeta `procedures/` del workspace (`*_procedures_V_0-1-0_NN.md`).
+Los procedimientos ejecutables y skills de agente son contenido declarado dinámicamente en los modelos y plantillas (no un catálogo fijo del skill). Se descubren invocando las herramientas MCP `list_template_procedures` y `list_template_skills`, las cuales recorren transitivamente la jerarquía `parent_spec` y el árbol de composición `includes` hasta una profundidad de 10 niveles, deduplicando procedimientos por `id` y skills por `name`.
+
+Además, los procedimientos se descubren consultando las secciones `## NN Procedure: ...` del modelo activo y la carpeta `procedures/` del workspace (`*_procedures_V_0-1-0_NN.md`).
 
 El procedimiento de master.html (anteriormente showroom) es reconocible: si el usuario solicita un "master.html", "master", "showroom", "galería" o "framework visual" de un modelo, se ofrece generarlo (sin modificar cómo se genera ni alterar el comportamiento del generador actual).
 
