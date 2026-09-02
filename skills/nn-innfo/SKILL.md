@@ -1,7 +1,7 @@
 ---
 name: nn-innfo
-version: "V_0-1-0"
-last_updated: 2026-08-24
+version: "V_0-1-1"
+last_updated: 2026-09-02
 metadata:
   source_type: "original"
   mcp: "innfo-mcp"
@@ -34,6 +34,8 @@ Activates when the user's message is the standalone token `NN` (its own word or 
 - Execute procedures declared in a model (ejecutar procedimientos del modelo).
 
 > **ACTIVATION = GREETING REQUIRED**: When this skill is loaded, the agent MUST greet the user. See Greeting Protocol below.
+
+> **NO-CEREMONY RULE (mandatory)**: When this skill activates with a clear authoring intent (standalone `NN`, or create/edit/validate/discuss a model), the agent MUST go straight to the Greeting Protocol and the Entry Menu (§0a). Do NOT run skill version checks, do NOT load or announce other skills (`nn-skills-lifecycle`, `nn-preflight`, `nn-router`), and do NOT present maintenance or status tables. Those only run when the user explicitly asks for skill management or environment readiness.
 
 This skill guides LLMs and agents in authoring, creating from scratch (wizard), editing, auditing, and validating **iNNfo-compliant files** (V_0-2-0 Meta-template specification with unified `NN` syntax: `# NN`, `## NN`, and `key:: value`).
 
