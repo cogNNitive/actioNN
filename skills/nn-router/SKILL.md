@@ -2,7 +2,7 @@
 name: nn-router
 description: Central system governance, setup, environment readiness gate (Preflight), and skill router for cogNNitive. Triggers: NN, nn, /nn, /nn-router, router, bootstrap, setup, preflight, "I want to use https://cognnitive.com/use".
 disable-model-invocation: true
-version: "3.2"
+version: "V_3-2-0"
 last_updated: 2026-08-02
 license: MIT
 compatibility: opencode, claude-code, cursor, any agent supporting skills

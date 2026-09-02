@@ -7,7 +7,7 @@ generator: https://actionn.cognnitive.com/nn-design-presets
 
 # Skills Manager
 
-**Skill name**: `nn-skills-lifecycle` · **Version**: 1.2 · **Updated**: 2026-08-26
+**Skill name**: `nn-skills-lifecycle` · **Version**: V_1-2-0 · **Updated**: 2026-08-26
 
 ## Purpose
 

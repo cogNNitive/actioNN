@@ -1,7 +1,7 @@
 ---
 name: nn-trannsform
 description: "Bootstrap projects, scan raw documents, normalize them to Markdown with mandatory provenance frontmatter, apply V_0-1-0 template-based transformations, and execute multi-step transformation procedures compliant with procedures_V_0-1-0_NN.md. Includes document ingestion, format conversion (txt, md, csv, json, docx, pdf, xlsx), procedure orchestration, and export generation. Triggers: trannsform, transform, workflow, pipeline, procedure, normalize, scan documents, document ingestion, document transformation, document processing, markdown conversion, project bootstrap"
-version: "2.0"
+version: "V_2-0-0"
 empty_sections_mode: "ask-per-section"
 license: MIT
 metadata:
@@ -107,7 +107,7 @@ source_file: "sources/original/interview_transcript.pdf"
 sha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 size_bytes: 1048576
 normalized_at: "2026-08-02T13:30:00Z"
-normalized_by: "traNNsform v2.0"
+normalized_by: "traNNsform V_2-0-0"
 ---
 ```
 
