@@ -57,15 +57,13 @@ Junction/SymbolicLink reference exists in
 repo-local skill folder to live-link into `~/.agents/skills/`; it is not part
 of this skill's automated flow.)
 
-## Other Branches
+## Dynamic SOP & Skill Discovery via `nn-innfo`
 
-- **Create a new skill** → delegates to `skill-creator` (with evaluation) or
-  `write-a-skill` (simple scaffold).
-- **Audit** → delegates to `skill-improver` (quality), `nnskills-organizer`
-  (structure), or `skill-origin-guard` (origin metadata).
-- **Maintenance** → reviews `.cogNNitive/skill-registry.md`, checks frontmatter
-  compliance, delegates fixes, and regenerates the registry with
-  `node scripts/build-registry.js`.
+In addition to static manifest pinning, skills and SOP procedures attached to template packages are dynamically discovered at runtime via `nn-innfo` and `innfo-mcp`:
+
+1. **`list_template_procedures`**: Discovers executable SOP procedure spec files (`procedures/`) across composite template inheritance trees up to depth 10.
+2. **`list_template_skills`**: Discovers agent skills (`skills/`) declared across composite template inheritance trees up to depth 10.
+3. **Multi-tier Resolution**: Looks up templates across `./specs/templates/<name>/<version>/`, legacy flat `./templates/`, `~/.agents/templates/`, and `~/.agents/skills/`.
 
 ## Files
 

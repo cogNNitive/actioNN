@@ -69,23 +69,18 @@ The `innfo-mcp` server bundle (`.cogNNitive/mcp-bundle.js`) is NOT tracked in gi
 - **Updates**: the same command checks the manifest for a newer published version and downloads it.
 - The skill `nn-skills-lifecycle init` handles this automatically when bootstrapping a workspace.
 
-## Bundled Templates - Synced From iNNfo
+## Bundled Templates & Dynamic Package Discovery
 
-Some skills ship a copy of an iNNfo L2 template under `skills/<name>/templates/`
-(declared as `bundled_templates` in the skill frontmatter). Today: `nn-innfo` bundles
-`workspace_spec_NN`.
+Some skills ship a copy of an iNNfo L2 template under `skills/<name>/templates/` (or structured template packages under `specs/templates/<name>/<version>/`). Today: `nn-innfo` resolves templates and their associated procedures/skills dynamically via `innfo-mcp`:
 
-- The **canonical** file always lives in `cogNNitive/iNNfo` at
-  `specs/templates/<name>.md` (or `specs/templates/<name>/<name>_V_x-y-z_NN.md`). The
-  bundled copy is a mirror, never a fork.
-- When the canonical template changes, re-copy it here verbatim. Do not hand-edit the
-  bundled copy.
-- `eNNvironment/docs/use/manifest.md` pins each bundled template's `version` + `commit`
-  against the iNNfo repo; keep those in sync with the copy you ship.
-- Verify with `node scripts/check-spec-version.mjs --check-urls --with-skills` from an
-  `iNNfo` checkout (the `--with-skills` flag scans this repo's `skills/` tree).
+- **Dynamic Procedure Discovery**: `list_template_procedures` returns all SOP procedures (`procedures/`) declared transitively across composite template `includes` trees (up to depth 10).
+- **Dynamic Skill Discovery**: `list_template_skills` returns all agent skills (`skills/`) declared transitively across composite template `includes` trees (up to depth 10).
+- **4-Tier Package Lookup**: `innfo-mcp` resolves templates checking `./specs/templates/<name>/<version>/`, flat `./templates/`, `~/.agents/templates/`, and `~/.agents/skills/*/templates/`.
 
-## Skill Registry â€” Regeneration
+- The **canonical** file always lives in `cogNNitive/iNNfo` under `specs/templates/`.
+- `eNNvironment/docs/use/manifest.md` pins template package dependencies (`version` + `commit`).
+
+## Skill Registry — Regeneration
 
 To rebuild the registry after adding, removing, or modifying skills:
 
