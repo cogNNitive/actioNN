@@ -65,6 +65,30 @@ In addition to static manifest pinning, skills and SOP procedures attached to te
 2. **`list_template_skills`**: Discovers agent skills (`skills/`) declared across composite template inheritance trees up to depth 10.
 3. **Multi-tier Resolution**: Looks up templates across `./specs/templates/<name>/<version>/`, legacy flat `./templates/`, `~/.agents/templates/`, and `~/.agents/skills/`.
 
+## Release Channels
+
+The manifest is published on two channels. Both are generated from
+`eNNvironment/manifest/source.yaml`; neither is hand-edited.
+
+| Channel | URL | Pins resolve to |
+| --- | --- | --- |
+| Stable (default) | `.../eNNvironment/main/docs/use/manifest.md` | release tags, reachable from `main` |
+| Preview | `.../eNNvironment/main/docs/use/manifest-next.md` | feature branches |
+
+Stable is the default and requires no configuration. Preview is an explicit
+opt-in through the `SM_MANIFEST_URL` environment variable, which overrides the
+manifest URL the manager fetches:
+
+```
+SM_MANIFEST_URL=https://raw.githubusercontent.com/cogNNitive/eNNvironment/main/docs/use/manifest-next.md   node scripts/skills-manager.js status
+```
+
+Preview exists so a change can be tested before it is published. It resolves
+branch tips, so its pins move and may point at unreviewed work — use it to try
+a change, never as a machine's normal configuration. The installed manifest URL
+is recorded in `~/.agents/bootstrap-state.json`; switching channels changes
+which pins a machine compares against.
+
 ## Files
 
 ```

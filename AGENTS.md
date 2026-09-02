@@ -11,6 +11,12 @@ When the user types **"I want to use https://cognnitive.com/use"** or similar bo
 6. For skills with `mcp[]`: download the bundle `url` into `~/.agents/mcp/{name}.bundle.js` and register in opencode.jsonc
 7. Present the `workflows[]` menu
 
+The URL in step 1 is the **canonical stable channel**. Use it unless the user
+explicitly asks for preview. A preview manifest is published alongside it at
+`docs/use/manifest-next.md`; it resolves feature branches rather than release
+tags, so its pins move and may point at unreviewed work. It is an explicit
+opt-in via `SM_MANIFEST_URL`, never a default and never a silent substitution.
+
 Skills provide specialized instructions and workflows for specific tasks.
 Use the skill tool to load a skill when a task matches its description.
 <!-- /gentle-ai:bootstrap-rule -->
