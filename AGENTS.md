@@ -69,6 +69,22 @@ The `innfo-mcp` server bundle (`.cogNNitive/mcp-bundle.js`) is NOT tracked in gi
 - **Updates**: the same command checks the manifest for a newer published version and downloads it.
 - The skill `nn-skills-lifecycle init` handles this automatically when bootstrapping a workspace.
 
+## Bundled Templates - Synced From iNNfo
+
+Some skills ship a copy of an iNNfo L2 template under `skills/<name>/templates/`
+(declared as `bundled_templates` in the skill frontmatter). Today: `nn-innfo` bundles
+`workspace_spec_NN`.
+
+- The **canonical** file always lives in `cogNNitive/iNNfo` at
+  `specs/templates/<name>.md` (or `specs/templates/<name>/<name>_V_x-y-z_NN.md`). The
+  bundled copy is a mirror, never a fork.
+- When the canonical template changes, re-copy it here verbatim. Do not hand-edit the
+  bundled copy.
+- `eNNvironment/docs/use/manifest.md` pins each bundled template's `version` + `commit`
+  against the iNNfo repo; keep those in sync with the copy you ship.
+- Verify with `node scripts/check-spec-version.mjs --check-urls --with-skills` from an
+  `iNNfo` checkout (the `--with-skills` flag scans this repo's `skills/` tree).
+
 ## Skill Registry â€” Regeneration
 
 To rebuild the registry after adding, removing, or modifying skills:

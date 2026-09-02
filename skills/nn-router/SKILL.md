@@ -58,8 +58,8 @@ The cogNNitive ecosystem is streamlined into 7 specialized skills:
 |:---|:---|:---|
 | **`nn-router`** | System governance, setup, preflight readiness gate & routing | User / `/nn-router` |
 | **`nn-preflight`** | Environment readiness gate (Tier 1/2 checks) — loaded by `nn-router` and `nn-trannsform` before they proceed | Model (Auto) |
-| **`nn-trannsform`** | Document ingestion (PDF/DOCX/XLSX), template transformation & procedures orchestration (`procedures_V_0-1-0_NN.md`) | User / Model |
-| **`nn-innfo`** | iNNfo model authoring, editing, schema validation & step-by-step Model Creation Wizard (Meta-template V_0-1-0) | User / Model |
+| **`nn-trannsform`** | Document ingestion (PDF/DOCX/XLSX), template transformation & procedures orchestration (`procedures_V_0-2-0_NN.md`) | User / Model |
+| **`nn-innfo`** | iNNfo model authoring, editing, schema validation & step-by-step Model Creation Wizard (Meta-template V_0-2-0) | User / Model |
 | **`nn-site-generator`** | Website generation & hydration | User / Model |
 | **`nn-design-presets`** | Visual design system tokens (Morado Nazareno, 8px grid) — activated for visual artifacts | Model (Auto/User) |
 | **`nn-skills-lifecycle`** | Install/update/audit skills from the remote manifest (Steward branch) | User / Model |

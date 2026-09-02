@@ -16,7 +16,7 @@ description: |
   - Creating or editing any file matching *_NN.md
   - Authoring or modifying business models, procedure models, or any model following an iNNfo template
   - Creating, editing, or modifying templates or specializations under docs/templates/
-  - Discussing the iNNfo V_0-1-0 specification, meta-templates, primitives, matrices, or naming conventions
+  - Discussing the iNNfo V_0-2-0 specification, meta-templates, primitives, matrices, or naming conventions
   - Any conversation about how iNNfo works, how to use it, or how to structure iNNfo files
   - Executing procedures declared in a model (ejecutar procedimientos del modelo)
 ---
@@ -30,14 +30,20 @@ Activates when the user's message is the standalone token `NN` (its own word or 
 - Create or edit any file matching `*_NN.md`.
 - Author or modify business models, procedure models, or any model following an iNNfo template.
 - Create, edit, or modify templates or specializations under `docs/templates/`.
-- Discuss the iNNfo V_0-1-0 specification, meta-templates, primitives, matrices, or naming conventions.
+- Discuss the iNNfo V_0-2-0 specification, meta-templates, primitives, matrices, or naming conventions.
 - Execute procedures declared in a model (ejecutar procedimientos del modelo).
 
 > **ACTIVATION = GREETING REQUIRED**: When this skill is loaded, the agent MUST greet the user. See Greeting Protocol below.
 
-This skill guides LLMs and agents in authoring, creating from scratch (wizard), editing, auditing, and validating **iNNfo-compliant files** (V_0-1-0 Meta-template specification with unified `NN` syntax: `# NN`, `## NN`, and `key:: value`).
+This skill guides LLMs and agents in authoring, creating from scratch (wizard), editing, auditing, and validating **iNNfo-compliant files** (V_0-2-0 Meta-template specification with unified `NN` syntax: `# NN`, `## NN`, and `key:: value`).
 
 **Resolution, validation, and mutation are delegated to the `innfo-mcp` server** — a deterministic engine wrapping `@cognnitive/innfo-core`. The agent does NOT hand-resolve spec chains, hand-validate models, or guess syntax when the MCP is available. See §1 (MCP Operating Model) and §7 (Delegation Contract).
+
+> 🛡️ **Single Source of Truth & Zero Workspace Pollution**:
+> 1. `iNNfo` repository is the **Single Source of Truth** for all templates and specs. Do NOT duplicate template files across repositories.
+> 2. When resolving templates/specs without MCP: if a git fallback clone is required, the agent MUST clone into the system temporary directory (`$env:TEMP/innfo_tmp` or `~/.agents/tmp/`), read the required file, and **immediately delete the temporary folder**. The agent MUST NEVER clone git repositories or leave checkouts inside the user's workspace directory.
+> 3. **Windows Network Resilience**: In Windows environments, do NOT execute bare `curl` in PowerShell (which aliases to `Invoke-WebRequest` and fails SSL handshakes). Use `curl.exe` explicitly, Node.js native fetch (`node -e "fetch(...)"`), or git archive.
+> 4. **Web GUI & Preview Integration**: When asked to preview a model or element in Web GUI environments, prefer generating structured Markdown cards with interactive deep links (`https://innfo.cognnitive.com/app/workspace?view=editor&model={model_id}#{element_id}`) or inline SVG diagrams instead of un-sanitizable `<iframe>` tags.
 
 ---
 
@@ -201,7 +207,7 @@ as its very first output — before any questions, analysis, or tool calls. Sess
 > [!NOTE]
 > **El servidor MCP (`innfo-mcp`) y las especificaciones canónicas son la ÚNICA fuente de verdad (SSOT) para la sintaxis y tipos de datos.** El agente NO duplica reglas gramaticales de memoria; las consulta dinámicamente vía MCP (`innfo-mcp_get_spec` / `innfo-mcp_get_template`).
 
-### Resumen de Niveles iNNfo (V_0-1-0)
+### Resumen de Niveles iNNfo (V_0-2-0)
 
 | Nivel | Rol | Sintaxis y Estructura |
 |---|---|---|
@@ -233,11 +239,11 @@ El servidor `innfo-mcp` expone 8 herramientas deterministas basadas en `@cognnit
 
 ## 2. Indicación Canónica de Especificaciones
 
-URLs estables `latest` de referencia:
-- **iNNfo (Nivel 1):** `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/iNNfo_V_0-1-0_NN.md`
-- **Business (Nivel 2):** `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/templates/business/business_V_0-1-0_NN.md`
-- **Procedures (Nivel 2):** `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/templates/procedures/procedures_V_0-1-0_NN.md`
-- **Organization (Nivel 2):** `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/templates/organization/organization_V_0-1-0_NN.md`
+URLs estables de referencia (la versión va en el nombre del archivo — `main` ya está content-pinned):
+- **iNNfo (Nivel 1):** `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/iNNfo_V_0-2-0_NN.md`
+- **Business (Nivel 2):** `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/templates/business/business_V_0-2-0_NN.md`
+- **Procedures (Nivel 2):** `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/templates/procedures/procedures_V_0-2-0_NN.md`
+- **Organization (Nivel 2):** `https://raw.githubusercontent.com/cogNNitive/iNNfo/main/specs/templates/organization/organization_V_0-2-0_NN.md`
 
 ### Regla de `parent_spec.url` en Modelos Nivel 3
 
@@ -536,7 +542,7 @@ El procedimiento de master.html (anteriormente showroom) es reconocible: si el u
 
 ## Core Rules
 
-1. **Meta-plantilla Estricta V_0-1-0:** Las plantillas Nivel 2 definen primitivas en el cuerpo (`# NN Concept Definition`). NUNCA colocar `concepts: [...]` o `fields: [...]` en el YAML frontmatter de Nivel 2.
+1. **Meta-plantilla Estricta V_0-2-0:** Las plantillas Nivel 2 definen primitivas en el cuerpo (`# NN Concept Definition`). NUNCA colocar `concepts: [...]` o `fields: [...]` en el YAML frontmatter de Nivel 2.
 2. **Sintaxis Unificada NN:** Usar `# NN <Concept>`, `## NN <Concept>: <Element>`, `key:: value`. No usar viñetas obsoletas `_NN` ni bloques de código ````yaml`.
 3. **Proveniencia Opcional y Actualizada:** `sources::` es opcional y apunta a archivos en `sources/nn/` (admite lista `[a, b]` para múltiples valores; sin IDs `src-xxx` ni carpeta `raw/`).
 4. **Cero Mutación Unilateral:** Nunca renombrar ni mover archivos sin confirmación explícita.

@@ -3,13 +3,89 @@ const assert = require('node:assert');
 const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
-const { spawnSync } = require('node:child_process');
+const http = require('node:http');
+const { spawnSync, spawn } = require('node:child_process');
 
 const managerScript = path.join(__dirname, 'skills-manager.js');
 
+function serveManifestOnce(content) {
+  return new Promise((resolve) => {
+    const server = http.createServer((req, res) => {
+      res.writeHead(200, { 'Content-Type': 'text/markdown' });
+      res.end(content);
+    });
+    server.listen(0, '127.0.0.1', () => {
+      const { port } = server.address();
+      resolve({
+        url: `http://127.0.0.1:${port}/manifest.md`,
+        close: () => new Promise((r) => server.close(r)),
+      });
+    });
+  });
+}
+
+// spawnSync blocks this process's event loop, which would starve the
+// in-process HTTP server used to serve a local manifest fixture (deadlock:
+// the child waits for a response the parent can't produce while blocked).
+// Use async spawn whenever a test needs the local server to stay live.
+function spawnAsync(args, options) {
+  return new Promise((resolve) => {
+    const child = spawn('node', args, { ...options });
+    let stdout = '';
+    let stderr = '';
+    child.stdout.on('data', (chunk) => { stdout += chunk; });
+    child.stderr.on('data', (chunk) => { stderr += chunk; });
+    child.on('close', (status) => resolve({ status, stdout, stderr }));
+  });
+}
+
+async function main() {
 console.log('Running skills-manager unit tests...');
 
-// 1. TTY interactive decision gate (non-TTY without --yes exits code 2)
+// 1. Manifest carrying `ref` parses without error; a version-only change does not
+//    mark the skill outdated (update detection stays commit-only).
+{
+  const manifestWithRef = `---
+agent-bootstrap:
+  version: "2.0"
+  skills:
+    - name: nn-router
+      repo: cogNNitive/actioNN
+      path: skills/nn-router
+      version: "3.2"
+      ref: skills-v1.0.0
+      commit: "d60a7109315820085ab127b70412992db6986c88"
+---
+# Manifest`;
+
+  const server = await serveManifestOnce(manifestWithRef);
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'actioNN-test-'));
+  const skillsDir = path.join(tmpDir, 'skills');
+  const stateFile = path.join(tmpDir, 'bootstrap-state.json');
+  fs.mkdirSync(path.join(skillsDir, 'nn-router'), { recursive: true });
+  // Installed state: same commit as manifest, but a stale `version` string —
+  // this must NOT be reported as outdated, since update detection is commit-only.
+  fs.writeFileSync(stateFile, JSON.stringify({
+    manifest: server.url,
+    skills: { 'nn-router': { commit: 'd60a7109315820085ab127b70412992db6986c88', version: '2.9' } },
+    templates: {},
+  }, null, 2), 'utf-8');
+
+  try {
+    const res = await spawnAsync([managerScript, 'status', '--skills-dir', skillsDir, '--state', stateFile], {
+      env: { ...process.env, SM_MANIFEST_URL: server.url },
+    });
+    assert.strictEqual(res.status, 0, `Manifest with ref should parse without error. stderr: ${res.stderr}`);
+    assert.match(res.stdout, /up-to-date/, 'commit match with a stale version string must report up-to-date, not outdated');
+    assert.doesNotMatch(res.stdout, /\boutdated\b/, 'a version-only difference must not mark the skill outdated');
+    console.log('✔ Manifest ref passthrough + commit-only update detection test passed');
+  } finally {
+    await server.close();
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+}
+
+// 2. TTY interactive decision gate (non-TTY without --yes exits code 2)
 {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'actioNN-test-'));
   const skillsDir = path.join(tmpDir, 'skills');
@@ -28,7 +104,7 @@ console.log('Running skills-manager unit tests...');
   }
 }
 
-// 2. Legacy state file migration: skills-state.json -> bootstrap-state.json
+// 3. Legacy state file migration: skills-state.json -> bootstrap-state.json
 {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'actioNN-test-'));
   const legacyStateFile = path.join(tmpDir, 'skills-state.json');
@@ -58,7 +134,7 @@ console.log('Running skills-manager unit tests...');
   }
 }
 
-// 3. Local sync command with --yes
+// 4. Local sync command with --yes
 {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'actioNN-test-'));
   const targetSkillsDir = path.join(tmpDir, 'global-skills');
@@ -78,3 +154,9 @@ console.log('Running skills-manager unit tests...');
 }
 
 console.log('All skills-manager unit tests passed successfully!');
+}
+
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
