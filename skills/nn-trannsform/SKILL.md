@@ -217,27 +217,33 @@ relationship_model:: B2B Long-term
 
 A single value may be written without brackets: `sources:: sources/nn/interview_transcript.md#L45-L60`. There is no `src-NNN`/`source_id` system anywhere in this pipeline.
 
-#### 3c. Version & Citation Selection
+#### 3c. Citation Format Selection
 
 Before generating the document, prompt the user:
 
 ```
-Do you want to generate a draft with comments and citations, or a final version?
+Select the citation and export format for the deliverable:
 
-  [a] (Recomendado) Final version — clean deliverable with formatted inline citations
-  [b] Draft for review — annotated with source pointers and review blocks
+  [a] (Recomendado) Standard Markdown Footnotes ([^1]) — clean superscript links with bottom references
+  [b] Sencillo — inline attribution (— Source: filename, section)
+  [c] APA 7th Edition — (Author, Year) in-text with trailing References
+  [d] MLA 9th Edition — (Author, par. X) parenthetical with Works Cited
+  [e] Chicago — Notes-Bibliography or Author-Date with Bibliography
+  [f] IEEE — [N] numbered references with trailing References
+  [g] Vancouver — numeric citation style with trailing References
+  [h] BibTeX export — clean document + companion .bib file
+  [i] No sources — clean text without citations or provenance markers
   [x] Cancel
 ```
 
 ---
 
-### 4. Draft & Traceability Content Protocol
+### 4. Citation & Provenance Protocol
 
-Draft deliverables (`_draft.md`) MUST include:
-1. Header: `# DRAFT FOR REVIEW — NOT FINAL VERSION`
-2. Dual-mode citation pointers per claim:
-   - HTML comment (machine-readable): `<!-- cite: sources/nn/<path>.md#L<start>-L<end>, section <section-name> -->`
-   - Visible text (human-readable): `— Source: <filename>, section <section-name>`
+Derived deliverables are generated in a single pass directly to `artifacts/exports/[Deliverable_Name]_V_x-y-z.md` without intermediate `_draft.md` files or non-standard `<!-- cite: ... -->` HTML comments:
+1. **Direct Formatting**: Apply the citation format selected in §3c directly during generation per rules in `citations.md`.
+2. **Provenance Traceability**: When citations are included (formats `[a]`–`[h]`), resolve claims directly from the Level 3 model's `sources::` pointers (`sources/nn/<path>.md#<heading-slug>`).
+3. **Clean Presentation**: Format `[i]` (No sources) produces presentation-ready deliverables omitting all citation markers and reference lists.
 
 ---
 
@@ -247,8 +253,7 @@ Draft deliverables (`_draft.md`) MUST include:
 |------|------|---------|-------|
 | **Normalized Markdown** | `sources/nn/` | `sources/nn/clientA/doc1.md` | Ingested source with scanner frontmatter, mirrors `sources/original/` subfolders |
 | **Model** (`*_NN.md`) | `models/` | `models/Business_Plan_V_1-0-0_NN.md` | iNNfo Level 3 V_0-1-0 semantic models with `sources::` |
-| **Export Deliverable** | `artifacts/exports/` | `artifacts/exports/Executive_Summary_V_1-0-0.md` | Clean final deliverable |
-| **Draft Deliverable** | `artifacts/exports/` | `artifacts/exports/Executive_Summary_V_1-0-0_draft.md` | Annotated draft |
+| **Export Deliverable** | `artifacts/exports/` | `artifacts/exports/Executive_Summary_V_1-0-0.md` | Clean deliverable in user-selected citation format |
 | **Procedure Spec** | `procedures/` | `procedures/Document_Ingest_V_1-0-0_procedures_NN.md` | Procedure spec compliant with `procedures_V_0-1-0_NN.md` |
 
 ---

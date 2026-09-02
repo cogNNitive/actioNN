@@ -1,59 +1,26 @@
-# Document Citations Specification
+# Capability Delta: Document Citations
 
 ## Purpose
 
-Single-pass, heading-anchored citation syntax and format selection for derived documents and Level 3 models. Establishes standard CommonMark / GitHub Flavored Markdown (GFM) footnotes (`[^1]`) as the primary citation format alongside direct single-pass bibliographic styles and unannotated exports. Applies whenever source documents (normalized under `sources/nn/`) contain attributed facts. There is no `src-NNN`/`source_id` sequential-ID system anywhere in this pipeline — citations always resolve directly to a `sources/nn/<path>.md#<heading-slug>` anchor.
+Update the `document-citations` capability to eliminate the bifurcated draft vs. final document lifecycle (`_draft.md` deliverables and `<!-- cite: ... -->` HTML comments) in favor of a direct, single-pass document derivation flow. Establish standard CommonMark / GitHub Flavored Markdown (GFM) footnotes (`[^1]`) as the primary recommended citation format alongside direct single-pass bibliographic styles (Sencillo, APA, MLA, Chicago, IEEE, Vancouver, BibTeX) and an unannotated "No sources" export.
 
-## Requirements
+## Removed Requirements
 
-### Requirement: Source Reference Syntax (`sources::`)
+### Requirement: Claim-Level Citation Comment in Drafts
 
-Every element in a Level 3 model MUST include explicit provenance via a `sources::` field pointing directly at one or more files in `sources/nn/`, anchored to a heading-slug. A single value MAY be written without brackets; multiple values MUST use iNNfo's generic list syntax.
+Draft deliverables (`_draft.md`) MUST pair every cited claim with a machine-readable HTML comment and human-readable visible text:
+- HTML comment: `<!-- cite: sources/nn/<path>.md#<heading-slug> -->`
+- Visible text: `— Source: <filename>, section <section-name>`
 
-#### Scenarios
+**Reason for Removal**: HTML comment markers in draft documents created markdown noise and required a secondary parsing and stripping pass. Single-pass generation produces the desired final citation format directly, rendering intermediate HTML comments obsolete.
 
-- GIVEN an element cites one source
-- WHEN writing its `sources::` field
-- THEN it MUST read `sources:: sources/nn/interview_transcript.md#key-clients`
+### Requirement: Draft vs Final Citation Treatment
 
-- GIVEN an element cites two sources
-- WHEN writing its `sources::` field
-- THEN it MUST read `sources:: [sources/nn/a.md#introduction, sources/nn/b.md#methodology]`
+The system MUST apply different citation treatment depending on whether the agent is producing a draft or a final version, per the choice presented in the transform flow (`[a] Final version` / `[b] Draft for review` / `[x] Cancel`).
 
-- GIVEN any citation anywhere in the pipeline
-- THEN it MUST NOT use a `src-NNN` or other sequential `source_id`
+**Reason for Removal**: The two-phase draft/final bifurcation is replaced by a single-pass derivation flow where citation format is selected upfront, removing the intermediate draft review stage and separate draft file naming conventions (`_draft.md`).
 
-### Requirement: Heading-Slug Anchor Derivation
-
-Every `sources/nn/<path>.md#<heading-slug>` anchor MUST use the GitHub-compatible slug computed from the target heading's text by the pipeline's shared slugging algorithm: strip leading `#` markers and markdown emphasis characters (`*`, `_`, `` ` ``), trim and lowercase, collapse whitespace runs to a single `-`, remove any character outside `[a-z0-9-]`, collapse repeated `-`, and trim leading/trailing `-`. Duplicate slugs within the same document MUST be disambiguated top-to-bottom by appending `-1`, `-2`, etc. to later occurrences, matching GitHub's own disambiguation. Every normalized file is guaranteed to have at least one heading — a synthetic top-level heading is auto-inserted during normalization when the source has none — so an anchor without a `#` fragment (a bare path) is always invalid; there is no line-number fallback.
-
-#### Scenarios
-
-- GIVEN a heading `## Market Overview!!`
-- WHEN its slug is computed
-- THEN it MUST equal `market-overview`
-
-- GIVEN a document with two headings that both slugify to `overview`
-- WHEN slugs are assigned top-to-bottom
-- THEN the first occurrence MUST keep `overview` and the second MUST become `overview-1`
-
-- GIVEN a citation with no `#` fragment (e.g. `sources/nn/report.md`)
-- THEN it MUST be treated as invalid — a heading-slug anchor is mandatory
-
-### Requirement: Citation Anchor Validation
-
-A `sources/nn/<path>.md#<heading-slug>` citation anchor MUST be validated by resolving `<path>` relative to the project root, confirming the target file exists, computing all of that file's heading slugs with the same slugging algorithm used at normalization time, and confirming the cited slug is among them.
-
-#### Scenarios
-
-- GIVEN a citation anchor whose `<path>` does not exist under the project
-- THEN validation MUST fail with a reason identifying the missing file
-
-- GIVEN a citation anchor whose file exists but whose `#slug` matches no heading in that file
-- THEN validation MUST fail and MUST list the file's available slugs in the failure reason
-
-- GIVEN a citation anchor whose file exists and whose `#slug` matches one of its headings
-- THEN validation MUST succeed
+## Added Requirements
 
 ### Requirement: Standard Markdown Footnotes
 
@@ -83,6 +50,8 @@ The system MUST support CommonMark / GitHub Flavored Markdown (GFM) standard foo
 - GIVEN a Markdown footnote definition referencing `sources/nn/report.md#exec-summary`
 - WHEN validating citations
 - THEN the anchor `sources/nn/report.md#exec-summary` MUST satisfy Citation Anchor Validation
+
+## Modified Requirements
 
 ### Requirement: Citation Format Selection
 
@@ -139,16 +108,3 @@ The derived document MUST be output directly to `artifacts/exports/[Deliverable_
 - GIVEN the same source file is cited multiple times in the document
 - WHEN generating output under IEEE or Vancouver format
 - THEN the same reference number MUST be reused for all citations of that source
-
-### Requirement: Procedure Lineage Auto-Capture
-
-Every scriptable, reproducible pipeline operation that produces or consumes a citable source or artifact (`--import-url`, `--scan`, template-apply) MUST auto-record a `# NN Procedures` entry in the project's cogNNitive provenance model, DataLad-style: the exact command/flags invoked, a timestamp, and the operation's Source/Artifact inputs and outputs. Re-running the same command MUST NOT duplicate the entry. This auto-capture is distinct from the user-authored orchestration specs saved under `procedures/`; manual `## NN Procedures:` entries remain reserved for non-scripted research/analysis steps the agent performs itself, and are preserved across refreshes.
-
-#### Scenarios
-
-- GIVEN the same `--scan` command with the same arguments is run twice
-- WHEN the provenance model is refreshed the second time
-- THEN no duplicate `# NN Procedures` entry is created for that command
-
-- GIVEN the agent performs a non-scripted analysis step not covered by `--import-url`, `--scan`, or template-apply
-- THEN it MAY add a manual `## NN Procedures:` entry, which MUST be preserved across subsequent refreshes
