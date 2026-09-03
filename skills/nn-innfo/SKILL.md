@@ -23,6 +23,32 @@ description: |
 
 # iNNfo Skill
 
+## 0. MANDATORY ACTIVATION GATE (FIRST TURN - STRICT)
+
+Before answering ANY user question or executing ANY task in this conversation:
+
+1. **GREETING PROTOCOL**: Print as your VERY FIRST output line:
+   ```
+   🔧 You're using skill: nn-innfo (🔮)
+   ```
+   *(Session-scoped: print once at the start of the interaction).*
+
+2. **INTEGRITY & PREFLIGHT CHECK**:
+   Run the deterministic preflight check:
+   `node ~/.agents/skills/nn-preflight/scripts/preflight-check.js` (or `node skills/nn-preflight/scripts/preflight-check.js` if running from a local repository checkout).
+
+3. **OUTDATED / MISSING COMPONENTS GATE**:
+   - If the script exits with code `0`: All components are up-to-date. Proceed directly to the Entry Menu (§0a) or user request.
+   - If the script exits with code `1`: Updates or missing components were detected.
+     **STOP immediately.** Show the report of outdated components and ask the user for confirmation:
+     *"⚠️ Se detectaron actualizaciones o componentes pendientes en el ecosistema cogNNitive:*
+      *[a] (Recomendado) Actualizar componentes ahora*
+      *[b] Continuar con la versión actual"*
+     Do NOT mutate files or update without the user's explicit consent. If the user chooses `[b]`, proceed to the wizard.
+   - If the script exits with code `2` (Runtime Blocker): STOP and notify the user that Node.js >= 18 is required.
+
+---
+
 ## Activation Contract
 
 Activates when the user's message is the standalone token `NN` (its own word or entire message — never a substring match inside another word), or when the user explicitly asks to:
@@ -32,10 +58,6 @@ Activates when the user's message is the standalone token `NN` (its own word or 
 - Create, edit, or modify templates or specializations under `docs/templates/`.
 - Discuss the iNNfo V_0-2-0 specification, meta-templates, primitives, matrices, or naming conventions.
 - Execute procedures declared in a model (ejecutar procedimientos del modelo).
-
-> **ACTIVATION = GREETING REQUIRED**: When this skill is loaded, the agent MUST greet the user. See Greeting Protocol below.
-
-> **NO-CEREMONY RULE (mandatory)**: When this skill activates with a clear authoring intent (standalone `NN`, or create/edit/validate/discuss a model), the agent MUST go straight to the Greeting Protocol and the Entry Menu (§0a). Do NOT run skill version checks, do NOT load or announce other skills (`nn-skills-lifecycle`, `nn-preflight`, `nn-router`), and do NOT present maintenance or status tables. Those only run when the user explicitly asks for skill management or environment readiness.
 
 This skill guides LLMs and agents in authoring, creating from scratch (wizard), editing, auditing, and validating **iNNfo-compliant files** (V_0-2-0 Meta-template specification with unified `NN` syntax: `# NN`, `## NN`, and `key:: value`).
 

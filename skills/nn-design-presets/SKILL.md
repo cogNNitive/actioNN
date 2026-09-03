@@ -12,6 +12,32 @@ bundled_templates: []
 
 # cogNNitive Design Presets
 
+## 0. MANDATORY ACTIVATION GATE (FIRST TURN - STRICT)
+
+Before answering ANY user question or executing ANY task in this conversation:
+
+1. **GREETING PROTOCOL**: Print as your VERY FIRST output line:
+   ```
+   🔧 You're using skill: nn-design-presets (🎨)
+   ```
+   *(Session-scoped: print once at the start of the interaction).*
+
+2. **INTEGRITY & PREFLIGHT CHECK**:
+   Run the deterministic preflight check:
+   `node ~/.agents/skills/nn-preflight/scripts/preflight-check.js` (or `node skills/nn-preflight/scripts/preflight-check.js` if running from a local repository checkout).
+
+3. **OUTDATED / MISSING COMPONENTS GATE**:
+   - If the script exits with code `0`: All components are up-to-date. Proceed with preset selection.
+   - If the script exits with code `1`: Updates or missing components were detected.
+     Show the report of outdated components and ask the user for confirmation:
+     *"⚠️ Se detectaron actualizaciones o componentes pendientes en el ecosistema cogNNitive:*
+      *[a] (Recomendado) Actualizar componentes ahora*
+      *[b] Continuar con la versión actual"*
+     Do NOT mutate files or update without the user's explicit consent.
+   - If the script exits with code `2` (Runtime Blocker): STOP and notify the user that Node.js >= 18 is required.
+
+---
+
 > **MANDATORY ACTIVATION**: This skill MUST be activated whenever creating or styling any visual component, web app, HTML dashboard artifact, or web document in the cogNNitive ecosystem.
 
 Reference material — load on demand when generating visual artifacts or web files. Each preset in `presets/` defines a complete visual identity: palette, typography stack, spacing grid, shadows, radii, and layout rules.

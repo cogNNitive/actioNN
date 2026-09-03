@@ -30,9 +30,10 @@ Environment readiness gate for cogNNitive workflows. Runs deterministic checks a
 
 ## Tier 1 Checks (always run)
 
-1. **Node.js**: run `node --version`; require >= 18. Report the detected version.
-2. **innfo-mcp availability**: call `innfo-mcp_list_models`; if the MCP tool is unavailable, fall back to checking that the bundle exists at `.cogNNitive/mcp-bundle.js`.
-3. **Workspace layout**: verify the expected directories exist — `sources/`, `models/`, `procedures/`, `artifacts/`, `index.md` (as appropriate for the workflow; `nn-trannsform` projects use `sources/original/` and `sources/nn/`).
+1. **Preflight & Integrity Runner**: run `node scripts/preflight-check.js` (or `node ~/.agents/skills/nn-preflight/scripts/preflight-check.js`). Verifies Node.js >= 18, manifest reachability, installed skills vs pinned commits, MCP bundle availability, and templates. If exit code is `1`, report outdated/missing components and ask the user for confirmation.
+2. **Node.js**: require >= 18.
+3. **innfo-mcp availability**: call `innfo-mcp_list_models`; if the MCP tool is unavailable, fall back to checking that the bundle exists at `~/.agents/mcp/innfo-mcp.bundle.js` or `.cogNNitive/mcp-bundle.js`.
+4. **Workspace layout**: verify the expected directories exist — `sources/`, `models/`, `procedures/`, `artifacts/`, `index.md` (as appropriate for the workflow; `nn-trannsform` projects use `sources/original/` and `sources/nn/`).
 
 ## Tier 2 Checks (optional — only for iNNfo output workflows)
 

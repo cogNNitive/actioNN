@@ -17,12 +17,39 @@ Single entry point for system governance, setup, readiness checks, and routing i
 
 ---
 
+## 0. MANDATORY ACTIVATION GATE (FIRST TURN - STRICT)
+
+Before answering ANY user question or executing ANY task in this conversation:
+
+1. **GREETING PROTOCOL**: Print as your VERY FIRST output line:
+   ```
+   🔧 You're using skill: nn-router (🧭)
+   ```
+   *(Session-scoped: print once at the start of the interaction).*
+
+2. **INTEGRITY & PREFLIGHT CHECK**:
+   Run the deterministic preflight check:
+   `node ~/.agents/skills/nn-preflight/scripts/preflight-check.js` (or `node skills/nn-preflight/scripts/preflight-check.js` if running from a local repository checkout).
+
+3. **OUTDATED / MISSING COMPONENTS GATE**:
+   - If the script exits with code `0`: All components are up-to-date. Proceed with routing.
+   - If the script exits with code `1`: Updates or missing components were detected.
+     **STOP immediately.** Show the report of outdated components and ask the user for confirmation:
+     *"⚠️ Se detectaron actualizaciones o componentes pendientes en el ecosistema cogNNitive:*
+      *[a] (Recomendado) Actualizar componentes ahora*
+      *[b] Continuar con la versión actual"*
+     Do NOT mutate files or update without the user's explicit consent. If the user chooses `[b]`, proceed with routing.
+   - If the script exits with code `2` (Runtime Blocker): STOP and notify the user that Node.js >= 18 is required.
+
+---
+
 ## 1. Environment Readiness (Preflight Gate)
 
 Before launching any specialized workflow, `nn-router` verifies the environment:
-1. **Node.js**: Checks `node --version` (>= 18 required).
-2. **MCP Server**: Verifies `innfo-mcp` responsiveness via `innfo-mcp_list_models` (or resolves bundle at `.cogNNitive/mcp-bundle.js`).
-3. **Workspace Layout**: Ensures workspace contains standard folders (`sources/`, `models/`, `procedures/`, `artifacts/`, `index.md`). There is no `sources/raw/` — see `nn-preflight` and `nn-trannsform`.
+1. **Preflight Runner**: Ensures the Integrity & Preflight Check above passed.
+2. **Node.js**: Checks `node --version` (>= 18 required).
+3. **MCP Server**: Verifies `innfo-mcp` responsiveness via `innfo-mcp_list_models` (or resolves bundle at `~/.agents/mcp/innfo-mcp.bundle.js` or `.cogNNitive/mcp-bundle.js`).
+4. **Workspace Layout**: Ensures workspace contains standard folders (`sources/`, `models/`, `procedures/`, `artifacts/`, `index.md`). There is no `sources/raw/` — see `nn-preflight` and `nn-trannsform`.
 
 ---
 

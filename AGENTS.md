@@ -131,10 +131,10 @@ Rules that apply regardless of project context. Safe to use in any repository.
 - Before every response, self-check: does this request match any skill in `<available_skills>`?
 - If yes, read the matching SKILL.md BEFORE generating your reply. Multiple skills can apply at once.
 
-### Skill Version Check — Bootstrap & Maintenance Only
-- Version checks (`node scripts/skills-manager.js status`) apply ONLY when the user's request IS a bootstrap/skill-management task (install, update, sync, audit) or matches the bootstrap phrases from `## cogNNitive Bootstrap Rule`. They are NEVER a prerequisite for using a skill (e.g. authoring an iNNfo model with `nn-innfo`).
-- If a version check cannot run (no checkout, no network, script error) in a bootstrap task, STOP and ask the user. Never claim a skill is up to date without the check having run.
-- The script lives at `scripts/skills-manager.js` in `cogNNitive/actioNN`; the desired pins live in `eNNvironment/docs/use/manifest.md`.
+### Skill & Integrity Gate (MANDATORY)
+- When any cogNNitive skill is activated (e.g. `nn-innfo`, `nn-trannsform`, `nn-router`), the agent MUST greet with the canonical emoji badge and execute the deterministic preflight check: `node ~/.agents/skills/nn-preflight/scripts/preflight-check.js` (or `node skills/nn-preflight/scripts/preflight-check.js`).
+- **Zero Interruption on OK**: If all components are up-to-date (exit code 0), proceed directly with the user's request without dumping verbose status tables.
+- **Consent First on Outdated**: If components are missing or outdated (exit code 1), STOP and present the outdated components, asking whether to update now `[a]` (Recommended) or continue with current versions `[b]`. Never mutate or update without explicit user confirmation.
 <!-- /gentle-ai:generic-rules -->
 
 <!-- gentle-ai:nn-rules -->

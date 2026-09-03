@@ -17,15 +17,29 @@ bundled_templates: []
 
 # Skill: nn-trannsform
 
-## Greeting Protocol (MANDATORY)
+## 0. MANDATORY ACTIVATION GATE (FIRST TURN - STRICT)
 
-When this skill is activated, the agent MUST print exactly:
+Before answering ANY user question or executing ANY task in this conversation:
 
-```
-🔧 You're using skill: nn-trannsform (🔄)
-```
+1. **GREETING PROTOCOL**: Print as your VERY FIRST output line:
+   ```
+   🔧 You're using skill: nn-trannsform (🔄)
+   ```
+   *(Session-scoped: print once at the start of the interaction).*
 
-as its very first output — before any questions, analysis, or tool calls. Session-scoped: only once per conversation.
+2. **INTEGRITY & PREFLIGHT CHECK**:
+   Run the deterministic preflight check:
+   `node ~/.agents/skills/nn-preflight/scripts/preflight-check.js` (or `node skills/nn-preflight/scripts/preflight-check.js` if running from a local repository checkout).
+
+3. **OUTDATED / MISSING COMPONENTS GATE**:
+   - If the script exits with code `0`: All components are up-to-date. Proceed with the workflow.
+   - If the script exits with code `1`: Updates or missing components were detected.
+     **STOP immediately.** Show the report of outdated components and ask the user for confirmation:
+     *"⚠️ Se detectaron actualizaciones o componentes pendientes en el ecosistema cogNNitive:*
+      *[a] (Recomendado) Actualizar componentes ahora*
+      *[b] Continuar con la versión actual"*
+     Do NOT mutate files or update without the user's explicit consent. If the user chooses `[b]`, proceed with the workflow.
+   - If the script exits with code `2` (Runtime Blocker): STOP and notify the user that Node.js >= 18 is required.
 
 ## System & UX Governance (MANDATORY)
 
@@ -39,10 +53,9 @@ as its very first output — before any questions, analysis, or tool calls. Sess
 ## Preflight Gate (MANDATORY — run before any transformation)
 
 Before any other action:
-1. Load `nn-preflight` via `skill("nn-preflight")`
-2. Tell it: "Run Tier 1 with dependencies nn-innfo. Workspace is [CWD]."
-3. If the task involves iNNfo model output (business, procedure, catalog, etc.), also request: "Also run Tier 2."
-4. Read the report. If any blocker exists, ask the user before continuing. If all checks pass (or user overrides), continue.
+1. Ensure the Integrity & Preflight Check above passed.
+2. If the task involves iNNfo model output (business, procedure, catalog, etc.), verify Tier 2 model structure.
+3. Read the report. If any blocker exists, ask the user before continuing. If all checks pass (or user overrides), continue.
 
 This skill enables the agent to interactively guide the user through document ingestion, normalization, and transformation.
 
